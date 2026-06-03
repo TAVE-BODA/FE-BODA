@@ -11,11 +11,11 @@
 ### 기능 브랜치 
 새로운 작업은 항상 `develop` 브랜치로부터 생성하며, 작업이 완료되면 `develop` 브랜치로 Pull Request(PR)를 보내기
 
-| `feature/` | 새로운 기능 개발 및 UI 구현 | `feature/login`, `feature/signup` |
-| `fix/` | 버그 수정 | `fix/login-error` |
-| `refactor/` | 코드 리팩토링 (기능 변화 없음) | `refactor/auth-context` |
-| `chore/` | 빌드 업무 수정, 패키지 매니저 설정 등 | `chore/install-axios` |
-| `docs/` | 문서 수정 (README 등) | `docs/update-readme` |
+*| `feature/` | 새로운 기능 개발 및 UI 구현 | `feature/login`, `feature/signup` |
+*| `fix/` | 버그 수정 | `fix/login-error` |
+*| `refactor/` | 코드 리팩토링 (기능 변화 없음) | `refactor/auth-context` |
+*| `chore/` | 빌드 업무 수정, 패키지 매니저 설정 등 | `chore/install-axios` |
+*| `docs/` | 문서 수정 (README 등) | `docs/update-readme` |
 
 ## 프로젝트 폴더 구조
 src/
