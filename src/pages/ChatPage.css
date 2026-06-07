@@ -1,3 +1,7 @@
+/* ==========================================================================
+   1. 기본 데스크톱 스타일 (화면 폭 1025px 이상)
+   ========================================================================== */
+
 .chat-page-container {
   display: flex;
   justify-content: center;
@@ -16,8 +20,8 @@
   flex-direction: column;
   width: 100%;
   max-width: 1300px; 
-  margin-right: auto;
-  margin-left: 25%; 
+  margin: 0 auto; 
+  transform: translateY(-80px);
 }
 
 .chat-flow-container {
@@ -58,7 +62,6 @@
   box-sizing: border-box;
 }
 
-/* 🚀 첫 화면용 메인 안내 말풍선: 큰 화면에선 600px로 고정, 화면이 그보다 작아질 때만 반응형 작동 */
 .first-bubble {
   padding: 35px 45px;
   border-radius: 25px;
@@ -66,7 +69,6 @@
   max-width: 600px; 
 }
 
-/* 답변용 아담한 말풍선 크기 */
 .chatbot-bubble {
   padding: 30px 40px;
   border-radius: 25px;
@@ -93,12 +95,11 @@
 }
 
 .chat-bubble-text {
-  font-size: 20px;
+  font-size: 24px;
   line-height: 1.6;
-  color: #555555;
+  color: #000000;
 }
 
-/* 🚀 두 번째 챗화면의 하얀색 말풍선 내부 텍스트 크기 상향 조절 */
 .chat-bubble-text.font-medium {
   font-size: 24px; 
   font-weight: 500;
@@ -169,4 +170,103 @@
 
 .arrow-icon {
   font-weight: 400;
+}
+
+
+/* ==========================================================================
+   2. 태블릿 반응형 구간 (화면 폭 1024px 이하)
+   ========================================================================== */
+@media screen and (max-width: 1024px) {
+  .chat-page-container {
+    min-width: 100%;
+    padding: 20px;
+  }
+  
+  .chat-content-wrap {
+    max-width: 90%;
+    transform: translateY(-40px);
+  }
+
+  .chat-avatar-area {
+    width: 110px;
+  }
+
+  .chat-avatar {
+    height: 110px;
+  }
+
+  .first-bubble, .chatbot-bubble, .user-bubble {
+    max-width: 80%;
+  }
+
+  .chat-bubble-title { font-size: 22px; }
+  .chat-bubble-text { font-size: 18px; }
+  .chat-bubble-text.font-medium { font-size: 20px; }
+  .user-bubble { font-size: 20px; }
+  .chat-option-btn, .insurance-condition-btn { font-size: 18px; }
+
+  .chat-options-area {
+    padding-left: 138px; /* 아바타 너비 축소에 맞춘 보정 */
+  }
+}
+
+
+/* ==========================================================================
+   3. 모바일 반응형 구간 (화면 폭 768px 이하)
+   ========================================================================== */
+@media screen and (max-width: 768px) {
+  .chat-page-container {
+    align-items: flex-start;
+    overflow-y: auto;
+  }
+
+  .chat-content-wrap {
+    max-width: 100%;
+    transform: translateY(0);
+    padding-top: 20px;
+  }
+
+  /* 🚀 아바타와 말풍선을 세로 배치로 변경하여 화면이 잘리는 현상을 완벽 방지합니다 */
+  .chat-message-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 25px;
+  }
+
+  .user-row {
+    align-items: flex-end; /* 유저 말풍선은 모바일에서도 오른쪽에 붙도록 배치 */
+  }
+
+  .chat-avatar-area {
+    width: 80px;
+  }
+
+  .chat-avatar {
+    height: 80px;
+  }
+
+  .first-bubble, .chatbot-bubble, .user-bubble {
+    width: 100%;
+    max-width: 100%;
+    padding: 22px 28px;
+    border-radius: 20px;
+  }
+
+  .chat-bubble-title { font-size: 18px; margin-bottom: 8px; }
+  .chat-bubble-text { font-size: 15px; }
+  .chat-bubble-text.font-medium { font-size: 16px; }
+  .user-bubble { font-size: 16px; padding: 16px 24px; }
+  
+  /* 🚀 들여쓰기를 없애서 선택지 버튼이 화면 전체 너비를 꽉 채우도록 만듭니다 */
+  .chat-options-area {
+    padding-left: 0;
+    gap: 12px;
+  }
+
+  .chat-option-btn, .insurance-condition-btn {
+    width: 100%; /* 모바일에서는 터치하기 편하게 가로를 꽉 채워줍니다 */
+    font-size: 15px;
+    padding: 14px 20px;
+  }
 }
