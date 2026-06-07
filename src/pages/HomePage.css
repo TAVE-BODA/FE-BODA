@@ -1,0 +1,101 @@
+.home-page-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  min-width: 1440px;
+  height: 100vh;
+  background: linear-gradient(116.82deg, #FFFFFF 0%, #E9EEFF 32.35%, #FBF6FF 54.76%, #E4ECFF 83.93%, #E0E9FF 98.26%, #D3D6FC 100%);
+  box-sizing: border-box;
+  padding: 100px 0 60px 0;
+}
+
+.home-main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+.home-character-area {
+  margin-bottom: 30px;
+}
+
+.home-character {
+  height: 200px;
+  object-fit: contain;
+}
+
+.home-title {
+  font-size: 42px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 24px;
+  letter-spacing: -0.5px;
+}
+
+.home-title .highlight {
+  color: #4A90E2;
+}
+
+.home-subtitle {
+  font-size: 22px;
+  line-height: 1.6;
+  color: #666666;
+  margin-bottom: 45px;
+}
+
+.check-insurance-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  width: 360px;
+  transition: transform 0.2s ease;
+}
+
+.check-insurance-btn:hover {
+  transform: scale(1.03);
+}
+
+.check-insurance-btn img {
+  width: 100%;
+  object-fit: contain;
+}
+
+.home-footer-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-top: 40px;
+}
+
+/* 하단 안내 텍스트 이미지 관련 스타일 */
+.footer-notice-wrap {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.footer-notice-text-img {
+  height: 30px; /* 피그마 원본 디자인에 맞춰 높이(height)를 자유롭게 조절해 주세요 */
+  object-fit: contain;
+}
+
+.insurance-logos-wrap {
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  justify-content: center;
+}
+
+.insurance-logos {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  opacity: 0.8;
+}

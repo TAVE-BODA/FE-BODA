@@ -1,13 +1,17 @@
 import React from 'react';
-import LoginPage from './pages/LoginPage'; // 방금 만든 로그인 페이지 컴포넌트 불러오기
-import './App.css'; // 전역 스타일 초기화용 (선택)
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import LoginPage from './pages/LoginPage'; 
+import HomePage from './pages/HomePage';
+import './App.css'; 
 
 function App() {
   return (
-    <>
-      {/* 로그인 페이지 컴포넌트를 화면에 렌더링합니다 */}
-      <LoginPage />
-    </>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<LoginPage />} />
+        <Route path="/home" element={<HomePage />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
