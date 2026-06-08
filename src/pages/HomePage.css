@@ -27,6 +27,8 @@
 .home-character {
   height: 200px;
   object-fit: contain;
+  transform-origin: bottom center;
+  animation: naturalWaddle 3s infinite ease-in-out;
 }
 
 .home-title {
@@ -74,7 +76,6 @@
   margin-top: 40px;
 }
 
-/* 하단 안내 텍스트 이미지 관련 스타일 */
 .footer-notice-wrap {
   margin-bottom: 20px;
   display: flex;
@@ -82,7 +83,7 @@
 }
 
 .footer-notice-text-img {
-  height: 30px; /* 피그마 원본 디자인에 맞춰 높이(height)를 자유롭게 조절해 주세요 */
+  height: 30px; 
   object-fit: contain;
 }
 
@@ -98,4 +99,11 @@
   height: auto;
   object-fit: contain;
   opacity: 0.8;
+}
+
+@keyframes naturalWaddle {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(-5.5deg); }
+  75% { transform: rotate(5.5deg); }
+  100% { transform: rotate(0deg); }
 }

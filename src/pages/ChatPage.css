@@ -1,0 +1,272 @@
+/* ==========================================================================
+   1. 기본 데스크톱 스타일 (화면 폭 1025px 이상)
+   ========================================================================== */
+
+.chat-page-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-width: 1440px;
+  height: 100vh;
+  background: linear-gradient(116.82deg, #FFFFFF 0%, #E9EEFF 32.35%, #FBF6FF 54.76%, #E4ECFF 83.93%, #E0E9FF 98.26%, #D3D6FC 100%);
+  box-sizing: border-box;
+  padding: 40px;
+  overflow: hidden;
+}
+
+.chat-content-wrap {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1300px; 
+  margin: 0 auto; 
+  transform: translateY(-80px);
+}
+
+.chat-flow-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.chat-message-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 28px;
+  margin-bottom: 35px;
+  width: 100%;
+}
+
+.user-row {
+  display: flex;
+  justify-content: flex-end; 
+  margin-bottom: 45px;
+  padding-left: 0; 
+}
+
+.chat-avatar-area {
+  flex-shrink: 0;
+  width: 140px; 
+}
+
+.chat-avatar {
+  width: 100%;
+  height: 140px;
+  object-fit: contain;
+}
+
+.chat-bubble {
+  background-color: #ffffff;
+  box-shadow: 0 15px 35px rgba(211, 214, 252, 0.25);
+  box-sizing: border-box;
+}
+
+.first-bubble {
+  padding: 35px 45px;
+  border-radius: 25px;
+  width: 100%; 
+  max-width: 600px; 
+}
+
+.chatbot-bubble {
+  padding: 30px 40px;
+  border-radius: 25px;
+  max-width: 500px;
+}
+
+.user-bubble {
+  padding: 24px 45px;
+  border-radius: 50px;
+  background-color: #ECECEC;
+  color: #1a1a1a;
+  font-size: 25px;
+  font-weight: 500;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.04);
+  width: fit-content;
+  max-width: 600px;
+}
+
+.chat-bubble-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 14px;
+}
+
+.chat-bubble-text {
+  font-size: 24px;
+  line-height: 1.6;
+  color: #000000;
+}
+
+.chat-bubble-text.font-medium {
+  font-size: 24px; 
+  font-weight: 500;
+  color: #1a1a1a;
+}
+
+.chat-options-area {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-left: 168px; 
+  width: 100%;
+}
+
+.chatbot-responses-group {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.chat-option-btn {
+  background-color: #ffffff;
+  border: 1.5px solid #229CFF;
+  border-radius: 50px;
+  padding: 18px 32px;
+  font-size: 20px;
+  font-weight: 500;
+  color: #084CB2;
+  text-align: left;
+  cursor: pointer;
+  width: fit-content; 
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 10px rgba(47, 128, 237, 0.05);
+}
+
+.chat-option-btn:hover {
+  background-color: #2f80ed;
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(47, 128, 237, 0.2);
+}
+
+.insurance-condition-btn {
+  background-color: #ffffff;
+  border: 1.5px solid #229CFF;
+  border-radius: 50px;
+  padding: 18px 32px;
+  font-size: 20px;
+  font-weight: 500;
+  color: #084CB2;
+  cursor: pointer;
+  width: fit-content;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 10px rgba(47, 128, 237, 0.05);
+}
+
+.insurance-condition-btn:hover {
+  background-color: #2f80ed;
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(47, 128, 237, 0.2);
+}
+
+.arrow-icon {
+  font-weight: 400;
+}
+
+
+/* ==========================================================================
+   2. 태블릿 반응형 구간 (화면 폭 1024px 이하)
+   ========================================================================== */
+@media screen and (max-width: 1024px) {
+  .chat-page-container {
+    min-width: 100%;
+    padding: 20px;
+  }
+  
+  .chat-content-wrap {
+    max-width: 90%;
+    transform: translateY(-40px);
+  }
+
+  .chat-avatar-area {
+    width: 110px;
+  }
+
+  .chat-avatar {
+    height: 110px;
+  }
+
+  .first-bubble, .chatbot-bubble, .user-bubble {
+    max-width: 80%;
+  }
+
+  .chat-bubble-title { font-size: 22px; }
+  .chat-bubble-text { font-size: 18px; }
+  .chat-bubble-text.font-medium { font-size: 20px; }
+  .user-bubble { font-size: 20px; }
+  .chat-option-btn, .insurance-condition-btn { font-size: 18px; }
+
+  .chat-options-area {
+    padding-left: 138px; /* 아바타 너비 축소에 맞춘 보정 */
+  }
+}
+
+
+/* ==========================================================================
+   3. 모바일 반응형 구간 (화면 폭 768px 이하)
+   ========================================================================== */
+@media screen and (max-width: 768px) {
+  .chat-page-container {
+    align-items: flex-start;
+    overflow-y: auto;
+  }
+
+  .chat-content-wrap {
+    max-width: 100%;
+    transform: translateY(0);
+    padding-top: 20px;
+  }
+
+  /* 🚀 아바타와 말풍선을 세로 배치로 변경하여 화면이 잘리는 현상을 완벽 방지합니다 */
+  .chat-message-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 25px;
+  }
+
+  .user-row {
+    align-items: flex-end; /* 유저 말풍선은 모바일에서도 오른쪽에 붙도록 배치 */
+  }
+
+  .chat-avatar-area {
+    width: 80px;
+  }
+
+  .chat-avatar {
+    height: 80px;
+  }
+
+  .first-bubble, .chatbot-bubble, .user-bubble {
+    width: 100%;
+    max-width: 100%;
+    padding: 22px 28px;
+    border-radius: 20px;
+  }
+
+  .chat-bubble-title { font-size: 18px; margin-bottom: 8px; }
+  .chat-bubble-text { font-size: 15px; }
+  .chat-bubble-text.font-medium { font-size: 16px; }
+  .user-bubble { font-size: 16px; padding: 16px 24px; }
+  
+  /* 🚀 들여쓰기를 없애서 선택지 버튼이 화면 전체 너비를 꽉 채우도록 만듭니다 */
+  .chat-options-area {
+    padding-left: 0;
+    gap: 12px;
+  }
+
+  .chat-option-btn, .insurance-condition-btn {
+    width: 100%; /* 모바일에서는 터치하기 편하게 가로를 꽉 채워줍니다 */
+    font-size: 15px;
+    padding: 14px 20px;
+  }
+}
