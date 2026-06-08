@@ -1,16 +1,21 @@
 import React, { useState } from 'react';
 import './ChatPage.css';
 import avatarImg from '../assets/images/chat_icon.png';
+import InsuranceModal from '../components/InsuranceModal'; // 🚀 components 폴더에 있는 새 모달 임포트
 
 export default function ChatPage() {
   const [selectedOption, setSelectedOption] = useState(null);
+  
+  /* 모달 창의 열림/닫힘 상태를 제어하는 state 추가 */
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleOptionClick = (optionNumber) => {
     setSelectedOption(optionNumber);
   };
 
+  /* 보험 조건 입력하기 버튼을 클릭하면 모달을 활성화합니다 */
   const handleInputConditions = () => {
-    console.log('보험 조건 입력하기 클릭됨');
+    setIsModalOpen(true);
   };
 
   // 선택한 번호에 따라 우측 유저 말풍선에 들어갈 텍스트를 매핑합니다
@@ -24,7 +29,7 @@ export default function ChatPage() {
     }
   };
 
-  // 🚀 선택한 번호에 따라 챗봇 첫 번째 말풍선의 중심 문구를 동적으로 변경합니다
+  // 선택한 번호에 따라 챗봇 첫 번째 말풍선의 중심 문구를 동적으로 변경합니다
   const getChatbotFocusText = (option) => {
     switch (option) {
       case 1: return "청구 가능성을 중심으로";
@@ -91,7 +96,6 @@ export default function ChatPage() {
               </div>
               
               <div className="chatbot-responses-group">
-                {/* 🚀 getChatbotFocusText 함수를 사용하여 선택지에 맞는 문구가 출력됩니다 */}
                 <div className="chat-bubble chatbot-bubble">
                   <p className="chat-bubble-text font-medium">
                     좋아요.<br />
@@ -124,11 +128,15 @@ export default function ChatPage() {
                 {getOptionText(selectedOption)}
               </div>
             </div>
-            {/* 추후 필요시 4번 전용 챗봇 UI를 여기에 추가 구현 */}
           </div>
         )}
 
       </div>
+
+      <InsuranceModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+      />
     </div>
   );
 }
