@@ -11,7 +11,6 @@ export default function ChatPage() {
   const handleOptionClick = (optionNumber) => {
     setSelectedOption(optionNumber);
     
-    /* 4번 버튼을 누른 경우 모달을 거치지 않고 즉시 파일 업로드 화면으로 전환 */
     if (optionNumber === 4) {
       setIsModalFinished(true);
     }
@@ -49,7 +48,7 @@ export default function ChatPage() {
     <div className="chat-page-container">
       <div className="chat-content-wrap">
         
-        {/* --- 대화 상태 1: 아무것도 선택하지 않은 첫 화면 --- */}
+        {/* --- 대화 상태 1: 첫 화면 --- */}
         {selectedOption === null && (
           <div className="chat-flow-container">
             <div className="chat-message-row">
@@ -84,7 +83,7 @@ export default function ChatPage() {
           </div>
         )}
 
-        {/* --- 대화 상태 2: 1, 2, 3번 버튼을 선택했을 때 나오는 조건 양식 화면 --- */}
+        {/* --- 대화 상태 2: 1, 2, 3번 선택 후 모달 입력 전 --- */}
         {[1, 2, 3].includes(selectedOption) && !isModalFinished && (
           <div className="chat-flow-container">
             <div className="chat-message-row user-row">
@@ -122,8 +121,8 @@ export default function ChatPage() {
           </div>
         )}
 
-        {/* --- 대화 상태 3: 1, 2, 3번 모달 완료 후 혹은 4번 선택 시 즉시 진입하는 PDF 업로드 화면 --- */}
-        {isModalFinished && (
+        {/* --- 대화 상태 3: 1, 2, 3번 조건 입력 성공 완료 후 (기존 안내 화면) --- */}
+        {[1, 2, 3].includes(selectedOption) && isModalFinished && (
           <div className="chat-flow-container">
             <div className="chat-message-row user-row">
               <div className="chat-bubble user-bubble">
@@ -162,6 +161,54 @@ export default function ChatPage() {
                     </button>
                     <button className="chat-option-btn" style={{ borderColor: '#229CFF', color: '#084CB2', minWidth: '240px', textAlign: 'center' }}>
                       아직 준비가 안됐어요
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* --- 대화 상태 4: 4번 버튼을 눌렀을 때 즉시 노출되는 보험증권 전용 업로드 화면 --- */}
+        {selectedOption === 4 && isModalFinished && (
+          <div className="chat-flow-container">
+            <div className="chat-message-row user-row">
+              <div className="chat-bubble user-bubble">
+                {getOptionText(selectedOption)}
+              </div>
+            </div>
+
+            <div className="chat-message-row">
+              <div className="chat-avatar-area">
+                <img src={avatarImg} alt="챗봇 캐릭터" className="chat-avatar" />
+              </div>
+              
+              <div className="chatbot-responses-group">
+                <div className="chat-bubble chatbot-bubble">
+                  <p className="chat-bubble-text font-medium">
+                    알겠습니다!<br></br>청구에 활용할 수 있는 보장 항목을<br></br>보여드릴게요.
+                  </p>
+                </div>
+                
+                <div className="chat-bubble chatbot-bubble">
+                  <p className="chat-bubble-text font-medium">
+                    분석을 위해 보험증권 PDF가 필요해요.
+                  </p>
+                </div>
+
+                <div className="chat-bubble chatbot-bubble">
+                  <p className="chat-bubble-text font-medium">
+                    파일을 바로 등록하시겠어요?
+                  </p>
+                </div>
+
+                <div className="chat-interactive-area" style={{ paddingLeft: 0, marginTop: '10px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <button className="insurance-condition-btn" style={{ justifyContent: 'space-between', minWidth: '240px' }}>
+                      파일 업로드하기 <span className="arrow-icon">⟩</span>
+                    </button>
+                    <button className="chat-option-btn" style={{ borderColor: '#229CFF', color: '#084CB2', minWidth: '240px', textAlign: 'center' }}>
+                      나중에 올릴게요
                     </button>
                   </div>
                 </div>
