@@ -1,24 +1,31 @@
 import React, { useState } from 'react';
 import './ChatPage.css';
 import avatarImg from '../assets/images/chat_icon.png';
-import InsuranceModal from '../components/InsuranceModal'; // 🚀 components 폴더에 있는 새 모달 임포트
+import InsuranceModal from '../components/InsuranceModal';
 
 export default function ChatPage() {
   const [selectedOption, setSelectedOption] = useState(null);
-  
-  /* 모달 창의 열림/닫힘 상태를 제어하는 state 추가 */
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalFinished, setIsModalFinished] = useState(false);
 
   const handleOptionClick = (optionNumber) => {
     setSelectedOption(optionNumber);
+    
+    /* 4번 버튼을 누른 경우 모달을 거치지 않고 즉시 파일 업로드 화면으로 전환 */
+    if (optionNumber === 4) {
+      setIsModalFinished(true);
+    }
   };
 
-  /* 보험 조건 입력하기 버튼을 클릭하면 모달을 활성화합니다 */
   const handleInputConditions = () => {
     setIsModalOpen(true);
   };
 
-  // 선택한 번호에 따라 우측 유저 말풍선에 들어갈 텍스트를 매핑합니다
+  const handleModalSubmitSuccess = (data) => {
+    setIsModalOpen(false);
+    setIsModalFinished(true);
+  };
+
   const getOptionText = (option) => {
     switch (option) {
       case 1: return "1. 청구 가능한지 먼저 알고싶어요";
@@ -29,7 +36,6 @@ export default function ChatPage() {
     }
   };
 
-  // 선택한 번호에 따라 챗봇 첫 번째 말풍선의 중심 문구를 동적으로 변경합니다
   const getChatbotFocusText = (option) => {
     switch (option) {
       case 1: return "청구 가능성을 중심으로";
@@ -78,18 +84,15 @@ export default function ChatPage() {
           </div>
         )}
 
-        {/* --- 대화 상태 2: 1, 2, 3번 버튼을 선택했을 때 나오는 공통 양식 화면 (멘트는 동적 변경) --- */}
-        {[1, 2, 3].includes(selectedOption) && (
+        {/* --- 대화 상태 2: 1, 2, 3번 버튼을 선택했을 때 나오는 조건 양식 화면 --- */}
+        {[1, 2, 3].includes(selectedOption) && !isModalFinished && (
           <div className="chat-flow-container">
-            
-            {/* [유저 메시지] 사용자가 누른 1, 2, 3번 중 하나의 텍스트가 꽂힙니다 */}
             <div className="chat-message-row user-row">
               <div className="chat-bubble user-bubble">
                 {getOptionText(selectedOption)}
               </div>
             </div>
 
-            {/* [챗봇 연속 답변] */}
             <div className="chat-message-row">
               <div className="chat-avatar-area">
                 <img src={avatarImg} alt="챗봇 캐릭터" className="chat-avatar" />
@@ -116,16 +119,52 @@ export default function ChatPage() {
                 </div>
               </div>
             </div>
-
           </div>
         )}
 
-        {/* --- 대화 상태 3: 4번 버튼을 선택했을 때의 분기 화면 --- */}
-        {selectedOption === 4 && (
+        {/* --- 대화 상태 3: 1, 2, 3번 모달 완료 후 혹은 4번 선택 시 즉시 진입하는 PDF 업로드 화면 --- */}
+        {isModalFinished && (
           <div className="chat-flow-container">
             <div className="chat-message-row user-row">
               <div className="chat-bubble user-bubble">
                 {getOptionText(selectedOption)}
+              </div>
+            </div>
+
+            <div className="chat-message-row">
+              <div className="chat-avatar-area">
+                <img src={avatarImg} alt="챗봇 캐릭터" className="chat-avatar" />
+              </div>
+              
+              <div className="chatbot-responses-group">
+                <div className="chat-bubble chatbot-bubble">
+                  <p className="chat-bubble-text font-medium">
+                    알려주신 내용을 확인했어요!
+                  </p>
+                </div>
+                
+                <div className="chat-bubble chatbot-bubble">
+                  <p className="chat-bubble-text font-medium">
+                    이제 내 보험 기준으로 확인하려면 보험증권과 보험약관 PDF가 필요해요.
+                  </p>
+                </div>
+
+                <div className="chat-bubble chatbot-bubble">
+                  <p className="chat-bubble-text font-medium">
+                    파일을 준비하셨나요?
+                  </p>
+                </div>
+
+                <div className="chat-interactive-area" style={{ paddingLeft: 0, marginTop: '10px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <button className="insurance-condition-btn" style={{ justifyContent: 'space-between', minWidth: '240px' }}>
+                      파일 업로드하기 <span className="arrow-icon">⟩</span>
+                    </button>
+                    <button className="chat-option-btn" style={{ borderColor: '#229CFF', color: '#084CB2', minWidth: '240px', textAlign: 'center' }}>
+                      아직 준비가 안됐어요
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -136,6 +175,7 @@ export default function ChatPage() {
       <InsuranceModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
+        onSubmitSuccess={handleModalSubmitSuccess}
       />
     </div>
   );

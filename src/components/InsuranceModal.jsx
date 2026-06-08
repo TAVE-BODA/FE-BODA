@@ -34,10 +34,10 @@ export default function InsuranceModal({ isOpen, onClose, onSubmitSuccess }) {
 
   const isFormValid = formData.treatment.trim() !== '' && formData.hospitalType !== '';
 
-  /* 백엔드 데이터 전송 */
   const handleNextSubmit = async () => {
     if (!isFormValid || isSubmitting) return;
 
+    /* 백엔드 데이터 전송 (디자인 구현을 위해 임시 주석 처리)
     setIsSubmitting(true);
     try {
       const response = await fetch('/api/insurance/submit', {
@@ -63,6 +63,12 @@ export default function InsuranceModal({ isOpen, onClose, onSubmitSuccess }) {
       alert('데이터 전송 중 오류가 발생했습니다.');
     } finally {
       setIsSubmitting(false);
+    }
+    */
+
+    // 모달 조건 완료 후 부모 페이지 컴포넌트로 상태 전달
+    if (onSubmitSuccess) {
+      onSubmitSuccess(formData);
     }
   };
 
