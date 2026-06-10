@@ -1,6 +1,7 @@
 import React from 'react';
 import './HomePage.css';
 import Character from '../components/Character';
+import NavBar from '../components/NavBar';
 import checkBtnImg from '../assets/images/home_confirmbutton.png';
 import logosImg from '../assets/images/home_bottomicon.png';
 
@@ -11,7 +12,11 @@ export default function HomePage() {
 
   return (
     <div className="home-page-container">
-      
+
+      <header className="home-header">
+        <NavBar />
+      </header>
+
       <main className="home-main-content">
         
         <div className="home-character-area">

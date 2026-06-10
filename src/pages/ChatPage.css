@@ -3,6 +3,7 @@
    ========================================================================== */
 
 .chat-page-container {
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -15,13 +16,20 @@
   overflow: hidden;
 }
 
+.chat-header {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+}
+
 .chat-content-wrap {
   display: flex;
   flex-direction: column;
   width: 100%;
   max-width: 1300px;
   margin: 0 auto;
-  transform: translateY(-80px);
+  transform: translateY(-20px);
 }
 
 .chat-flow-container {
@@ -217,7 +225,7 @@
 
   .chat-content-wrap {
     max-width: 100%;
-    transform: translateY(0);
+    transform: translateY(40px);
     padding-top: 20px;
   }
 

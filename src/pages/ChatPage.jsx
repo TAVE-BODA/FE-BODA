@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import './ChatPage.css';
 import Character from '../components/Character';
 import InsuranceModal from '../components/InsuranceModal';
+import NavBar from '../components/NavBar';
 
 export default function ChatPage() {
   const [selectedOption, setSelectedOption] = useState(null);
@@ -46,6 +47,9 @@ export default function ChatPage() {
 
   return (
     <div className="chat-page-container">
+      <header className="chat-header">
+        <NavBar />
+      </header>
       <div className="chat-content-wrap">
         
         {/* --- 대화 상태 1: 첫 화면 --- */}
