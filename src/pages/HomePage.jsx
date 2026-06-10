@@ -1,6 +1,6 @@
 import React from 'react';
 import './HomePage.css';
-import characterImg from '../assets/images/home_mainicon.png';
+import characterImg from '../assets/images/characters/character_curious.png';
 import checkBtnImg from '../assets/images/home_confirmbutton.png';
 import logosImg from '../assets/images/home_bottomicon.png';
 import bottomTextImg from '../assets/images/home_bottomtext.png';

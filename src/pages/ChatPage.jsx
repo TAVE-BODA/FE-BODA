@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './ChatPage.css';
-import avatarImg from '../assets/images/chat_icon.png';
+import avatarImg from '../assets/images/characters/character_curious.png';
 import InsuranceModal from '../components/InsuranceModal';
 
 export default function ChatPage() {
