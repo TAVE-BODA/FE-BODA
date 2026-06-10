@@ -50,11 +50,6 @@
   width: 140px;
 }
 
-.chat-avatar {
-  width: 100%;
-  height: 140px;
-  object-fit: contain;
-}
 
 .chat-bubble {
   background-color: var(--gray-white);
@@ -191,7 +186,7 @@
     width: 110px;
   }
 
-  .chat-avatar {
+  .chat-avatar-area .character {
     height: 110px;
   }
 
@@ -242,7 +237,7 @@
     width: 80px;
   }
 
-  .chat-avatar {
+  .chat-avatar-area .character {
     height: 80px;
   }
 

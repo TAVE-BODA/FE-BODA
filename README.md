@@ -87,6 +87,65 @@ background: var(--gradient-bg);
 
 ---
 
+## 컴포넌트
+
+### Character
+
+보다 캐릭터 이미지를 표시하는 컴포넌트. 크기와 표정을 props로 제어.
+
+**Props**
+
+| prop | 타입 | 기본값 | 설명 |
+|---|---|---|---|
+| `variant` | `string` | `'curious'` | 표정 종류 |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'sm'` | 크기 |
+| `animate` | `boolean` | `false` | 흔들림 애니메이션 여부 |
+
+**크기**
+
+| size | px |
+|---|---|
+| `sm` | 140px |
+| `md` | 160px |
+| `lg` | 200px |
+
+**사용 예시**
+
+```jsx
+import Character from '../components/Character';
+
+// 기본 (140px, 현재 기본 : 호기심 표정)
+<Character />
+
+// 홈페이지 — 200px + 흔들림 애니메이션
+<Character size="lg" animate />
+
+// 채팅페이지 — 140px, 정지
+<Character size="sm" />
+```
+
+**새 표정 추가하는 법**
+
+1. `src/assets/images/characters/`에 이미지 파일 추가
+2. `Character.jsx`의 `VARIANTS`에 한 줄 추가
+
+```jsx
+// Character.jsx
+import happyImg from '../assets/images/characters/character_happy.png';
+
+const VARIANTS = {
+  curious: curiousImg,
+  happy: happyImg,   // 추가
+};
+```
+
+```jsx
+// 사용
+<Character variant="happy" size="md" />
+```
+
+---
+
 ## 프로젝트 구조
 
 ```
@@ -94,10 +153,12 @@ src/
 ├── index.css             # 디자인 토큰 (전역 CSS 변수)
 ├── main.jsx              # 앱 진입점
 ├── App.jsx               # 라우팅
-├── assets/               # 이미지 리소스
+├── assets/
+│   └── images/
+│       └── characters/   # 캐릭터 이미지 (character_*.png)
 ├── components/
-│   ├── InsuranceModal.jsx
-│   └── InsuranceModal.css
+│   ├── Character.jsx / .css
+│   ├── InsuranceModal.jsx / .css
 └── pages/
     ├── LoginPage.jsx / .css
     ├── HomePage.jsx / .css

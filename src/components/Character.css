@@ -1,0 +1,19 @@
+.character {
+  object-fit: contain;
+  transform-origin: bottom center;
+}
+
+.character--sm { height: 140px; }
+.character--md { height: 160px; }
+.character--lg { height: 200px; }
+
+.character--animated {
+  animation: naturalWaddle 3s infinite ease-in-out;
+}
+
+@keyframes naturalWaddle {
+  0%   { transform: rotate(0deg); }
+  25%  { transform: rotate(-5.5deg); }
+  75%  { transform: rotate(5.5deg); }
+  100% { transform: rotate(0deg); }
+}

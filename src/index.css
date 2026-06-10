@@ -1,12 +1,12 @@
 :root {
   /* 배경 그라디언트 */
   --gradient-bg: linear-gradient(
-    116.82deg,
+    135deg,
     #FFFFFF 0%,
-    #E9EEFF 32.35%,
-    #FBF6FF 54.76%,
-    #E4ECFF 83.93%,
-    #E0E9FF 98.26%,
+    #E9EEFF 32%,
+    #FBF6FF 55%,
+    #E4ECFF 84%,
+    #E0E9FF 98%,
     #D3D6FC 100%
   );
 

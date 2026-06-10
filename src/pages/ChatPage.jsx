@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './ChatPage.css';
-import avatarImg from '../assets/images/characters/character_curious.png';
+import Character from '../components/Character';
 import InsuranceModal from '../components/InsuranceModal';
 
 export default function ChatPage() {
@@ -53,7 +53,7 @@ export default function ChatPage() {
           <div className="chat-flow-container">
             <div className="chat-message-row">
               <div className="chat-avatar-area">
-                <img src={avatarImg} alt="챗봇 캐릭터" className="chat-avatar" />
+                <Character size="sm" />
               </div>
               <div className="chat-bubble first-bubble">
                 <h3 className="chat-bubble-title">무엇을 먼저 확인해 드릴까요?</h3>
@@ -94,7 +94,7 @@ export default function ChatPage() {
 
             <div className="chat-message-row">
               <div className="chat-avatar-area">
-                <img src={avatarImg} alt="챗봇 캐릭터" className="chat-avatar" />
+                <Character size="sm" />
               </div>
               
               <div className="chatbot-responses-group">
@@ -132,7 +132,7 @@ export default function ChatPage() {
 
             <div className="chat-message-row">
               <div className="chat-avatar-area">
-                <img src={avatarImg} alt="챗봇 캐릭터" className="chat-avatar" />
+                <Character size="sm" />
               </div>
               
               <div className="chatbot-responses-group">
@@ -180,7 +180,7 @@ export default function ChatPage() {
 
             <div className="chat-message-row">
               <div className="chat-avatar-area">
-                <img src={avatarImg} alt="챗봇 캐릭터" className="chat-avatar" />
+                <Character size="sm" />
               </div>
               
               <div className="chatbot-responses-group">
