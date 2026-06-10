@@ -159,7 +159,7 @@ export default function ChatPage() {
                     <button className="insurance-condition-btn" style={{ justifyContent: 'space-between', minWidth: '240px' }}>
                       파일 업로드하기 <span className="arrow-icon">⟩</span>
                     </button>
-                    <button className="chat-option-btn" style={{ borderColor: '#229CFF', color: '#084CB2', minWidth: '240px', textAlign: 'center' }}>
+                    <button className="chat-option-btn" style={{ borderColor: 'var(--Main-05)', color: 'var(--Main-07)', minWidth: '240px', textAlign: 'center' }}>
                       아직 준비가 안됐어요
                     </button>
                   </div>
@@ -207,7 +207,7 @@ export default function ChatPage() {
                     <button className="insurance-condition-btn" style={{ justifyContent: 'space-between', minWidth: '240px' }}>
                       파일 업로드하기 <span className="arrow-icon">⟩</span>
                     </button>
-                    <button className="chat-option-btn" style={{ borderColor: '#229CFF', color: '#084CB2', minWidth: '240px', textAlign: 'center' }}>
+                    <button className="chat-option-btn" style={{ borderColor: 'var(--Main-05)', color: 'var(--Main-07)', minWidth: '240px', textAlign: 'center' }}>
                       나중에 올릴게요
                     </button>
                   </div>

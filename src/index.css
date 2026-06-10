@@ -1,9 +1,64 @@
-/* 전역 Poppins 폰트 적용 */
+:root {
+  /* 배경 그라디언트 */
+  --gradient-bg: linear-gradient(
+    116.82deg,
+    #FFFFFF 0%,
+    #E9EEFF 32.35%,
+    #FBF6FF 54.76%,
+    #E4ECFF 83.93%,
+    #E0E9FF 98.26%,
+    #D3D6FC 100%
+  );
+
+  /* 메인 컬러 */
+  --Main-00: #f8fdff;
+  --Main-01: #f1fbff;
+  --Main-02: #c5eeff;
+  --Main-03: #96dfff;
+  --Main-04: #63c3ff;
+  --Main-05: #229cff;  /* primary */
+  --Main-06: #057dee;
+  --Main-07: #084cb2;
+  --Main-08: #0a356d;
+
+  /* 그레이스케일 */
+  --gray-white: #FFFFFF;
+  --gray-01: #FBFBFB;
+  --gray-02: #F0F2F3;
+  --gray-03: #CACDCF;
+  --gray-04: #ADB1B4;
+  --gray-05: #808386;
+  --gray-06: #575A5F;
+  --gray-07: #343537;
+  --gray-08: #242527;
+  --gray-black: #101010;
+  --gray-white-0: #FFFFFF00;
+
+  /* 폰트 패밀리 */
+  --font-base: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* 폰트 크기 */
+  --text-display: 48px;
+  --text-heading: 40px;
+  --text-title:   36px;
+  --text-body1:   24px;
+  --text-body2:   20px;
+  --text-body3:   16px;
+  --text-body4:   14px;
+  --text-body5:   12px;
+
+  /* 폰트 웨이트 */
+  --weight-bold:     700;  /* B */
+  --weight-semibold: 600;
+  --weight-medium:   500;  /* M */
+  --weight-regular:  400;  /* R */
+}
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-base);
 }
 
 html, body, #root {

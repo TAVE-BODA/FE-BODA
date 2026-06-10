@@ -3,46 +3,46 @@
   justify-content: center;
   align-items: center;
   width: 100%;
-  min-width: 1440px; 
-  height: 100vh;     
-  background: linear-gradient(116.82deg, #FFFFFF 0%, #E9EEFF 32.35%, #FBF6FF 54.76%, #E4ECFF 83.93%, #E0E9FF 98.26%, #D3D6FC 100%);
+  min-width: 1440px;
+  height: 100vh;
+  background: var(--gradient-bg);
   box-sizing: border-box;
   position: relative;
 }
 
 .login-card {
-  background-color: #ffffff;
-  width: 700px;        
-  padding: 90px 55px;  
-  border-radius: 24px; 
-  box-shadow: 0 30px 60px rgba(211, 214, 252, 0.35); 
+  background-color: var(--gray-white);
+  width: 700px;
+  padding: 90px 55px;
+  border-radius: 24px;
+  box-shadow: 0 30px 60px rgba(211, 214, 252, 0.35);
   text-align: center;
   box-sizing: border-box;
   z-index: 10;
 }
 
 .login-logo-area {
-  margin-bottom: 50px; 
+  margin-bottom: 50px;
 }
 
 .login-logo {
-  height: 50px;        
+  height: 50px;
   object-fit: contain;
 }
 
 .login-text-area h2 {
-  font-size: 35px;     
-  font-weight: 700;
-  color: #333333;
+  font-size: var(--text-title);
+  font-weight: var(--weight-bold);
+  color: var(--gray-07);
   margin-bottom: 20px;
   letter-spacing: -0.5px;
 }
 
 .login-text-area p {
-  font-size: 20px;     
-  line-height: 1.65;   
-  color: #555555;      
-  margin-bottom: 50px; 
+  font-size: var(--text-body2);
+  line-height: 1.65;
+  color: var(--gray-06);
+  margin-bottom: 50px;
 }
 
 .kakao-login-btn {
@@ -66,13 +66,13 @@
 
 .login-footer-divider {
   height: 2px;
-  background-color: #f1f3f7;
+  background-color: var(--gray-02);
   margin-bottom: 35px;
 }
 
 .login-footer-text p {
-  font-size: 17px;   
-  color: #999999;
-  margin: 8px 0;      
+  font-size: var(--text-body3);
+  color: var(--gray-04);
+  margin: 8px 0;
   letter-spacing: -0.3px;
 }
