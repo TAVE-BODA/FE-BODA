@@ -1,0 +1,360 @@
+/* ── 페이지 컨테이너 ──────────────────────────────── */
+.upload-page {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  min-width: 1440px;
+  height: 100vh;
+  background: var(--gradient-bg);
+  padding: 100px 0 60px;
+  box-sizing: border-box;
+}
+
+.upload-header {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+}
+
+/* ── 메인 영역 (홈페이지와 동일한 구조) ─────────── */
+.upload-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin: auto;
+  width: 100%;
+}
+
+.upload-character-area {
+  margin-bottom: 30px;
+}
+
+.upload-title {
+  font-size: var(--text-heading);
+  font-weight: var(--weight-bold);
+  color: var(--gray-black);
+  letter-spacing: -0.5px;
+  margin-bottom: 24px;
+}
+
+.upload-title__highlight {
+  color: var(--Main-05);
+}
+
+.upload-subtitle {
+  font-size: var(--text-body3);
+  font-weight: var(--weight-regular);
+  color: var(--gray-06);
+  margin-bottom: 32px;
+}
+
+/* ── 업로드 박스 ──────────────────────────────────── */
+.upload-box {
+  display: flex;
+  width: 990px;
+  max-width: 90%;
+  height: 256px;
+  padding: 36.583px;
+  justify-content: center;
+  align-items: center;
+  gap: 36.583px;
+  border-radius: 60px;
+  border: 1px dashed var(--Main-06);
+  background: #F2F9FF;
+  backdrop-filter: blur(12.8px);
+  transition: background 0.2s ease;
+  box-sizing: border-box;
+}
+
+.upload-box--dragging {
+  background: rgba(235, 246, 255, 0.65);
+}
+
+/* 빈 상태 */
+.upload-box__empty {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 36px 40px;
+  cursor: pointer;
+  width: 100%;
+  justify-content: center;
+}
+
+.upload-box__icon {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+}
+
+.upload-box__empty-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.upload-box__drop-text {
+  font-size: var(--text-body2);
+  font-weight: var(--weight-semibold);
+  color: var(--Main-06);
+}
+
+.upload-box__hint {
+  font-size: var(--text-body4);
+  color: var(--gray-04);
+}
+
+/* 파일 있는 상태 */
+.upload-box__content {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 20px 24px 16px;
+  gap: 16px;
+}
+
+.upload-box__files {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 4px;
+}
+
+.upload-box__files::-webkit-scrollbar {
+  display: none;
+}
+
+.upload-box__add-btn {
+  width: 88px;
+  height: 88px;
+  border-radius: 12px;
+  border: 2px dashed var(--gray-03);
+  background: none;
+  font-size: 28px;
+  color: var(--gray-04);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.upload-box__add-btn:hover {
+  border-color: var(--Main-05);
+  color: var(--Main-05);
+}
+
+.upload-box__bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.upload-box__notice {
+  font-size: var(--text-body4);
+  color: var(--gray-05);
+}
+
+.upload-box__submit {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: var(--Main-05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.upload-box__submit:hover {
+  background: var(--Main-06);
+  transform: scale(1.06);
+}
+
+/* ── 파일 썸네일 ──────────────────────────────────── */
+.file-thumb {
+  position: relative;
+  width: 88px;
+  height: 88px;
+  border-radius: 12px;
+  overflow: visible;
+  flex-shrink: 0;
+}
+
+.file-thumb__remove {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  z-index: 1;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: var(--Main-05);
+  color: var(--gray-white);
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.file-thumb__remove:hover {
+  background: var(--Main-07);
+}
+
+.file-thumb__preview {
+  width: 88px;
+  height: 88px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.file-thumb__placeholder {
+  width: 88px;
+  height: 88px;
+  border-radius: 12px;
+  background: var(--gray-02);
+}
+
+/* ── 분석중 화면 ──────────────────────────────────── */
+.upload-main--analyzing {
+  gap: 20px;
+}
+
+.upload-analyzing__title {
+  font-size: var(--text-body1);
+  font-weight: var(--weight-bold);
+  color: var(--gray-07);
+}
+
+.upload-analyzing__desc {
+  font-size: var(--text-body3);
+  color: var(--gray-05);
+}
+
+.upload-spinner {
+  display: block;
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--Main-02);
+  border-top-color: var(--Main-06);
+  border-radius: 50%;
+  animation: upload-spin 0.8s linear infinite;
+}
+
+@keyframes upload-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── 완료 팝업 ───────────────────────────────────── */
+.upload-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.upload-popup {
+  background: var(--gray-white);
+  border-radius: 32px;
+  padding: 52px 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  min-width: 420px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+}
+
+.upload-popup__title {
+  font-size: var(--text-body1);
+  font-weight: var(--weight-bold);
+  color: var(--gray-black);
+}
+
+.upload-popup__desc {
+  font-size: var(--text-body3);
+  color: var(--gray-05);
+  text-align: center;
+}
+
+.upload-popup__btn {
+  margin-top: 8px;
+  padding: 14px 52px;
+  border-radius: 60px;
+  border: none;
+  background: var(--Main-06);
+  color: var(--gray-white);
+  font-size: var(--text-body3);
+  font-weight: var(--weight-semibold);
+  font-family: var(--font-base);
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.upload-popup__btn:hover {
+  background: var(--Main-07);
+  transform: scale(1.02);
+}
+
+/* ── 푸터 ────────────────────────────────────────── */
+.upload-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+}
+
+.upload-footer__notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-body3);
+  font-weight: var(--weight-regular);
+  color: var(--gray-06);
+}
+
+.upload-footer__info-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: var(--gray-04);
+  font-size: 13px;
+  font-weight: var(--weight-bold);
+  color: var(--gray-white);
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.upload-footer__logos {
+  width: 100%;
+  max-width: 800px;
+  height: auto;
+  object-fit: contain;
+  opacity: 0.8;
+}
