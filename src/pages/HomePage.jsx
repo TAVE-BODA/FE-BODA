@@ -1,9 +1,9 @@
 import React from 'react';
 import './HomePage.css';
-import characterImg from '../assets/images/home_mainicon.png';
+import Character from '../components/Character';
+import NavBar from '../components/NavBar';
 import checkBtnImg from '../assets/images/home_confirmbutton.png';
 import logosImg from '../assets/images/home_bottomicon.png';
-import bottomTextImg from '../assets/images/home_bottomtext.png';
 
 export default function HomePage() {
   const handleCheckInsurance = () => {
@@ -12,11 +12,15 @@ export default function HomePage() {
 
   return (
     <div className="home-page-container">
-      
+
+      <header className="home-header">
+        <NavBar />
+      </header>
+
       <main className="home-main-content">
         
         <div className="home-character-area">
-          <img src={characterImg} alt="보다 캐릭터" className="home-character" />
+          <Character size="lg" animate />
         </div>
 
         <h1 className="home-title">
@@ -36,7 +40,10 @@ export default function HomePage() {
 
       <footer className="home-footer-area">
         <div className="footer-notice-wrap">
-          <img src={bottomTextImg} alt="BOBO가 정확하게 분석할 수 있는 보험사는 아래와 같아요" className="footer-notice-text-img" />
+          <p className="footer-notice-text">
+            BODA가 정확하게 분석할 수 있는 보험사는 아래와 같아요
+            <span className="footer-notice-info">!</span>
+          </p>
         </div>
         <div className="insurance-logos-wrap">
           <img src={logosImg} alt="지원하는 보험사 로고 목록" className="insurance-logos" />

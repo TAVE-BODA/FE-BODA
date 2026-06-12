@@ -1,4 +1,5 @@
 .home-page-container {
+  position: relative;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -6,9 +7,16 @@
   width: 100%;
   min-width: 1440px;
   height: 100vh;
-  background: linear-gradient(116.82deg, #FFFFFF 0%, #E9EEFF 32.35%, #FBF6FF 54.76%, #E4ECFF 83.93%, #E0E9FF 98.26%, #D3D6FC 100%);
+  background: var(--gradient-bg);
   box-sizing: border-box;
   padding: 100px 0 60px 0;
+}
+
+.home-header {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
 }
 
 .home-main-content {
@@ -24,29 +32,23 @@
   margin-bottom: 30px;
 }
 
-.home-character {
-  height: 200px;
-  object-fit: contain;
-  transform-origin: bottom center;
-  animation: naturalWaddle 3s infinite ease-in-out;
-}
 
 .home-title {
-  font-size: 42px;
-  font-weight: 700;
-  color: #1a1a1a;
+  font-size: var(--text-heading);
+  font-weight: var(--weight-bold);
+  color: var(--gray-black);
   margin-bottom: 24px;
   letter-spacing: -0.5px;
 }
 
 .home-title .highlight {
-  color: #4A90E2;
+  color: var(--Main-05);
 }
 
 .home-subtitle {
-  font-size: 22px;
+  font-size: var(--text-body1);
   line-height: 1.6;
-  color: #666666;
+  color: var(--gray-05);
   margin-bottom: 45px;
 }
 
@@ -82,9 +84,31 @@
   justify-content: center;
 }
 
-.footer-notice-text-img {
-  height: 30px; 
-  object-fit: contain;
+.footer-notice-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-body3);
+  font-weight: var(--weight-regular);
+  color: var(--gray-06);
+  letter-spacing: normal;
+}
+
+.footer-notice-info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: var(--gray-04);
+  font-size: 13px;
+  font-weight: var(--weight-bold);
+  color: var(--gray-white);
+  flex-shrink: 0;
+  line-height: 1;
+  overflow: hidden;
+  vertical-align: middle;
 }
 
 .insurance-logos-wrap {
@@ -101,9 +125,3 @@
   opacity: 0.8;
 }
 
-@keyframes naturalWaddle {
-  0% { transform: rotate(0deg); }
-  25% { transform: rotate(-5.5deg); }
-  75% { transform: rotate(5.5deg); }
-  100% { transform: rotate(0deg); }
-}

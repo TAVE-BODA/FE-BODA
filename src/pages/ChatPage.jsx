@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import './ChatPage.css';
-import avatarImg from '../assets/images/chat_icon.png';
+import Character from '../components/Character';
 import InsuranceModal from '../components/InsuranceModal';
+import NavBar from '../components/NavBar';
 
 export default function ChatPage() {
   const [selectedOption, setSelectedOption] = useState(null);
@@ -46,6 +47,9 @@ export default function ChatPage() {
 
   return (
     <div className="chat-page-container">
+      <header className="chat-header">
+        <NavBar />
+      </header>
       <div className="chat-content-wrap">
         
         {/* --- 대화 상태 1: 첫 화면 --- */}
@@ -53,7 +57,7 @@ export default function ChatPage() {
           <div className="chat-flow-container">
             <div className="chat-message-row">
               <div className="chat-avatar-area">
-                <img src={avatarImg} alt="챗봇 캐릭터" className="chat-avatar" />
+                <Character size="sm" />
               </div>
               <div className="chat-bubble first-bubble">
                 <h3 className="chat-bubble-title">무엇을 먼저 확인해 드릴까요?</h3>
@@ -94,7 +98,7 @@ export default function ChatPage() {
 
             <div className="chat-message-row">
               <div className="chat-avatar-area">
-                <img src={avatarImg} alt="챗봇 캐릭터" className="chat-avatar" />
+                <Character size="sm" />
               </div>
               
               <div className="chatbot-responses-group">
@@ -132,7 +136,7 @@ export default function ChatPage() {
 
             <div className="chat-message-row">
               <div className="chat-avatar-area">
-                <img src={avatarImg} alt="챗봇 캐릭터" className="chat-avatar" />
+                <Character size="sm" />
               </div>
               
               <div className="chatbot-responses-group">
@@ -159,7 +163,7 @@ export default function ChatPage() {
                     <button className="insurance-condition-btn" style={{ justifyContent: 'space-between', minWidth: '240px' }}>
                       파일 업로드하기 <span className="arrow-icon">⟩</span>
                     </button>
-                    <button className="chat-option-btn" style={{ borderColor: '#229CFF', color: '#084CB2', minWidth: '240px', textAlign: 'center' }}>
+                    <button className="chat-option-btn" style={{ borderColor: 'var(--Main-05)', color: 'var(--Main-07)', minWidth: '240px', textAlign: 'center' }}>
                       아직 준비가 안됐어요
                     </button>
                   </div>
@@ -180,7 +184,7 @@ export default function ChatPage() {
 
             <div className="chat-message-row">
               <div className="chat-avatar-area">
-                <img src={avatarImg} alt="챗봇 캐릭터" className="chat-avatar" />
+                <Character size="sm" />
               </div>
               
               <div className="chatbot-responses-group">
@@ -207,7 +211,7 @@ export default function ChatPage() {
                     <button className="insurance-condition-btn" style={{ justifyContent: 'space-between', minWidth: '240px' }}>
                       파일 업로드하기 <span className="arrow-icon">⟩</span>
                     </button>
-                    <button className="chat-option-btn" style={{ borderColor: '#229CFF', color: '#084CB2', minWidth: '240px', textAlign: 'center' }}>
+                    <button className="chat-option-btn" style={{ borderColor: 'var(--Main-05)', color: 'var(--Main-07)', minWidth: '240px', textAlign: 'center' }}>
                       나중에 올릴게요
                     </button>
                   </div>
