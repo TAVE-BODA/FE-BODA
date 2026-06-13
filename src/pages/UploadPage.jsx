@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import './UploadPage.css';
 import Character from '../components/Character';
@@ -16,7 +17,7 @@ const STEP = {
 };
 
 export default function UploadPage() {
-
+  const navigate = useNavigate();
   const [step, setStep] = useState(STEP.CERT_UPLOAD);
   const [certFiles, setCertFiles]   = useState([]);
   const [termsFiles, setTermsFiles] = useState([]);
@@ -61,7 +62,7 @@ export default function UploadPage() {
 
   const handlePopupNext = () => {
     if (step === STEP.CERT_DONE)  setStep(STEP.TERMS_UPLOAD);
-    if (step === STEP.TERMS_DONE) { /* TODO: 결과 페이지로 이동 */ }
+    if (step === STEP.TERMS_DONE) { navigate('/result'); }
   };
 
   return (
@@ -141,12 +142,32 @@ export default function UploadPage() {
 
       {isAnalyzing && (
         <main className="upload-main upload-main--analyzing">
-          <Character size="md" animate />
-          <h2 className="upload-analyzing__title">
-            {isCert ? '보험증권' : '보험약관'}을 분석하고 있어요
-          </h2>
-          <p className="upload-analyzing__desc">잠시만 기다려주세요...</p>
-          <span className="upload-spinner" />
+          <div className="upload-analyzing__top">
+            <Character size="lg" animate />
+            <h2 className="upload-analyzing__title">
+              <span className="upload-analyzing__highlight">보다</span>가 열심히 읽고 있어요
+            </h2>
+          </div>
+          <div className="upload-analyzing__doc-card">
+            <p className="upload-analyzing__doc-title">
+              {isCert ? '보험 증권' : '보험 약관'}
+            </p>
+            <div className="upload-analyzing__skeleton-group">
+              <div className="upload-analyzing__skeleton upload-analyzing__skeleton--short" />
+              <div className="upload-analyzing__skeleton upload-analyzing__skeleton--long" />
+              <div className="upload-analyzing__skeleton upload-analyzing__skeleton--mid" />
+            </div>
+            <div className="upload-analyzing__skeleton-group">
+              <div className="upload-analyzing__skeleton upload-analyzing__skeleton--short" />
+              <div className="upload-analyzing__skeleton upload-analyzing__skeleton--long" />
+              <div className="upload-analyzing__skeleton upload-analyzing__skeleton--mid" />
+            </div>
+            <div className="upload-analyzing__skeleton-group">
+              <div className="upload-analyzing__skeleton upload-analyzing__skeleton--short" />
+              <div className="upload-analyzing__skeleton upload-analyzing__skeleton--long" />
+              <div className="upload-analyzing__skeleton upload-analyzing__skeleton--mid" />
+            </div>
+          </div>
         </main>
       )}
 
