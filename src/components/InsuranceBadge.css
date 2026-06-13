@@ -1,0 +1,66 @@
+.insurance-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1.5px solid var(--badge-border);
+  background: var(--badge-bg);
+  color: var(--badge-text);
+  font-size: var(--text-body5);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+  line-height: 1;
+  cursor: default;
+  user-select: none;
+}
+
+.insurance-badge--bold {
+  font-size: var(--text-body4);
+  font-weight: var(--weight-bold);
+  padding: 7px 16px;
+}
+
+.insurance-badge__info {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid var(--badge-border);
+  font-size: 10px;
+  font-weight: var(--weight-bold);
+  font-style: italic;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.insurance-badge__tooltip {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--gray-08);
+  color: var(--gray-white);
+  font-size: var(--text-body5);
+  font-weight: var(--weight-regular);
+  font-style: normal;
+  padding: 8px 14px;
+  border-radius: 10px;
+  white-space: nowrap;
+  z-index: 200;
+  pointer-events: none;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+}
+
+.insurance-badge__tooltip::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-bottom-color: var(--gray-08);
+}
