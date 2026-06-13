@@ -1,0 +1,193 @@
+.detail-card {
+  border: 1.5px solid var(--card-color);
+  border-radius: 20px;
+  overflow: visible;
+  background: var(--gray-white);
+}
+
+/* ── 헤더 ─────────────────────────────────── */
+.detail-card__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 28px 16px;
+}
+
+.detail-card__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--card-color);
+  flex-shrink: 0;
+}
+
+.detail-card__company {
+  font-size: var(--text-body2);
+  font-weight: var(--weight-bold);
+  color: var(--gray-black);
+  flex: 1;
+}
+
+.detail-card__period {
+  font-size: var(--text-body5);
+  color: var(--gray-04);
+  white-space: nowrap;
+}
+
+/* ── 행 공통 ──────────────────────────────── */
+.detail-row {
+  display: flex;
+  align-items: center;
+  padding: 14px 28px;
+  border-top: 1px solid var(--gray-02);
+  gap: 12px;
+}
+
+.detail-card__body {
+  padding-bottom: 8px;
+}
+
+.detail-row__label {
+  flex: 1;
+  font-size: var(--text-body4);
+  color: var(--gray-07);
+}
+
+/* ── 단순 행 ──────────────────────────────── */
+.detail-row__amount {
+  font-size: var(--text-body4);
+  font-weight: var(--weight-medium);
+  color: var(--gray-black);
+  white-space: nowrap;
+}
+
+.detail-row__amount--bold {
+  font-weight: var(--weight-bold);
+}
+
+/* ── 약관 필요 ────────────────────────────── */
+.detail-row__needs-terms {
+  font-size: var(--text-body4);
+  font-weight: var(--weight-medium);
+  color: #F5A623;
+  white-space: nowrap;
+}
+
+/* ── 컬럼 헤더 행 ─────────────────────────── */
+.detail-row--col-header {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  background: var(--gray-02);
+}
+
+.detail-row__col-head {
+  width: 130px;
+  text-align: right;
+  font-size: var(--text-body5);
+  font-weight: var(--weight-semibold);
+  color: var(--gray-05);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* ── 섹션 행 ──────────────────────────────── */
+.detail-row--section {
+  background: var(--gray-02);
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.detail-row__section-label {
+  flex: 1;
+  font-size: var(--text-body4);
+  font-weight: var(--weight-semibold);
+  color: var(--gray-07);
+}
+
+.detail-row__col-head--section {
+  font-size: var(--text-body5);
+  font-weight: var(--weight-semibold);
+  color: var(--gray-05);
+}
+
+/* ── 컬럼 데이터 행 ───────────────────────── */
+.detail-row--col-data {
+  align-items: center;
+}
+
+.detail-row__col-val {
+  width: 130px;
+  text-align: right;
+  font-size: var(--text-body4);
+  font-weight: var(--weight-medium);
+  color: var(--gray-black);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.detail-row__col-val--active {
+  color: var(--Main-05);
+  font-weight: var(--weight-semibold);
+}
+
+/* ── 툴팁 ─────────────────────────────────── */
+.detail-tooltip-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.detail-tooltip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 1.5px solid var(--gray-03);
+  font-size: 9px;
+  font-weight: var(--weight-bold);
+  font-style: italic;
+  color: var(--gray-04);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.detail-tooltip-bubble {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 8px);
+  transform: translateY(-50%);
+  background: var(--gray-08);
+  color: var(--gray-white);
+  font-size: var(--text-body5);
+  font-weight: var(--weight-regular);
+  font-style: normal;
+  padding: 8px 12px;
+  border-radius: 10px;
+  white-space: normal;
+  width: 200px;
+  word-break: keep-all;
+  z-index: 200;
+  pointer-events: none;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  line-height: 1.4;
+  text-align: left;
+}
+
+.detail-tooltip-bubble::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  transform: translateY(-50%);
+  border: 6px solid transparent;
+  border-right-color: var(--gray-08);
+}
