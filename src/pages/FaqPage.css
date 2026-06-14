@@ -1,7 +1,6 @@
 .faq-page-container {
   display: flex;
   width: 100%;
-  min-width: 1440px;
   height: 100vh;
   background: var(--gradient-bg);
   box-sizing: border-box;
@@ -10,6 +9,7 @@
 
 .boda-sidebar {
   width: 400px; 
+  min-width: 400px;
   height: 100vh;
   background: transparent;
   border-right: 1px solid var(--Main-01);
@@ -52,14 +52,14 @@
 }
 
 .sidebar-menu-icon {
-  width: 40px;  
-  height: 40px; 
+  width: 42px;  
+  height: 42px; 
   object-fit: contain;
   transition: filter 0.2s ease; 
 }
 
 .sidebar-menu-text {
-  font-size: var(--text-body2); 
+  font-size: var(--text-body1); 
   font-weight: var(--weight-medium);
   color: var(--gray-06);
 }
@@ -81,6 +81,7 @@
 .faq-main-content {
   padding-left: 440px; 
   flex-grow: 1;
+  min-width: 0;
   height: 100vh;
   overflow-y: auto;
   padding-top: 240px; 
@@ -105,7 +106,7 @@
   align-items: center;
   gap: 20px;
   margin-bottom: 35px; 
-  margin-left: -30px;
+  margin-left: -10px;
 }
 
 .faq-title-black-icon {
@@ -219,6 +220,7 @@
 @media screen and (max-width: 1024px) {
   .boda-sidebar {
     width: 80px;
+    min-width: 80px;
   }
   .faq-main-content {
     padding-left: 120px;
@@ -229,15 +231,21 @@
 
 @media screen and (max-width: 768px) {
   .faq-page-container {
-    min-width: 100%;
     flex-direction: column; 
     overflow-y: auto;
+  }
+  .boda-sidebar {
+    position: relative;
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--Main-01);
   }
   .faq-main-content {
     padding-left: 20px;
     padding-right: 20px;
     height: auto;
-    padding-top: 60px;
+    padding-top: 40px;
   }
   .faq-question-text {
     font-size: var(--text-body2);
