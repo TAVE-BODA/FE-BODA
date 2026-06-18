@@ -3,18 +3,12 @@ import './LoginPage.css';
 import logoImg from '../assets/images/login_bodalogo.png';
 import kakaoBtnImg from '../assets/images/login_kakaotalk.png';
 
-const KAKAO_CLIENT_ID = import.meta.env.VITE_KAKAO_CLIENT_ID;
-const KAKAO_REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI;
+// 백엔드가 카카오 인증부터 토큰 교환까지 전부 처리함. 프론트엔드는 이 주소로만 보내면 됨.
+const KAKAO_LOGIN_URL = import.meta.env.VITE_KAKAO_LOGIN_URL;
 
 export default function LoginPage() {
   const handleKakaoLogin = () => {
-    const kakaoAuthUrl =
-      `https://kauth.kakao.com/oauth/authorize` +
-      `?client_id=${KAKAO_CLIENT_ID}` +
-      `&redirect_uri=${encodeURIComponent(KAKAO_REDIRECT_URI)}` +
-      `&response_type=code`;
-
-    window.location.href = kakaoAuthUrl;
+    window.location.href = KAKAO_LOGIN_URL;
   };
 
   return (
