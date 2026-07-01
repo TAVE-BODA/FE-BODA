@@ -74,7 +74,7 @@
 }
 
 .result-bubble-title {
-  font-size: 32px;
+  font-size: 36px;
   font-weight: var(--weight-bold);
   color: var(--Main-06);
   margin-bottom: 14px;
@@ -109,6 +109,19 @@
   font-weight: var(--weight-medium);
   color: var(--Main-08);
   line-height: 1.6;
+}
+
+.result-highlight-label {
+  font-size: var(--text-body1);
+  font-weight: var(--weight-medium);
+  color: var(--Sub-08);
+  margin-bottom: 10px;
+}
+
+.result-highlight-amount {
+  font-size: 42x;
+  font-weight: var(--weight-bold);
+  color: var(--Sub-08);
 }
 
 .result-evidence-list {
@@ -203,4 +216,31 @@
   .result-bubble { max-width: 100%; padding: 22px 28px; }
   .result-evidence-list, .result-followup-area { padding-left: 0; }
   .result-evidence-list { max-width: none; }
+}
+
+/* 보라색 테마 (옵션 2: 예상 보험금) */
+.theme-purple .result-bubble-title {
+  color: #756EC7;
+}
+
+.theme-purple .result-highlight-box {
+  background-color: #928BFF1A; /* 928BFF 8% 투명도 배경 */
+  border: 1px solid #928BFF;
+}
+
+.theme-purple .result-highlight-label {
+  color: #756EC7;
+  font-size: var(--text-body1);
+  font-weight: var(--weight-medium);
+  margin-bottom: 10px;
+}
+
+.theme-purple .result-highlight-amount {
+  color: #756EC7;
+  font-size: 42px;
+  font-weight: var(--weight-bold);
+}
+
+.theme-purple .evidence-amount {
+  color: #756EC7;
 }
