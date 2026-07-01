@@ -5,6 +5,13 @@ import EvidenceCard from '../components/EvidenceCard';
 import characterResult from '../assets/images/characters/character_result2.png';
 import checkBadge from '../assets/images/check-badge.png';
 import checkBadgePurple from '../assets/images/check-badge-purple.png';
+import checkBadgeGreen from '../assets/images/check-badge-green.png';
+
+const BADGE_BY_THEME = {
+  main: checkBadge,
+  purple: checkBadgePurple,
+  green: checkBadgeGreen,
+};
 
 const DUMMY_DATA_BY_OPTION = {
   1: {
@@ -19,7 +26,7 @@ const DUMMY_DATA_BY_OPTION = {
         id: 'ev1',
         tag: '핵심',
         title: '재해랑 질병은 달라요',
-        description: '운동하다 다친 건 외부에서 생긴 사고라서 \'재해\'예요. 보험에선 몸 안에서 생기는 병과 다르게 봐요.',
+        description: "운동하다 다친 건 외부에서 생긴 사고라서 '재해'예요. 보험에선 몸 안에서 생기는 병과 다르게 봐요.",
         clauseRef: '재해분류표 제1항',
       },
       {
@@ -83,6 +90,55 @@ const DUMMY_DATA_BY_OPTION = {
       { number: 4, label: '4. 내 보험의 보장 항목부터 보고 싶어요' },
     ],
   },
+  3: {
+    theme: 'green',
+    userQuestion: '보험금 받으려면 어떤 서류가 필요해요?',
+    resultTitle: '꼭 챙겨야할 서류 4가지에요.',
+    resultSummary: '골절 입원 청구 기준  삼성생명 삼성 팩 건강보험(2604) 기준으로 확인했어요.',
+    highlightType: 'amount',
+    highlightLabel: '퇴원 전에 한번에 받으면 편해요.',
+    highlightAmount: '4가지 서류가 필요해요.',
+    evidences: [
+      {
+        id: 'ev1',
+        tag: '필수',
+        title: '진단서',
+        description: '어떤 재해로 골절 진단을 받았는지 적혀있는 서류예요.',
+        tip: '퇴원 전 담당 의사한테 요청하면 바로 발급돼요.',
+        clauseRef: '삼성 팩 건강보험(2604) 약관 요약서 보험금 청구서류 — 진단 항목',
+      },
+      {
+        id: 'ev2',
+        tag: '필수',
+        title: '입퇴원확인서',
+        description: '언제 입원하고 퇴원했는지 확인해주는 서류예요.',
+        tip: '퇴원 당일 원무과에서 발급받으면 돼요.',
+        clauseRef: '삼성 팩 건강보험(2604) 약관 요약서 보험금 청구서류 — 입원 항목',
+      },
+      {
+        id: 'ev3',
+        tag: '필수',
+        title: '보험금 청구서',
+        description: '삼성생명 양식으로 작성해야 해요.',
+        tip: '삼성생명 앱 또는 홈페이지에서 내려받을 수 있어요.',
+        clauseRef: '삼성 팩 건강보험(2604) 약관 요약서 보험금 청구서류 — 공통 항목',
+      },
+      {
+        id: 'ev4',
+        tag: '필수',
+        title: '신분증',
+        description: '주민등록증이나 운전면허증이면 돼요.',
+        tip: '가족이 대신 청구할 땐 인감증명서도 함께 필요해요.',
+        clauseRef: '삼성 팩 건강보험(2604) 약관 요약서 보험금 청구서류 — 공통 항목',
+      },
+    ],
+    followupOptions: [
+      { number: 0, label: '각 서류 발급받는 방법이 궁금해요 – 진단서  입퇴원확인서  청구서 발급 방법' },
+      { number: 1, label: '1. 청구 가능한지 먼저 알고 싶어요' },
+      { number: 2, label: '2. 얼마나 더 받을 수 있어요?' },
+      { number: 4, label: '4. 내 보험의 보장 항목부터 보고 싶어요' },
+    ],
+  },
 };
 
 export default function ResultPage({ data, onSelectFollowup, onCustomInput }) {
@@ -124,21 +180,21 @@ export default function ResultPage({ data, onSelectFollowup, onCustomInput }) {
 
             <div className="result-highlight-box">
               <img
-                src={theme === 'purple' ? checkBadgePurple : checkBadge}
+                src={BADGE_BY_THEME[theme] || checkBadge}
                 alt=""
                 className="result-check-badge"
               />
               {highlightType === 'amount' ? (
                 <div>
-                  <p className="result-highlight-label">{highlightLabel}</p>
                   <p className="result-highlight-amount">{highlightAmount}</p>
+                  <p className="result-highlight-label">{highlightLabel}</p>
                 </div>
               ) : (
                 <p className="result-highlight-text">
-                  {highlightText.split('\n').map((line, idx) => (
+                  {highlightText.split('\n').map((line, idx, arr) => (
                     <span key={idx}>
                       {line}
-                      {idx < highlightText.split('\n').length - 1 && <br />}
+                      {idx < arr.length - 1 && <br />}
                     </span>
                   ))}
                 </p>
@@ -155,6 +211,7 @@ export default function ResultPage({ data, onSelectFollowup, onCustomInput }) {
               title={item.title}
               amount={item.amount}
               description={item.description}
+              tip={item.tip}
               clauseRef={item.clauseRef}
             />
           ))}

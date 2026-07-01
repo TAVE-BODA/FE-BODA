@@ -244,3 +244,33 @@
 .theme-purple .evidence-amount {
   color: #756EC7;
 }
+
+/* 초록 테마 (옵션 3: 필요 서류) */
+.theme-green .result-bubble-title {
+  color: #249C00;
+}
+
+.theme-green .result-highlight-box {
+  background-color: rgba(175, 234, 124, 0.2);
+  border: 1px solid #AFEA7C;
+}
+
+.theme-green .result-highlight-amount {
+  color: #249C00;
+  font-size: 42px;
+  font-weight: var(--weight-bold);
+  margin-bottom: 6px;
+}
+
+.theme-green .result-highlight-label {
+  color: #249C00;
+  font-size: var(--text-body1);
+  font-weight: var(--weight-medium);
+}
+
+/* 필수 뱃지 - 초록 계열로 오버라이드 */
+.theme-green .evidence-tag {
+  background-color: #F0FDE8;
+  border-color: #AFEA7C;
+  color: #249C00;
+}

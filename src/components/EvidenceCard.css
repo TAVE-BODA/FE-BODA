@@ -43,10 +43,25 @@
   margin-bottom: 14px;
 }
 
+.evidence-amount {
+  font-size: 42px;
+  font-weight: var(--weight-bold);
+  color: var(--gray-black);
+  margin-bottom: 14px;
+}
+
 .evidence-desc {
   font-size: var(--text-body1);
   line-height: 1.7;
   color: var(--gray-black);
+  margin-bottom: 14px;
+}
+
+/* 초록 안내 텍스트 (3번 옵션 전용) */
+.evidence-tip {
+  font-size: var(--text-body1);
+  font-weight: var(--weight-medium);
+  color: #249C00;
   margin-bottom: 22px;
 }
 
@@ -90,13 +105,6 @@
   font-size: var(--text-body2);
   font-weight: var(--weight-medium);
   color: var(--gray-black);
-}
-
-.evidence-amount {
-  font-size: 42px;
-  font-weight: var(--weight-bold);
-  color: var(--gray-black);
-  margin-bottom: 14px;
 }
 
 .evidence-clause-list {

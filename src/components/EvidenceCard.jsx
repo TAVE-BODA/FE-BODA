@@ -4,7 +4,7 @@ import bookmarkIcon from '../assets/images/bookmark-outline.png';
 import docSearchIcon from '../assets/images/doc-search.png';
 import chevronUpIcon from '../assets/images/chevron-up.png';
 
-export default function EvidenceCard({ tag, title, amount, description, clauseRef }) {
+export default function EvidenceCard({ tag, title, amount, description, tip, clauseRef }) {
   const [isOpen, setIsOpen] = useState(true);
 
   return (
@@ -17,6 +17,7 @@ export default function EvidenceCard({ tag, title, amount, description, clauseRe
       <h4 className="evidence-title">{title}</h4>
       {amount && <p className="evidence-amount">{amount}</p>}
       <p className="evidence-desc">{description}</p>
+      {tip && <p className="evidence-tip">{tip}</p>}
 
       <button
         className="evidence-toggle-btn"
