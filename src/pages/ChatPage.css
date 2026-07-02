@@ -261,7 +261,6 @@
   .chat-bubble-text.font-medium { font-size: 16px; }
   .user-bubble { font-size: 16px; padding: 16px 24px; }
 
-  /* 들여쓰기를 없애서 선택지 버튼이 화면 전체 너비를 꽉 채우도록 만듭니다 */
   .chat-options-area {
     padding-left: 0;
     gap: 12px;
@@ -272,4 +271,29 @@
     font-size: 15px;
     padding: 14px 20px;
   }
+}
+
+/* 인라인 style={{ paddingLeft: 0 }} 대체 */
+.chat-no-indent {
+  padding-left: 0;
+  margin-top: 10px;
+}
+
+/* 파일 업로드 버튼 그룹 */
+.chat-upload-btn-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 파일 업로드 버튼 */
+.chat-upload-btn {
+  justify-content: space-between;
+  min-width: 240px;
+}
+
+/* 취소 버튼 */
+.chat-cancel-btn {
+  min-width: 240px;
+  text-align: center;
 }
