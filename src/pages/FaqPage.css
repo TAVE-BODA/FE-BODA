@@ -45,7 +45,7 @@
   padding: 24px 44px; 
   background: none;
   border: none;
-  border-left: 5px solid transparent; 
+  border-right: 5px solid transparent; 
   text-align: left;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -66,7 +66,7 @@
 
 .sidebar-menu-btn.active {
   background-color: #D5D5D533;
-  border-left: 5px solid var(--Main-06); 
+  border-right: 5px solid var(--Main-06); 
 }
 
 .sidebar-menu-btn.active .sidebar-menu-text {
@@ -261,4 +261,91 @@
     min-width: 28px;
     font-size: var(--text-body2);
   }
+}
+
+/* 고객센터 페이지 */
+.cs-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.cs-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-top: 60px;
+  gap: 24px;
+}
+
+.cs-character {
+  width: 300px;
+  height: 300px;
+  object-fit: contain;
+}
+
+.cs-main-text {
+  font-size: var(--text-body1);
+  font-weight: var(--weight-bold);
+  color: var(--gray-black);
+  text-align: center;
+}
+
+.cs-tel {
+  font-size: var(--text-body1);
+  font-weight: var(--weight-regular);
+  color: var(--gray-06);
+  text-align: center;
+}
+
+.cs-hours-card {
+  width: 100%;
+  max-width: 420px;
+  border: 0.5px solid rgba(211, 214, 252, 0.4);
+  border-radius: 24px;
+  overflow: hidden;
+  box-sizing: border-box;
+  background: transparent;
+}
+
+.cs-hours-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 32px;
+  background: transparent;
+  transition: background 0.2s ease;
+}
+
+.cs-hours-row:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.cs-hours-divider {
+  width: 100%;
+  height: 0.5px;
+  background: rgba(211, 214, 252, 0.5);
+}
+
+.cs-hours-label {
+  font-size: var(--text-body2);
+  font-weight: var(--weight-medium);
+  color: var(--gray-05);
+  letter-spacing: 0.01em;
+}
+
+.cs-hours-value {
+  font-size: var(--text-body2);
+  font-weight: var(--weight-medium);
+  color: var(--gray-05);
+}
+
+.cs-hours-closed .cs-hours-label {
+  color: var(--gray-05);
+}
+
+.cs-hours-closed .cs-hours-value {
+  color: var(--gray-05);
+  font-weight: var(--weight-regular);
 }
