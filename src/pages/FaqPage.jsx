@@ -7,6 +7,8 @@ import iconUpload from '../assets/images/side_icon_upload.png';
 import iconResult from '../assets/images/side_icon_result.png';
 import iconPrivacy from '../assets/images/side_icon_privacy.png';
 import iconCoverage from '../assets/images/side_icon_coverage.png';
+import iconCs from '../assets/images/side_icon_cs.png';
+import characterCs from '../assets/images/characters/character_cs.png';
 
 export default function FaqPage() {
   const [currentMenu, setCurrentMenu] = useState('faq');
@@ -18,25 +20,26 @@ export default function FaqPage() {
     { id: 'result', name: '분석 결과', icon: iconResult },
     { id: 'privacy', name: '개인정보 보호', icon: iconPrivacy },
     { id: 'coverage', name: '지원 범위', icon: iconCoverage },
+    { id: 'cs', name: '고객센터', icon: iconCs },
   ];
 
   const contentData = {
     faq: [
-      { 
-        q: "어떤 파일을 올려야 하나요?", 
-        a: "보험증권과 약관 PDF 파일을 올리면 돼요.\n증권만 올려도 보장 내역 확인은 가능해요. 청구 가능 여부가 궁금하다면 약관도 함께 올려줘요.\n파일은 보험사 앱이나 홈페이지에서 받을 수 있어요." 
+      {
+        q: "어떤 파일을 올려야 하나요?",
+        a: "보험증권과 약관 PDF 파일을 올리면 돼요.\n증권만 올려도 보장 내역 확인은 가능해요. 청구 가능 여부가 궁금하다면 약관도 함께 올려줘요.\n파일은 보험사 앱이나 홈페이지에서 받을 수 있어요."
       },
-      { 
-        q: "올린 파일은 어떻게 되나요? 저장되나요?", 
+      {
+        q: "올린 파일은 어떻게 되나요? 저장되나요?",
         a: "PDF 원본은 분석이 끝나면 <b>즉시 삭제</b>돼요.\n분석된 텍스트 내용만 계정에 저장해요. 덕분에 다음에 다시 올리지 않아도 바로 질문할 수 있어요."
       },
-      { 
-        q: "제 보험사가 지원되는지 어떻게 알 수 있나요?", 
-        a: "<b>삼성생명, 한화생명, 교보생명, 삼성화재, 현대해상, DB손해보험</b> 6개사는 높은 정확도로 분석돼요.\n그 외 보험사도 업로드는 가능하지만, 분석 정확도가 낮을 수 있어요." 
+      {
+        q: "제 보험사가 지원되는지 어떻게 알 수 있나요?",
+        a: "<b>삼성생명, 한화생명, 교보생명, 삼성화재, 현대해상, DB손해보험</b> 6개사는 높은 정확도로 분석돼요.\n그 외 보험사도 업로드는 가능하지만, 분석 정확도가 낮을 수 있어요."
       },
-      { 
-        q: "실손보험도 분석해주나요?", 
-        a: "실손은 가입 여부 확인과 기본적인 청구 가능 여부까지 알 수 있어요.\n다만 중복 비례보상 계산은 보다가 정확하게 답하기 어려워요. \n이 경우엔 보험사에 직접 확인하는 게 맞아요." 
+      {
+        q: "실손보험도 분석해주나요?",
+        a: "실손은 가입 여부 확인과 기본적인 청구 가능 여부까지 알 수 있어요.\n다만 중복 비례보상 계산은 보다가 정확하게 답하기 어려워요. \n이 경우엔 보험사에 직접 확인하는 게 맞아요."
       }
     ],
     upload: [
@@ -98,7 +101,7 @@ export default function FaqPage() {
         q: "보다(Boda)가 답하기 어려운 질문은 어떻게 되나요?",
         a: "보다가 정확하게 답하기 어려운 질문은 솔직하게 알려드려요. 이 경우엔 보험사 고객센터 번호도 함께 안내해드려요."
       }
-    ]
+    ],
   };
 
   const handleMenuChange = (menuId) => {
@@ -116,7 +119,6 @@ export default function FaqPage() {
   const parseBoldText = (text) => {
     const regex = /(<b>.*?<\/b>)/g;
     const parts = text.split(regex);
-
     return parts.map((part, idx) => {
       if (part.startsWith('<b>') && part.endsWith('</b>')) {
         const cleanText = part.replace(/<\/?b>/g, '');
@@ -128,52 +130,85 @@ export default function FaqPage() {
 
   return (
     <div className="faq-page-container">
-      
       <Sidebar currentMenu={currentMenu} onMenuChange={handleMenuChange} />
 
       <main className="faq-main-content">
         <div className="faq-content-wrap">
-          
-          <div className="faq-title-area">
-            <img src={activeMenuObj?.icon} alt="타이틀 아이콘" className="faq-title-black-icon" />
-            <h1 className="faq-main-title">{activeMenuObj?.name}</h1>
-          </div>
 
-          <div className="faq-accordion-list">
-            {currentList.map((item, index) => {
-              const isOpen = openIndex === index;
-              return (
-                <div key={index} className={`faq-accordion-item ${isOpen ? 'is-open' : ''}`}>
-                  
-                  <button className="faq-question-btn" onClick={() => handleToggle(index)}>
-                    <span className="faq-question-text">
-                      <span className="q-highlight">Q.</span> {item.q}
-                    </span>
-                    <span className={`faq-arrow-chevron ${isOpen ? 'rotated' : ''}`}></span>
-                  </button>
+          {currentMenu === 'cs' ? (
+            <div className="cs-content">
+              <div className="faq-title-area">
+                <img src={iconCs} alt="고객센터" className="faq-title-black-icon" />
+                <h1 className="faq-main-title">고객센터</h1>
+              </div>
+              <div className="cs-body">
+                <img
+                  src={characterCs}
+                  alt="고객센터 캐릭터"
+                  className="cs-character"
+                />
+                <p className="cs-main-text">더 궁금한 건 고객센터에 물어봐요</p>
+                <p className="cs-tel">Tel. 010-5637-3731</p>
 
-                  <div className={`faq-answer-panel ${isOpen ? 'show' : ''}`}>
-                    <div className="faq-answer-inner">
-                      <span className="a-highlight">A.</span>
-                      <div className="faq-answer-text-block">
-                        {item.a.split('\n').map((line, lIdx) => (
-                          <React.Fragment key={lIdx}>
-                            {parseBoldText(line)}
-                            <br />
-                          </React.Fragment>
-                        ))}
+                <div className="cs-hours-card">
+                  <div className="cs-hours-row">
+                    <span className="cs-hours-label">평일</span>
+                    <span className="cs-hours-value">09:00 - 18:00</span>
+                  </div>
+                  <div className="cs-hours-divider" />
+                  <div className="cs-hours-row">
+                    <span className="cs-hours-label">점심시간</span>
+                    <span className="cs-hours-value">12:00 - 13:00</span>
+                  </div>
+                  <div className="cs-hours-divider" />
+                  <div className="cs-hours-row cs-hours-closed">
+                    <span className="cs-hours-label">주말 · 공휴일</span>
+                    <span className="cs-hours-value">휴무</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="faq-title-area">
+                <img src={activeMenuObj?.icon} alt="타이틀 아이콘" className="faq-title-black-icon" />
+                <h1 className="faq-main-title">{activeMenuObj?.name}</h1>
+              </div>
+
+              <div className="faq-accordion-list">
+                {currentList.map((item, index) => {
+                  const isOpen = openIndex === index;
+                  return (
+                    <div key={index} className={`faq-accordion-item ${isOpen ? 'is-open' : ''}`}>
+                      <button className="faq-question-btn" onClick={() => handleToggle(index)}>
+                        <span className="faq-question-text">
+                          <span className="q-highlight">Q.</span> {item.q}
+                        </span>
+                        <span className={`faq-arrow-chevron ${isOpen ? 'rotated' : ''}`}></span>
+                      </button>
+                      <div className={`faq-answer-panel ${isOpen ? 'show' : ''}`}>
+                        <div className="faq-answer-inner">
+                          <span className="a-highlight">A.</span>
+                          <div className="faq-answer-text-block">
+                            {item.a.split('\n').map((line, lIdx) => (
+                              <React.Fragment key={lIdx}>
+                                {parseBoldText(line)}
+                                <br />
+                              </React.Fragment>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-
-                </div>
-              );
-            })}
-          </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
 
         </div>
       </main>
-
     </div>
   );
 }
