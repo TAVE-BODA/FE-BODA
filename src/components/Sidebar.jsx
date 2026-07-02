@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import logo from '../assets/images/bodalogo.png';
 import iconFaq from '../assets/images/side_icon_faq.png';
 import iconUpload from '../assets/images/side_icon_upload.png';
@@ -8,6 +9,8 @@ import iconCoverage from '../assets/images/side_icon_coverage.png';
 import iconCs from '../assets/images/side_icon_cs.png';
 
 export default function Sidebar({ currentMenu, onMenuChange }) {
+  const navigate = useNavigate();
+
   const menuItems = [
     { id: 'faq', name: '자주 묻는 질문', icon: iconFaq },
     { id: 'upload', name: '파일 업로드', icon: iconUpload },
@@ -19,7 +22,7 @@ export default function Sidebar({ currentMenu, onMenuChange }) {
 
   return (
     <aside className="boda-sidebar">
-      <div className="sidebar-logo-area">
+      <div className="sidebar-logo-area" onClick={() => navigate('/home')} style={{ cursor: 'pointer' }}>
         <img src={logo} alt="boda 로고" className="sidebar-logo-img" />
       </div>
       <nav className="sidebar-nav">
