@@ -286,13 +286,11 @@
   gap: 12px;
 }
 
-/* 파일 업로드 버튼 */
 .chat-upload-btn {
-  justify-content: space-between;
+  justify-content: center;
   min-width: 240px;
 }
 
-/* 취소 버튼 */
 .chat-cancel-btn {
   min-width: 240px;
   text-align: center;

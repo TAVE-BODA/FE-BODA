@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './ChatPage.css';
 import Character from '../components/Character';
 import InsuranceModal from '../components/InsuranceModal';
@@ -36,13 +37,16 @@ const UPLOAD_CONTENT = {
   },
 };
 
-function UploadButtonGroup({ cancelLabel }) {
+function UploadButtonGroup({ cancelLabel, onCancel }) {
   return (
     <div className="chat-upload-btn-group">
       <button className="insurance-condition-btn chat-upload-btn">
-        파일 업로드하기 <span className="arrow-icon">⟩</span>
+        파일 업로드하기
       </button>
-      <button className="chat-option-btn chat-cancel-btn">
+      <button
+        className="chat-option-btn chat-cancel-btn"
+        onClick={onCancel}
+      >
         {cancelLabel}
       </button>
     </div>
@@ -50,9 +54,11 @@ function UploadButtonGroup({ cancelLabel }) {
 }
 
 export default function ChatPage() {
+  const navigate = useNavigate();
   const [selectedOption, setSelectedOption] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalFinished, setIsModalFinished] = useState(false);
+  const [isNotReady, setIsNotReady] = useState(false);
 
   const handleOptionClick = (optionNumber) => {
     setSelectedOption(optionNumber);
@@ -89,7 +95,6 @@ export default function ChatPage() {
                 </p>
               </div>
             </div>
-
             <div className="chat-options-area">
               {Object.entries(OPTION_TEXT).map(([key, label]) => (
                 <button
@@ -112,7 +117,6 @@ export default function ChatPage() {
                 {OPTION_TEXT[selectedOption]}
               </div>
             </div>
-
             <div className="chat-message-row">
               <div className="chat-avatar-area">
                 <Character size="sm" />
@@ -131,7 +135,7 @@ export default function ChatPage() {
                 </div>
                 <div className="chat-no-indent">
                   <button className="insurance-condition-btn" onClick={() => setIsModalOpen(true)}>
-                    보험 조건 입력하기 <span className="arrow-icon">⟩</span>
+                    보험 조건 입력하기
                   </button>
                 </div>
               </div>
@@ -157,9 +161,46 @@ export default function ChatPage() {
                     <p className="chat-bubble-text font-medium">{msg}</p>
                   </div>
                 ))}
-                <div className="chat-no-indent">
-                  <UploadButtonGroup cancelLabel={UPLOAD_CONTENT.confirm.cancelLabel} />
-                </div>
+
+                {!isNotReady && (
+                  <div className="chat-no-indent">
+                    <UploadButtonGroup
+                      cancelLabel={UPLOAD_CONTENT.confirm.cancelLabel}
+                      onCancel={() => setIsNotReady(true)}
+                    />
+                  </div>
+                )}
+
+                {isNotReady && (
+                  <>
+                    <div className="chat-message-row user-row">
+                      <div className="chat-bubble user-bubble">
+                        아직 준비가 안됐어요
+                      </div>
+                    </div>
+                    <div className="chat-bubble chatbot-bubble">
+                      <p className="chat-bubble-text font-medium">
+                        보험증권과 보험약관은 가입하신 각 보험사에서 다운로드할 수 있어요.
+                      </p>
+                    </div>
+                    <div className="chat-no-indent">
+                      <div className="chat-upload-btn-group">
+                        <button
+                          className="insurance-condition-btn chat-upload-btn"
+                          onClick={() => {}}
+                        >
+                          파일 준비됐어요
+                        </button>
+                        <button
+                          className="chat-option-btn chat-cancel-btn"
+                          onClick={() => navigate('/home')}
+                        >
+                          나중에 할게요
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -182,7 +223,10 @@ export default function ChatPage() {
                   <div key={idx} className="chat-bubble chatbot-bubble">
                     <p className="chat-bubble-text font-medium">
                       {msg.split('\n').map((line, i) => (
-                        <React.Fragment key={i}>{line}{i < msg.split('\n').length - 1 && <br />}</React.Fragment>
+                        <React.Fragment key={i}>
+                          {line}
+                          {i < msg.split('\n').length - 1 && <br />}
+                        </React.Fragment>
                       ))}
                     </p>
                   </div>
