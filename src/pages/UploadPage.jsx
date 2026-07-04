@@ -204,7 +204,9 @@ export default function UploadPage() {
 
 function FileThumb({ file, onRemove }) {
   const preview = React.useMemo(
-    () => file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
+    () => (file.type.startsWith('image/') || file.type === 'application/pdf')
+      ? URL.createObjectURL(file)
+      : null,
     [file]
   );
 
@@ -217,9 +219,11 @@ function FileThumb({ file, onRemove }) {
       <button className="file-thumb__remove" onClick={onRemove} aria-label="파일 제거">
         &times;
       </button>
-      {preview
+      {file.type.startsWith('image/') && preview
         ? <img src={preview} alt={file.name} className="file-thumb__preview" />
-        : <div className="file-thumb__placeholder" />
+        : file.type === 'application/pdf' && preview
+          ? <embed src={preview} type="application/pdf" className="file-thumb__preview" />
+          : <div className="file-thumb__placeholder" />
       }
     </div>
   );

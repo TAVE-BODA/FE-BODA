@@ -225,6 +225,7 @@
   height: 88px;
   border-radius: 12px;
   object-fit: cover;
+  pointer-events: none;
 }
 
 .file-thumb__placeholder {
