@@ -1,0 +1,370 @@
+/* ── 페이지 레이아웃 ─────────────────────────────────────── */
+.mypage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 1440px;
+  min-height: 100vh;
+  background: var(--gradient-bg);
+  box-sizing: border-box;
+}
+
+.mypage-header {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+}
+
+.mypage-main {
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 120px 40px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* ── 페이지 타이틀 ───────────────────────────────────────── */
+.mypage-title {
+  font-size: var(--text-body2);
+  font-weight: var(--weight-bold);
+  color: var(--gray-black);
+  letter-spacing: 0.5px;
+}
+
+/* ── 프로필 카드 ─────────────────────────────────────────── */
+.mypage-profile-card {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  background: var(--gray-white);
+  border-radius: 20px;
+  padding: 28px 32px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.mypage-profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--gray-02);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.mypage-profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.mypage-profile-name {
+  font-size: var(--text-body1);
+  font-weight: var(--weight-bold);
+  color: var(--gray-black);
+  line-height: 1.2;
+}
+
+.mypage-profile-nim {
+  font-weight: var(--weight-medium);
+}
+
+.mypage-profile-sub {
+  font-size: var(--text-body4);
+  font-weight: var(--weight-regular);
+  color: var(--gray-05);
+}
+
+.mypage-kakao-btn {
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: none;
+  background: #FEE500;
+  color: #000000;
+  font-size: var(--text-body4);
+  font-weight: var(--weight-semibold);
+  font-family: var(--font-base);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.mypage-kakao-btn:hover {
+  opacity: 0.85;
+}
+
+/* ── 섹션 타이틀 ─────────────────────────────────────────── */
+.mypage-section-title {
+  font-size: var(--text-body2);
+  font-weight: var(--weight-bold);
+  color: var(--gray-black);
+}
+
+/* ── 보험 카드 목록 ──────────────────────────────────────── */
+.mypage-insurance-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ── 보험 카드 ───────────────────────────────────────────── */
+.mypage-insurance-card {
+  background: var(--gray-white);
+  border-radius: 20px;
+  padding: 28px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+/* 카드 헤더 */
+.mypage-card-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.mypage-company-badge {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-body4);
+  font-weight: var(--weight-bold);
+  flex-shrink: 0;
+}
+
+.mypage-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mypage-card-name {
+  font-size: var(--text-body2);
+  font-weight: var(--weight-bold);
+  color: var(--gray-black);
+  line-height: 1.2;
+}
+
+.mypage-card-meta {
+  font-size: var(--text-body5);
+  font-weight: var(--weight-regular);
+  color: var(--gray-05);
+}
+
+/* 서류 목록 */
+.mypage-doc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.mypage-doc-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  background: var(--gray-01);
+  border-radius: 12px;
+}
+
+.mypage-doc-type {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: var(--text-body5);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.mypage-doc-type--cert {
+  background: #EBF4FF;
+  color: #057dee;
+}
+
+.mypage-doc-type--terms {
+  background: #F0EEFF;
+  color: #7C55D8;
+}
+
+.mypage-doc-type--empty {
+  background: var(--gray-02);
+  color: var(--gray-04);
+}
+
+.mypage-doc-filename {
+  flex: 1;
+  font-size: var(--text-body4);
+  font-weight: var(--weight-regular);
+  color: var(--gray-07);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mypage-doc-filename--empty {
+  color: var(--gray-04);
+}
+
+.mypage-doc-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: var(--text-body5);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.mypage-doc-status--complete {
+  background: #E8FAF2;
+  color: #1A9E60;
+}
+
+.mypage-add-doc-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1.5px solid var(--gray-03);
+  background: transparent;
+  color: var(--gray-06);
+  font-size: var(--text-body5);
+  font-weight: var(--weight-medium);
+  font-family: var(--font-base);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.mypage-add-doc-btn:hover {
+  border-color: var(--Main-05);
+  color: var(--Main-05);
+}
+
+/* 상태 바 */
+.mypage-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: var(--text-body5);
+  font-weight: var(--weight-regular);
+}
+
+.mypage-status-bar--complete {
+  background: #EBF6FF;
+}
+
+.mypage-status-bar--partial {
+  background: #FFF6EE;
+}
+
+.mypage-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.mypage-status-dot--complete {
+  background: #229cff;
+}
+
+.mypage-status-dot--partial {
+  background: #F5A623;
+}
+
+.mypage-status-text {
+  color: var(--gray-07);
+  font-weight: var(--weight-medium);
+}
+
+.mypage-status-divider {
+  color: var(--gray-04);
+}
+
+.mypage-status-date {
+  color: var(--gray-05);
+}
+
+/* 액션 버튼 */
+.mypage-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mypage-action-btn {
+  width: 100%;
+  padding: 16px;
+  border-radius: 14px;
+  font-size: var(--text-body3);
+  font-weight: var(--weight-semibold);
+  font-family: var(--font-base);
+  cursor: pointer;
+  transition: opacity 0.15s, background 0.15s;
+  line-height: 1;
+}
+
+.mypage-action-btn--primary {
+  background: var(--Main-05);
+  color: var(--gray-white);
+  border: none;
+}
+
+.mypage-action-btn--primary:hover {
+  background: var(--Main-06);
+}
+
+.mypage-action-btn--secondary {
+  background: transparent;
+  color: var(--gray-06);
+  border: 1.5px solid var(--gray-03);
+}
+
+.mypage-action-btn--secondary:hover {
+  border-color: var(--gray-05);
+  color: var(--gray-07);
+}
+
+/* ── 로그아웃 ────────────────────────────────────────────── */
+.mypage-logout-btn {
+  align-self: center;
+  background: none;
+  border: none;
+  color: var(--gray-04);
+  font-size: var(--text-body4);
+  font-weight: var(--weight-regular);
+  font-family: var(--font-base);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.15s;
+  margin-top: 8px;
+}
+
+.mypage-logout-btn:hover {
+  color: var(--gray-06);
+}
