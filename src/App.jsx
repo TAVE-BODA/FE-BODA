@@ -6,6 +6,7 @@ import ChatPage from './pages/ChatPage';
 import UploadPage from './pages/UploadPage';
 import ResultPage from './pages/ResultPage';
 import DetailPage from './pages/DetailPage';
+import MyPage from './pages/MyPage';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/result" element={<ResultPage />} />
         <Route path="/result/:id" element={<DetailPage />} />
         <Route path="/chat" element={<ChatPage />} />
+        <Route path="/mypage" element={<MyPage />} />
       </Routes>
     </BrowserRouter>
   );
