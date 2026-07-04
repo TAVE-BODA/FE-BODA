@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import './HomePage.css';
 import Character from '../components/Character';
 import NavBar from '../components/NavBar';
@@ -6,8 +7,10 @@ import checkBtnImg from '../assets/images/home_confirmbutton.png';
 import logosImg from '../assets/images/home_bottomicon.png';
 
 export default function HomePage() {
+  const navigate = useNavigate();
+
   const handleCheckInsurance = () => {
-    console.log('내 보험금 확인하기 버튼 클릭됨');
+    navigate('/chat');
   };
 
   return (
