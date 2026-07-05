@@ -8,6 +8,9 @@ import DashboardPage from './pages/DashboardPage';
 import DetailPage from './pages/DetailPage';
 import MyPage from './pages/MyPage';
 import ServiceIntroPage from './pages/ServiceIntroPage';
+import FaqPage from './pages/FaqPage';
+import KakaoCallbackPage from './pages/KakaoCallbackPage';
+import ResultPage from './pages/ResultPage';
 
 function App() {
   return (
@@ -21,6 +24,9 @@ function App() {
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/service" element={<ServiceIntroPage />} />
         <Route path="/mypage" element={<MyPage />} />
+        <Route path="/faq" element={<FaqPage />} />
+        <Route path="/oauth/callback/kakao" element={<KakaoCallbackPage />} />
+        <Route path="/result/:optionNumber" element={<ResultPage />} />
       </Routes>
     </BrowserRouter>
   );

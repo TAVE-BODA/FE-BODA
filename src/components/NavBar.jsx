@@ -1,10 +1,11 @@
 import { useNavigate } from 'react-router-dom';
 import './NavBar.css';
+import { useNavigate } from 'react-router-dom';
 import bodaLogoImg from '../assets/images/bodalogo.png';
 
 const NAV_ITEMS = [
   { label: '서비스 소개', href: '/service' },
-  { label: 'FAQ', href: '#' },
+  { label: 'FAQ', href: '/faq' },
   { label: 'MY PAGE', href: '/mypage' },
 ];
 
