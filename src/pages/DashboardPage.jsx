@@ -3,7 +3,7 @@ import NavBar from '../components/NavBar';
 import Character from '../components/Character';
 import InsuranceBadge from '../components/InsuranceBadge';
 import CoverageCard from '../components/CoverageCard';
-import './ResultPage.css';
+import './DashboardPage.css';
 
 // ── 아이콘 (SVG 인라인) ────────────────────────────────────
 const IconDiagnosis = () => (
@@ -67,7 +67,7 @@ const DUMMY_DATA = {
   noticeBanner: '진단금, 수술비, 입원일당, 골절·재해는 보험사마다 따로 청구해서 모두 받을 수 있어요.',
 };
 
-export default function ResultPage() {
+export default function DashboardPage() {
   const navigate = useNavigate();
   const data = DUMMY_DATA;
 

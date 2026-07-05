@@ -4,7 +4,7 @@ import LoginPage from './pages/LoginPage';
 import HomePage from './pages/HomePage';
 import ChatPage from './pages/ChatPage';
 import UploadPage from './pages/UploadPage';
-import ResultPage from './pages/ResultPage';
+import DashboardPage from './pages/DashboardPage';
 import DetailPage from './pages/DetailPage';
 import MyPage from './pages/MyPage';
 import ServiceIntroPage from './pages/ServiceIntroPage';
@@ -16,7 +16,7 @@ function App() {
         <Route path="/" element={<LoginPage />} />
         <Route path="/home" element={<HomePage />} />
         <Route path="/upload" element={<UploadPage />} />
-        <Route path="/result" element={<ResultPage />} />
+        <Route path="/result" element={<DashboardPage />} />
         <Route path="/result/:id" element={<DetailPage />} />
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/service" element={<ServiceIntroPage />} />
