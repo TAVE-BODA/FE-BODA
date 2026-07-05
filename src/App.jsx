@@ -7,6 +7,7 @@ import UploadPage from './pages/UploadPage';
 import ResultPage from './pages/ResultPage';
 import DetailPage from './pages/DetailPage';
 import MyPage from './pages/MyPage';
+import ServiceIntroPage from './pages/ServiceIntroPage';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/result" element={<ResultPage />} />
         <Route path="/result/:id" element={<DetailPage />} />
         <Route path="/chat" element={<ChatPage />} />
+        <Route path="/service" element={<ServiceIntroPage />} />
         <Route path="/mypage" element={<MyPage />} />
       </Routes>
     </BrowserRouter>

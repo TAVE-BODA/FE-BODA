@@ -5,7 +5,7 @@
 // { type: 'section',     label }
 // { type: 'col-data',    label, col1?, col1Active?, col1Tooltip?, col2?, col2Active?, col2Tooltip? }
 //
-// col1Active / col2Active = true → 파란색 (현재 받을 수 있는 금액)
+// col1Active / col2Active = true -> 파란색 (현재 받을 수 있는 금액)
 
 export const COVERAGE_DETAIL = {
 

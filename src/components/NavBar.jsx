@@ -3,7 +3,7 @@ import './NavBar.css';
 import bodaLogoImg from '../assets/images/bodalogo.png';
 
 const NAV_ITEMS = [
-  { label: '서비스 소개', href: '#' },
+  { label: '서비스 소개', href: '/service' },
   { label: 'FAQ', href: '#' },
   { label: 'MY PAGE', href: '/mypage' },
 ];
