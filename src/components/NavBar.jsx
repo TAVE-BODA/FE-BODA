@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom';
 import './NavBar.css';
-import { useNavigate } from 'react-router-dom';
 import bodaLogoImg from '../assets/images/bodalogo.png';
 
 const NAV_ITEMS = [
