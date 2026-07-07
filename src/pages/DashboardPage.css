@@ -1,0 +1,150 @@
+.result-page {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 1440px;
+  min-height: 100vh;
+  background: var(--gradient-bg);
+  box-sizing: border-box;
+}
+
+.result-header {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+}
+
+/* ── 메인 콘텐츠 ─────────────────────────────────────────── */
+.result-main {
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 120px 40px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* ── 타이틀 영역 ─────────────────────────────────────────── */
+.result-title-area {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.result-title-left {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.result-title-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.result-title {
+  font-size: 32px;
+  font-weight: var(--weight-bold);
+  color: var(--gray-black);
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+
+.result-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-body4);
+  font-weight: var(--weight-regular);
+  color: var(--gray-05);
+  padding-left: 4px;
+}
+
+.result-meta__check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #2BBF7A;
+  color: white;
+  font-size: 11px;
+  font-weight: var(--weight-bold);
+}
+
+.result-report-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: 1.5px solid var(--gray-03);
+  background: transparent;
+  color: var(--gray-06);
+  font-size: var(--text-body4);
+  font-weight: var(--weight-medium);
+  font-family: var(--font-base);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s, color 0.15s;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.result-report-btn:hover {
+  border-color: var(--Main-05);
+  color: var(--Main-05);
+}
+
+/* ── 보험사 필터 뱃지 ────────────────────────────────────── */
+.result-badges {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ── 공지 배너 ───────────────────────────────────────────── */
+.result-notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 22px;
+  border-radius: 14px;
+  border: 1.5px solid #F0D080;
+  background: #FFFBEB;
+}
+
+.result-notice__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #F5A623;
+  color: white;
+  font-size: 13px;
+  font-weight: var(--weight-bold);
+  flex-shrink: 0;
+}
+
+.result-notice__text {
+  font-size: var(--text-body4);
+  font-weight: var(--weight-regular);
+  color: var(--gray-07);
+  line-height: 1.5;
+}
+
+/* ── 보장 카드 그리드 ────────────────────────────────────── */
+.result-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}

@@ -1,0 +1,127 @@
+.home-page-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  min-width: 1440px;
+  height: 100vh;
+  background: var(--gradient-bg);
+  box-sizing: border-box;
+  padding: 100px 0 60px 0;
+}
+
+.home-header {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+}
+
+.home-main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+.home-character-area {
+  margin-bottom: 30px;
+}
+
+
+.home-title {
+  font-size: var(--text-heading);
+  font-weight: var(--weight-bold);
+  color: var(--gray-black);
+  margin-bottom: 24px;
+  letter-spacing: -0.5px;
+}
+
+.home-title .highlight {
+  color: var(--Main-05);
+}
+
+.home-subtitle {
+  font-size: var(--text-body1);
+  line-height: 1.6;
+  color: var(--gray-05);
+  margin-bottom: 45px;
+}
+
+.check-insurance-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  width: 360px;
+  transition: transform 0.2s ease;
+}
+
+.check-insurance-btn:hover {
+  transform: scale(1.03);
+}
+
+.check-insurance-btn img {
+  width: 100%;
+  object-fit: contain;
+}
+
+.home-footer-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-top: 40px;
+}
+
+.footer-notice-wrap {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.footer-notice-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-body3);
+  font-weight: var(--weight-regular);
+  color: var(--gray-06);
+  letter-spacing: normal;
+}
+
+.footer-notice-info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: var(--gray-04);
+  font-size: 13px;
+  font-weight: var(--weight-bold);
+  color: var(--gray-white);
+  flex-shrink: 0;
+  line-height: 1;
+  overflow: hidden;
+  vertical-align: middle;
+}
+
+.insurance-logos-wrap {
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  justify-content: center;
+}
+
+.insurance-logos {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  opacity: 0.8;
+}
+

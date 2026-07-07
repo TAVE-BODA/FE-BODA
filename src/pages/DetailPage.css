@@ -1,0 +1,124 @@
+.detail-page {
+  position: relative;
+  width: 100%;
+  min-width: 1440px;
+  min-height: 100vh;
+  background: var(--gradient-bg);
+  box-sizing: border-box;
+}
+
+.detail-header {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+}
+
+/* ── 메인 ─────────────────────────────────── */
+.detail-main {
+  max-width: 780px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 100px 40px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ── 상단 영역 ────────────────────────────── */
+.detail-top {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.detail-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: 999px;
+  border: 1.5px solid var(--gray-03);
+  background: transparent;
+  color: var(--gray-06);
+  font-size: var(--text-body4);
+  font-weight: var(--weight-medium);
+  font-family: var(--font-base);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.detail-back-btn:hover {
+  border-color: var(--Main-05);
+  color: var(--Main-05);
+}
+
+.detail-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.detail-title {
+  font-size: var(--text-title);
+  font-weight: var(--weight-bold);
+  color: var(--gray-black);
+  letter-spacing: -0.5px;
+}
+
+/* ── 서브타이틀 ───────────────────────────── */
+.detail-subtitle {
+  font-size: var(--text-body3);
+  color: var(--gray-06);
+  padding-left: 2px;
+}
+
+/* ── 카드 목록 ────────────────────────────── */
+.detail-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── 하단 CTA ─────────────────────────────── */
+.detail-cta {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 28px;
+  border-radius: 20px;
+  border: 1.5px solid var(--Main-02);
+  background: var(--Main-00);
+}
+
+.detail-cta__text {
+  flex: 1;
+  font-size: var(--text-body3);
+  font-weight: var(--weight-medium);
+  color: var(--gray-07);
+}
+
+.detail-cta__btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border-radius: 999px;
+  border: none;
+  background: var(--Main-06);
+  color: var(--gray-white);
+  font-size: var(--text-body4);
+  font-weight: var(--weight-semibold);
+  font-family: var(--font-base);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.detail-cta__btn:hover {
+  background: var(--Main-07);
+  transform: scale(1.02);
+}
