@@ -46,26 +46,20 @@
   padding-right: 6px;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 24px;
 }
 
-.modal-scroll-body::-webkit-scrollbar {
-  width: 6px;
-}
-.modal-scroll-body::-webkit-scrollbar-track {
-  background: transparent;
-}
-.modal-scroll-body::-webkit-scrollbar-thumb {
-  background: var(--gray-03);
-  border-radius: 4px;
-}
+.modal-scroll-body::-webkit-scrollbar { width: 6px; }
+.modal-scroll-body::-webkit-scrollbar-track { background: transparent; }
+.modal-scroll-body::-webkit-scrollbar-thumb { background: var(--gray-03); border-radius: 4px; }
 
+/* ── 질문 카드 ── */
 .question-card {
   background-color: var(--gray-white);
   border: 1px solid var(--gray-02);
   border-radius: 24px;
-  padding: 42px 32px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.03);
+  padding: 32px 28px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -74,13 +68,13 @@
 .card-title-row {
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin-bottom: 24px;
+  gap: 12px;
+  margin-bottom: 20px;
 }
 
 .question-number {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   background-color: var(--Main-08);
   color: var(--gray-white);
   border-radius: 50%;
@@ -88,115 +82,320 @@
   align-items: center;
   justify-content: center;
   font-size: var(--text-body3);
-  font-weight: var(--weight-medium);
+  font-weight: var(--weight-bold);
   flex-shrink: 0;
 }
 
 .question-text {
-  font-size: var(--text-body1);
+  font-size: var(--text-body2);
   font-weight: var(--weight-bold);
   color: var(--gray-black);
 }
 
 .required-badge {
   color: #ff6b6b;
-  font-size: var(--text-body3);
+  font-size: 12px;
   font-weight: var(--weight-bold);
-  margin-left: 8px;
+  margin-left: 6px;
 }
 
-.optional-badge {
-  color: var(--gray-04);
+/* ── 서브 타이틀 ── */
+.sub-question-title {
   font-size: var(--text-body3);
   font-weight: var(--weight-bold);
-  margin-left: 8px;
-}
-
-.style-text-input {
-  width: 100%;
-  background-color: var(--gray-01);
-  border: 1px solid var(--gray-02);
-  border-radius: 16px;
-  padding: 22px 24px;
-  font-size: var(--text-body2);
   color: var(--gray-07);
-  outline: none;
-  box-sizing: border-box;
+  margin-bottom: 10px;
+  margin-top: 20px;
 }
 
-.style-text-input::placeholder {
-  color: var(--gray-04);
+.sub-question-title:first-of-type {
+  margin-top: 0;
 }
 
-.tile-grid-4 {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  width: 100%;
-}
-
-.visual-tile {
-  background-color: var(--gray-01);
-  border: 1px solid transparent;
-  border-radius: 16px;
-  padding: 26px 10px;
+/* ── Q1 라디오 카드 ── */
+.radio-card-group {
   display: flex;
   flex-direction: column;
+  gap: 10px;
+}
+
+.radio-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  background-color: var(--gray-01);
+  border: 1.5px solid transparent;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+  text-align: left;
+}
+
+.radio-card:hover {
+  background-color: var(--Main-01);
+  border-color: var(--Main-04);
+}
+
+.radio-card.selected {
+  background-color: var(--Main-01);
+  border-color: var(--Main-05);
+}
+
+.radio-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--gray-03);
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-  cursor: pointer;
-  box-sizing: border-box;
+  flex-shrink: 0;
   transition: all 0.15s ease;
 }
 
-.tile-icon-placeholder {
-  width: 54px;
-  height: 54px;
-  background-color: var(--gray-02);
-  border-radius: 6px;
-}
-
-.tile-label {
-  font-size: var(--text-body2);
-  color: var(--gray-06);
-  font-weight: var(--weight-semibold);
-}
-
-.visual-tile.selected {
-  background-color: var(--Main-01);
+.radio-card.selected .radio-dot {
   border-color: var(--Main-05);
-  color: var(--Main-05);
+  background-color: var(--Main-05);
 }
 
-.visual-tile.selected .tile-label {
-  color: var(--Main-05);
+.radio-dot::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--gray-white);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.radio-card.selected .radio-dot::after {
+  opacity: 1;
+}
+
+.radio-card-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.radio-card-main {
+  font-size: var(--text-body3);
+  font-weight: var(--weight-medium);
+  color: var(--gray-black);
+}
+
+.radio-card.selected .radio-card-main {
+  color: var(--Main-07);
   font-weight: var(--weight-bold);
 }
 
+.radio-card-sub {
+  font-size: 12px;
+  color: var(--gray-04);
+  font-weight: var(--weight-regular);
+}
+
+/* ── Q2 체크박스 카드 ── */
+.checkbox-card-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.checkbox-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  background-color: var(--gray-01);
+  border: 1.5px solid transparent;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+  text-align: left;
+}
+
+.checkbox-card:hover {
+  background-color: var(--Main-01);
+  border-color: var(--Main-04);
+}
+
+.checkbox-card.selected {
+  background-color: var(--Main-01);
+  border-color: var(--Main-05);
+}
+
+.checkbox-box {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 2px solid var(--gray-03);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+  font-size: 13px;
+  color: transparent;
+}
+
+.checkbox-card.selected .checkbox-box {
+  border-color: var(--Main-05);
+  background-color: var(--Main-05);
+  color: var(--gray-white);
+}
+
+.checkbox-card-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.checkbox-card-main {
+  font-size: var(--text-body3);
+  font-weight: var(--weight-medium);
+  color: var(--gray-black);
+}
+
+.checkbox-card.selected .checkbox-card-main {
+  color: var(--Main-07);
+  font-weight: var(--weight-bold);
+}
+
+.checkbox-card-sub {
+  font-size: 12px;
+  color: var(--gray-04);
+}
+
+/* ── 가로 버튼 그룹 (2~3개 선택지) ── */
+.toggle-btn-group {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.toggle-btn {
+  flex: 1;
+  min-width: 120px;
+  padding: 14px 16px;
+  background-color: var(--gray-01);
+  border: 1.5px solid transparent;
+  border-radius: 14px;
+  font-size: var(--text-body3);
+  font-weight: var(--weight-medium);
+  color: var(--gray-06);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.toggle-btn:hover {
+  background-color: var(--Main-01);
+  border-color: var(--Main-04);
+}
+
+.toggle-btn.selected {
+  background-color: var(--Main-01);
+  border-color: var(--Main-05);
+  color: var(--Main-07);
+  font-weight: var(--weight-bold);
+}
+
+/* ── 치아 개수 그리드 ── */
+.teeth-count-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+
+.teeth-count-btn {
+  padding: 12px 6px;
+  background-color: var(--gray-01);
+  border: 1.5px solid transparent;
+  border-radius: 12px;
+  font-size: var(--text-body3);
+  font-weight: var(--weight-medium);
+  color: var(--gray-06);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.teeth-count-btn:hover {
+  background-color: var(--Main-01);
+  border-color: var(--Main-04);
+}
+
+.teeth-count-btn.selected {
+  background-color: var(--Main-01);
+  border-color: var(--Main-05);
+  color: var(--Main-07);
+  font-weight: var(--weight-bold);
+}
+
+.teeth-count-unknown {
+  grid-column: span 3;
+}
+
+/* ── 입원 박수 입력 ── */
+.nights-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.nights-input {
+  width: 100%;
+  background-color: var(--gray-01);
+  border: 1.5px solid var(--gray-02);
+  border-radius: 14px;
+  padding: 14px 50px 14px 18px;
+  font-size: var(--text-body3);
+  color: var(--gray-07);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease;
+}
+
+.nights-input:focus {
+  border-color: var(--Main-05);
+  background-color: var(--Main-01);
+}
+
+.nights-input::placeholder { color: var(--gray-04); }
+
+.nights-unit {
+  position: absolute;
+  right: 18px;
+  font-size: var(--text-body3);
+  font-weight: var(--weight-bold);
+  color: var(--gray-05);
+}
+
+/* ── Q4 날짜 (기존 유지) ── */
 .button-option-group {
   display: flex;
   gap: 12px;
   width: 100%;
 }
 
-.button-option-group .option-btn {
-  flex: 1;
-}
-
 .option-btn {
-  background-color: var(--gray-white);
-  border: 1px solid var(--gray-02);
-  border-radius: 16px;
-  padding: 22px 10px;
-  font-size: var(--text-body2);
+  flex: 1;
+  background-color: var(--gray-01);
+  border: 1.5px solid transparent;
+  border-radius: 14px;
+  padding: 16px 10px;
+  font-size: var(--text-body3);
   color: var(--gray-06);
-  font-weight: var(--weight-semibold);
+  font-weight: var(--weight-medium);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
   box-sizing: border-box;
   transition: all 0.15s ease;
 }
@@ -204,13 +403,13 @@
 .option-btn.selected {
   background-color: var(--Main-01);
   border-color: var(--Main-05);
-  color: var(--Main-05);
+  color: var(--Main-07);
   font-weight: var(--weight-bold);
 }
 
 .calendar-icon {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   object-fit: contain;
 }
 
@@ -221,7 +420,7 @@
   border-radius: 20px;
   padding: 24px;
   box-sizing: border-box;
-  margin-top: 20px;
+  margin-top: 16px;
   box-shadow: 0 10px 30px rgba(34, 156, 255, 0.08);
 }
 
@@ -250,9 +449,7 @@
   transition: background 0.2s;
 }
 
-.cal-nav-btn:hover {
-  background-color: var(--gray-02);
-}
+.cal-nav-btn:hover { background-color: var(--gray-02); }
 
 .calendar-weekdays {
   display: grid;
@@ -271,11 +468,11 @@
 }
 
 .calendar-day-cell {
-  height: 48px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--text-body2);
+  font-size: var(--text-body3);
   font-weight: var(--weight-medium);
   color: var(--gray-03);
 }
@@ -300,12 +497,12 @@
 }
 
 .selected-date-display {
-  margin-top: 18px;
+  margin-top: 16px;
   text-align: center;
   font-size: var(--text-body3);
   color: var(--gray-06);
   border-top: 1px dashed var(--gray-02);
-  padding-top: 14px;
+  padding-top: 12px;
 }
 
 .selected-date-display span {
@@ -316,40 +513,13 @@
 }
 
 .info-sub-text {
-  font-size: var(--text-body4);
-  color: var(--gray-05);
-  margin-top: 16px;
+  font-size: 12px;
+  color: var(--gray-04);
+  margin-top: 12px;
   line-height: 1.5;
 }
 
-.currency-input-box {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 100%;
-  margin-bottom: 14px;
-}
-
-.style-currency-input {
-  width: 100%;
-  background-color: var(--gray-white);
-  border: 1px solid var(--gray-02);
-  border-radius: 16px;
-  padding: 22px 65px 22px 24px;
-  font-size: var(--text-body2);
-  color: var(--gray-07);
-  outline: none;
-  box-sizing: border-box;
-}
-
-.currency-unit {
-  position: absolute;
-  right: 26px;
-  font-size: var(--text-body2);
-  font-weight: var(--weight-bold);
-  color: var(--gray-black);
-}
-
+/* ── 다음으로 버튼 ── */
 .modal-next-btn-container {
   display: flex;
   justify-content: center;
@@ -380,9 +550,7 @@
   cursor: pointer;
 }
 
-.modal-next-btn:not(:disabled):hover {
-  background-color: #0d2e54;
-}
+.modal-next-btn:not(:disabled):hover { background-color: #0d2e54; }
 
 @keyframes fadeIn {
   from { opacity: 0; }
