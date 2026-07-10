@@ -148,7 +148,9 @@ export default function InsuranceModal({ isOpen, onClose, onSubmitSuccess }) {
                   className={`radio-card ${formData.q1 === opt.id ? 'selected' : ''}`}
                   onClick={() => handleField('q1', opt.id)}
                 >
-                  <span className="radio-dot" />
+                  <span className="radio-dot">
+                    {formData.q1 === opt.id && '✓'}
+                  </span>
                   <span className="radio-card-label">
                     <span className="radio-card-main">{opt.label}</span>
                     {opt.desc && <span className="radio-card-sub">{opt.desc}</span>}
@@ -164,7 +166,7 @@ export default function InsuranceModal({ isOpen, onClose, onSubmitSuccess }) {
               <span className="question-number">2</span>
               <span className="question-text">
                 어떤 치료를 받았나요? <span className="required-badge">*필수</span>
-                <span style={{ fontSize: '12px', color: 'var(--gray-04)', fontWeight: 'normal', marginLeft: '6px' }}>중복 선택 가능</span>
+                <span style={{ fontSize: 'var(--text-body4)', color: 'var(--gray-04)', fontWeight: 'normal', marginLeft: '6px' }}>중복 선택 가능</span>
               </span>
             </div>
             <div className="checkbox-card-group">
@@ -193,7 +195,7 @@ export default function InsuranceModal({ isOpen, onClose, onSubmitSuccess }) {
               </div>
 
               <p className="sub-question-title" style={{ marginTop: 0 }}>어떤 병원에 입원하셨나요?</p>
-              <div className="toggle-btn-group" style={{ marginBottom: '20px' }}>
+              <div className="toggle-btn-group" style={{ marginBottom: '16px' }}>
                 {Q3A_HOSPITAL_OPTIONS.map(opt => (
                   <button
                     key={opt.id}
@@ -206,7 +208,7 @@ export default function InsuranceModal({ isOpen, onClose, onSubmitSuccess }) {
               </div>
 
               <p className="sub-question-title">어떤 병실을 사용하셨나요?</p>
-              <div className="toggle-btn-group" style={{ marginBottom: '20px' }}>
+              <div className="toggle-btn-group" style={{ marginBottom: '16px' }}>
                 {Q3A_ROOM_OPTIONS.map(opt => (
                   <button
                     key={opt.id}
@@ -242,7 +244,7 @@ export default function InsuranceModal({ isOpen, onClose, onSubmitSuccess }) {
               </div>
 
               <p className="sub-question-title" style={{ marginTop: 0 }}>어느 부위를 다쳤나요?</p>
-              <div className="toggle-btn-group" style={{ marginBottom: '20px' }}>
+              <div className="toggle-btn-group" style={{ marginBottom: '16px' }}>
                 {Q3B_BODY_OPTIONS.map(opt => (
                   <button
                     key={opt.id}
@@ -278,7 +280,7 @@ export default function InsuranceModal({ isOpen, onClose, onSubmitSuccess }) {
               </div>
 
               <p className="sub-question-title" style={{ marginTop: 0 }}>어떤 치아 치료를 받으셨나요?</p>
-              <div className="toggle-btn-group" style={{ flexWrap: 'wrap', marginBottom: '20px' }}>
+              <div className="toggle-btn-group" style={{ flexWrap: 'wrap', marginBottom: '16px' }}>
                 {Q3C_DENTAL_OPTIONS.map(opt => (
                   <button
                     key={opt.id}
