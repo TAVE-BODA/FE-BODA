@@ -4,7 +4,7 @@ import './ChatPage.css';
 import Character from '../components/Character';
 import InsuranceModal from '../components/InsuranceModal';
 import NavBar from '../components/NavBar';
-import { createChatSession, sendInsuranceCondition } from '../api/chat';
+import { createChatSession } from '../api/chat';
 
 const OPTION_TEXT = {
   1: '1. 청구 가능한지 먼저 알고싶어요',
@@ -38,10 +38,13 @@ const UPLOAD_CONTENT = {
   },
 };
 
-function UploadButtonGroup({ cancelLabel, onCancel }) {
+function UploadButtonGroup({ cancelLabel, onCancel, onUpload }) {
   return (
     <div className="chat-upload-btn-group">
-      <button className="insurance-condition-btn chat-upload-btn">
+      <button
+        className="insurance-condition-btn chat-upload-btn"
+        onClick={onUpload}
+      >
         파일 업로드하기
       </button>
       <button
@@ -60,8 +63,9 @@ export default function ChatPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalFinished, setIsModalFinished] = useState(false);
   const [isNotReady, setIsNotReady] = useState(false);
-  const [chatSessionId, setChatSessionId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [conditionData, setConditionData] = useState(null);
+  const [chatSessionId, setChatSessionId] = useState(null);
 
   const handleOptionClick = (optionNumber) => {
     setSelectedOption(optionNumber);
@@ -71,22 +75,28 @@ export default function ChatPage() {
   const handleModalSubmitSuccess = async (formData) => {
     setIsLoading(true);
     try {
-      // 1단계: 채팅 세션 생성
+      // 채팅 세션 생성
       const session = await createChatSession();
       setChatSessionId(session.chatSessionId);
-
-      // 2단계: 보험 조건 전송
-      const result = await sendInsuranceCondition(session.chatSessionId, formData, selectedOption);
-      console.log('AI 응답:', result);
-
+      setConditionData(formData);
       setIsModalOpen(false);
       setIsModalFinished(true);
     } catch (error) {
-      console.error('API 오류:', error);
+      console.error('세션 생성 오류:', error);
       alert('오류가 발생했어요. 다시 시도해주세요.');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleGoToUpload = () => {
+    navigate('/upload', {
+      state: {
+        chatSessionId,
+        conditionData,
+        selectedOption,
+      },
+    });
   };
 
   const isOption123 = [1, 2, 3].includes(selectedOption);
@@ -158,7 +168,7 @@ export default function ChatPage() {
                     onClick={() => setIsModalOpen(true)}
                     disabled={isLoading}
                   >
-                    보험 조건 입력하기
+                    {isLoading ? '처리 중...' : '보험 조건 입력하기'}
                   </button>
                 </div>
               </div>
@@ -190,6 +200,7 @@ export default function ChatPage() {
                     <UploadButtonGroup
                       cancelLabel={UPLOAD_CONTENT.confirm.cancelLabel}
                       onCancel={() => setIsNotReady(true)}
+                      onUpload={handleGoToUpload}
                     />
                   </div>
                 )}
@@ -210,7 +221,7 @@ export default function ChatPage() {
                       <div className="chat-upload-btn-group">
                         <button
                           className="insurance-condition-btn chat-upload-btn"
-                          onClick={() => navigate('/upload')}
+                          onClick={handleGoToUpload}
                         >
                           파일 준비됐어요
                         </button>
@@ -255,7 +266,10 @@ export default function ChatPage() {
                   </div>
                 ))}
                 <div className="chat-no-indent">
-                  <UploadButtonGroup cancelLabel={UPLOAD_CONTENT.coverage.cancelLabel} />
+                  <UploadButtonGroup
+                    cancelLabel={UPLOAD_CONTENT.coverage.cancelLabel}
+                    onUpload={handleGoToUpload}
+                  />
                 </div>
               </div>
             </div>
