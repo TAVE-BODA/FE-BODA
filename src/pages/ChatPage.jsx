@@ -187,7 +187,7 @@ export default function ChatPage() {
                       <div className="chat-upload-btn-group">
                         <button
                           className="insurance-condition-btn chat-upload-btn"
-                          onClick={() => {}}
+                          onClick={() => navigate('/upload')}
                         >
                           파일 준비됐어요
                         </button>
