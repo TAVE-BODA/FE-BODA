@@ -6,7 +6,7 @@ import Character from '../components/Character';
 import NavBar from '../components/NavBar';
 import logosImg from '../assets/images/home_bottomicon.png';
 import uploadIconSrc from '../assets/icons/upload-icon.svg';
-import { uploadPolicy, uploadTerms } from '../api/upload';
+import { uploadPolicy, uploadTerms, checkPolicyStatus, checkTermsStatus, pollUntilDone } from '../api/upload';
 import { sendInsuranceCondition } from '../api/chat';
 
 const STEP = {
@@ -22,14 +22,13 @@ export default function UploadPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // ChatPage에서 넘어온 데이터
   const { chatSessionId, conditionData, selectedOption } = location.state || {};
 
   const [step, setStep] = useState(STEP.CERT_UPLOAD);
   const [certFiles, setCertFiles]   = useState([]);
   const [termsFiles, setTermsFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading]   = useState(false);
   const fileInputRef = useRef(null);
 
   const isCert         = step.startsWith('cert');
@@ -48,9 +47,9 @@ export default function UploadPage() {
     setActiveFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleDragOver  = (e) => { e.preventDefault(); setIsDragging(true); };
-  const handleDragLeave = ()  => setIsDragging(false);
-  const handleDrop      = (e) => { e.preventDefault(); setIsDragging(false); addFiles(e.dataTransfer.files); };
+  const handleDragOver   = (e) => { e.preventDefault(); setIsDragging(true); };
+  const handleDragLeave  = ()  => setIsDragging(false);
+  const handleDrop       = (e) => { e.preventDefault(); setIsDragging(false); addFiles(e.dataTransfer.files); };
   const handleFileChange = (e) => { addFiles(e.target.files); e.target.value = ''; };
 
   const handleAnalyze = async () => {
@@ -58,18 +57,21 @@ export default function UploadPage() {
     const nextDone      = isCert ? STEP.CERT_DONE      : STEP.TERMS_DONE;
     setStep(nextAnalyzing);
     setIsLoading(true);
+
     try {
       if (isCert) {
-        // 보험증권 업로드
-        await uploadPolicy(activeFiles[0], chatSessionId);
+        // 보험증권 업로드 → analysisId 받기 → 완료될 때까지 폴링
+        const { id } = await uploadPolicy(activeFiles[0], chatSessionId);
+        await pollUntilDone(checkPolicyStatus, id);
       } else {
-        // 보험약관 업로드
-        await uploadTerms(activeFiles[0], chatSessionId);
+        // 보험약관 업로드 → termsDocumentId 받기 → 완료될 때까지 폴링
+        const { id } = await uploadTerms(activeFiles[0], chatSessionId);
+        await pollUntilDone(checkTermsStatus, id);
       }
       setStep(nextDone);
     } catch (error) {
       console.error('업로드 오류:', error);
-      alert('업로드 중 오류가 발생했어요. 다시 시도해주세요.');
+      alert(error.message || '업로드 중 오류가 발생했어요. 다시 시도해주세요.');
       setStep(isCert ? STEP.CERT_UPLOAD : STEP.TERMS_UPLOAD);
     } finally {
       setIsLoading(false);
