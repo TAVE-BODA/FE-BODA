@@ -60,11 +60,9 @@ export default function UploadPage() {
 
     try {
       if (isCert) {
-        // 보험증권 업로드 → analysisId 받기 → 완료될 때까지 폴링
         const { id } = await uploadPolicy(activeFiles[0], chatSessionId);
         await pollUntilDone(checkPolicyStatus, id);
       } else {
-        // 보험약관 업로드 → termsDocumentId 받기 → 완료될 때까지 폴링
         const { id } = await uploadTerms(activeFiles[0], chatSessionId);
         await pollUntilDone(checkTermsStatus, id);
       }
@@ -80,11 +78,12 @@ export default function UploadPage() {
 
   const handlePopupNext = async () => {
     if (step === STEP.CERT_DONE) {
-      // 증권 완료 → 약관 업로드로 이동
+      // 증권 완료 → 약관 업로드로 이동 (isLoading, fileInput 초기화)
+      setIsLoading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
       setStep(STEP.TERMS_UPLOAD);
     }
     if (step === STEP.TERMS_DONE) {
-      // 약관 완료 → 보험 조건 전송 → 결과 페이지 이동
       setIsLoading(true);
       try {
         const result = await sendInsuranceCondition(chatSessionId, conditionData, selectedOption);
