@@ -42,7 +42,7 @@ export const sendInsuranceCondition = async (chatSessionId, formData, selectedOp
 
   const ROOM_TYPE_MAP = {
     single: 'PRIVATE_ROOM',
-    double: 'SEMI_PRIVATE_ROOM',
+    double: 'TWO_THREE_ROOM',
     general: 'GENERAL_ROOM',
   };
 
