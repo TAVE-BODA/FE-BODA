@@ -4,6 +4,7 @@ import './ChatPage.css';
 import Character from '../components/Character';
 import InsuranceModal from '../components/InsuranceModal';
 import NavBar from '../components/NavBar';
+import { createChatSession, sendInsuranceCondition } from '../api/chat';
 
 const OPTION_TEXT = {
   1: '1. 청구 가능한지 먼저 알고싶어요',
@@ -59,15 +60,33 @@ export default function ChatPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalFinished, setIsModalFinished] = useState(false);
   const [isNotReady, setIsNotReady] = useState(false);
+  const [chatSessionId, setChatSessionId] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleOptionClick = (optionNumber) => {
     setSelectedOption(optionNumber);
     if (optionNumber === 4) setIsModalFinished(true);
   };
 
-  const handleModalSubmitSuccess = () => {
-    setIsModalOpen(false);
-    setIsModalFinished(true);
+  const handleModalSubmitSuccess = async (formData) => {
+    setIsLoading(true);
+    try {
+      // 1단계: 채팅 세션 생성
+      const session = await createChatSession();
+      setChatSessionId(session.chatSessionId);
+
+      // 2단계: 보험 조건 전송
+      const result = await sendInsuranceCondition(session.chatSessionId, formData, selectedOption);
+      console.log('AI 응답:', result);
+
+      setIsModalOpen(false);
+      setIsModalFinished(true);
+    } catch (error) {
+      console.error('API 오류:', error);
+      alert('오류가 발생했어요. 다시 시도해주세요.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const isOption123 = [1, 2, 3].includes(selectedOption);
@@ -134,7 +153,11 @@ export default function ChatPage() {
                   </p>
                 </div>
                 <div className="chat-no-indent">
-                  <button className="insurance-condition-btn" onClick={() => setIsModalOpen(true)}>
+                  <button
+                    className="insurance-condition-btn"
+                    onClick={() => setIsModalOpen(true)}
+                    disabled={isLoading}
+                  >
                     보험 조건 입력하기
                   </button>
                 </div>
