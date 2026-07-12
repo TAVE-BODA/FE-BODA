@@ -96,7 +96,7 @@ export default function UploadPage() {
       try {
         const result = await sendInsuranceCondition(chatSessionId, conditionData, selectedOption);
         console.log('AI 응답:', result);
-        navigate(`/result/${selectedOption}`, {
+        navigate(`/result/option/${selectedOption}`, {
           state: { resultData: result },
         });
       } catch (error) {
