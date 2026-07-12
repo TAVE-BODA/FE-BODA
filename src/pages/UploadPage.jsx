@@ -1,11 +1,13 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 import './UploadPage.css';
 import Character from '../components/Character';
 import NavBar from '../components/NavBar';
 import logosImg from '../assets/images/home_bottomicon.png';
 import uploadIconSrc from '../assets/icons/upload-icon.svg';
+import { uploadPolicy, uploadTerms } from '../api/upload';
+import { sendInsuranceCondition } from '../api/chat';
 
 const STEP = {
   CERT_UPLOAD:     'cert-upload',
@@ -18,19 +20,25 @@ const STEP = {
 
 export default function UploadPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // ChatPage에서 넘어온 데이터
+  const { chatSessionId, conditionData, selectedOption } = location.state || {};
+
   const [step, setStep] = useState(STEP.CERT_UPLOAD);
   const [certFiles, setCertFiles]   = useState([]);
   const [termsFiles, setTermsFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef(null);
 
-  const isCert        = step.startsWith('cert');
-  const isUpload      = step === STEP.CERT_UPLOAD    || step === STEP.TERMS_UPLOAD;
-  const isAnalyzing   = step === STEP.CERT_ANALYZING || step === STEP.TERMS_ANALYZING;
-  const isDone        = step === STEP.CERT_DONE      || step === STEP.TERMS_DONE;
-  const activeFiles   = isCert ? certFiles : termsFiles;
+  const isCert         = step.startsWith('cert');
+  const isUpload       = step === STEP.CERT_UPLOAD    || step === STEP.TERMS_UPLOAD;
+  const isAnalyzing    = step === STEP.CERT_ANALYZING || step === STEP.TERMS_ANALYZING;
+  const isDone         = step === STEP.CERT_DONE      || step === STEP.TERMS_DONE;
+  const activeFiles    = isCert ? certFiles : termsFiles;
   const setActiveFiles = isCert ? setCertFiles : setTermsFiles;
-  const hasFiles      = activeFiles.length > 0;
+  const hasFiles       = activeFiles.length > 0;
 
   const addFiles = useCallback((incoming) => {
     setActiveFiles(prev => [...prev, ...Array.from(incoming)]);
@@ -49,20 +57,46 @@ export default function UploadPage() {
     const nextAnalyzing = isCert ? STEP.CERT_ANALYZING : STEP.TERMS_ANALYZING;
     const nextDone      = isCert ? STEP.CERT_DONE      : STEP.TERMS_DONE;
     setStep(nextAnalyzing);
+    setIsLoading(true);
     try {
-      const formData = new FormData();
-      activeFiles.forEach(f => formData.append('files', f));
-      // await api.post(isCert ? '/upload/cert' : '/upload/terms', formData);
-      await new Promise(r => setTimeout(r, 2000)); // TODO: 실제 API 호출로 교체
+      if (isCert) {
+        // 보험증권 업로드
+        await uploadPolicy(activeFiles[0], chatSessionId);
+      } else {
+        // 보험약관 업로드
+        await uploadTerms(activeFiles[0], chatSessionId);
+      }
       setStep(nextDone);
-    } catch {
+    } catch (error) {
+      console.error('업로드 오류:', error);
+      alert('업로드 중 오류가 발생했어요. 다시 시도해주세요.');
       setStep(isCert ? STEP.CERT_UPLOAD : STEP.TERMS_UPLOAD);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handlePopupNext = () => {
-    if (step === STEP.CERT_DONE)  setStep(STEP.TERMS_UPLOAD);
-    if (step === STEP.TERMS_DONE) { navigate('/result'); }
+  const handlePopupNext = async () => {
+    if (step === STEP.CERT_DONE) {
+      // 증권 완료 → 약관 업로드로 이동
+      setStep(STEP.TERMS_UPLOAD);
+    }
+    if (step === STEP.TERMS_DONE) {
+      // 약관 완료 → 보험 조건 전송 → 결과 페이지 이동
+      setIsLoading(true);
+      try {
+        const result = await sendInsuranceCondition(chatSessionId, conditionData, selectedOption);
+        console.log('AI 응답:', result);
+        navigate(`/result/${selectedOption}`, {
+          state: { resultData: result },
+        });
+      } catch (error) {
+        console.error('보험 조건 전송 오류:', error);
+        alert('분석 중 오류가 발생했어요. 다시 시도해주세요.');
+      } finally {
+        setIsLoading(false);
+      }
+    }
   };
 
   return (
@@ -74,7 +108,6 @@ export default function UploadPage() {
 
       {isUpload && (
         <main className="upload-main">
-          {/* 홈페이지와 동일한 캐릭터+타이틀 영역 */}
           <div className="upload-character-area">
             <Character size="lg" animate />
           </div>
@@ -85,7 +118,6 @@ export default function UploadPage() {
             <strong>{isCert ? '보험증권' : '보험약관'}</strong>을 업로드해주세요
           </p>
 
-          {/* 업로드 박스 */}
           <div
             className={[
               'upload-box',
@@ -99,7 +131,7 @@ export default function UploadPage() {
             <input
               ref={fileInputRef}
               type="file"
-              multiple
+              accept=".pdf"
               onChange={handleFileChange}
               style={{ display: 'none' }}
             />
@@ -109,7 +141,7 @@ export default function UploadPage() {
                 <img src={uploadIconSrc} alt="업로드" className="upload-box__icon" />
                 <div className="upload-box__empty-text">
                   <p className="upload-box__drop-text">파일을 여기에 드롭하세요</p>
-                  <p className="upload-box__hint">또는 클릭하여 파일 선택 &middot; 최대 20MB</p>
+                  <p className="upload-box__hint">또는 클릭하여 파일 선택 &middot; PDF만 가능</p>
                 </div>
               </div>
             ) : (
@@ -128,7 +160,12 @@ export default function UploadPage() {
                 </div>
                 <div className="upload-box__bottom">
                   <p className="upload-box__notice">파일을 골랐어요! 분석 후 바로 삭제돼요</p>
-                  <button className="upload-box__submit" onClick={handleAnalyze} aria-label="분석 시작">
+                  <button
+                    className="upload-box__submit"
+                    onClick={handleAnalyze}
+                    disabled={isLoading}
+                    aria-label="분석 시작"
+                  >
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                       <path d="M10 15V5M10 5L5 10M10 5L15 10" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
@@ -181,8 +218,12 @@ export default function UploadPage() {
             <p className="upload-popup__desc">
               {step === STEP.TERMS_DONE ? '이제 보험금을 확인할 수 있어요' : '이번엔 보험약관을 업로드해주세요'}
             </p>
-            <button className="upload-popup__btn" onClick={handlePopupNext}>
-              {step === STEP.TERMS_DONE ? '결과 보러가기' : '다음으로'}
+            <button
+              className="upload-popup__btn"
+              onClick={handlePopupNext}
+              disabled={isLoading}
+            >
+              {isLoading ? '분석 중...' : step === STEP.TERMS_DONE ? '결과 보러가기' : '다음으로'}
             </button>
           </div>
         </div>
