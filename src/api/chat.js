@@ -67,38 +67,35 @@ export const sendInsuranceCondition = async (chatSessionId, formData, selectedOp
 
   const body = {
     questionType,
-    message: questionType, // 빈 문자열 대신 questionType 값으로
+    message: questionType,
     incidentType: INCIDENT_TYPE_MAP[formData.q1],
     treatmentTypes: formData.q2.map(t => TREATMENT_TYPE_MAP[t]).filter(Boolean),
 
-    ...(formData.q2.includes('hospitalized') && {
-      hospitalizationInfo: {
+    // 입원 - 선택 시에만 포함, 미선택 시 null
+    hospitalizationInfo: formData.q2.includes('hospitalized') ? {
         hospitalType: HOSPITAL_TYPE_MAP[formData.q3a_hospital],
         roomType: ROOM_TYPE_MAP[formData.q3a_room],
         hospitalizedNights: Number(formData.q3a_nights) || 0,
-      },
-    }),
+    } : null,
 
-    ...(formData.q2.includes('cast') && {
-      castInfo: {
+    // 깁스 - 선택 시에만 포함, 미선택 시 null
+    castInfo: formData.q2.includes('cast') ? {
         castInjuryPartType: CAST_BODY_MAP[formData.q3b_body],
         castType: CAST_TYPE_MAP[formData.q3b_cast],
-      },
-    }),
+    } : null,
 
-    ...(formData.q2.includes('dental') && {
-      dentalInfo: {
+    // 치아 - 선택 시에만 포함, 미선택 시 null
+    dentalInfo: formData.q2.includes('dental') ? {
         dentalTreatmentTypes: [DENTAL_TYPE_MAP[formData.q3c_dental]].filter(Boolean),
         dentalTreatmentCountType: formData.q3c_count === 'unknown' ? 'UNKNOWN' : 'EXACT_COUNT',
         dentalTreatmentCount: formData.q3c_count === 'unknown' ? 0 : Number(formData.q3c_count),
-      },
-    }),
+    } : null,
 
     treatmentStartDateType: formData.q4_type === 'date' ? 'EXACT_DATE' : 'YEAR_MONTH',
     treatmentStartDate: formData.q4_type === 'date' ? formData.q4_date : null,
     treatmentStartYear: formData.q4_type === 'yearmonth' ? Number(formData.q4_year) : 0,
     treatmentStartMonth: formData.q4_type === 'yearmonth' ? Number(formData.q4_month) : 0,
-  };
+    };
 
   const response = await fetch(`${BASE_URL}/api/chat/sessions/${chatSessionId}/messages`, {
     method: 'POST',
