@@ -65,37 +65,48 @@ export const sendInsuranceCondition = async (chatSessionId, formData, selectedOp
 
   const questionType = QUESTION_TYPE_MAP[selectedOption];
 
+  // 선택한 항목만 포함 (null, undefined 필드 제거)
   const body = {
     questionType,
-    message: questionType,
     incidentType: INCIDENT_TYPE_MAP[formData.q1],
     treatmentTypes: formData.q2.map(t => TREATMENT_TYPE_MAP[t]).filter(Boolean),
 
-    // 입원 - 선택 시에만 포함, 미선택 시 null
-    hospitalizationInfo: formData.q2.includes('hospitalized') ? {
+    // 날짜
+    treatmentStartDateType: formData.q4_type === 'date' ? 'EXACT_DATE' : 'YEAR_MONTH',
+    ...(formData.q4_type === 'date' && {
+      treatmentStartDate: formData.q4_date,
+    }),
+    ...(formData.q4_type === 'yearmonth' && {
+      treatmentStartYear: Number(formData.q4_year),
+      treatmentStartMonth: Number(formData.q4_month),
+    }),
+
+    // 입원 선택 시에만 포함
+    ...(formData.q2.includes('hospitalized') && {
+      hospitalizationInfo: {
         hospitalType: HOSPITAL_TYPE_MAP[formData.q3a_hospital],
         roomType: ROOM_TYPE_MAP[formData.q3a_room],
         hospitalizedNights: Number(formData.q3a_nights) || 0,
-    } : null,
+      },
+    }),
 
-    // 깁스 - 선택 시에만 포함, 미선택 시 null
-    castInfo: formData.q2.includes('cast') ? {
+    // 깁스 선택 시에만 포함
+    ...(formData.q2.includes('cast') && {
+      castInfo: {
         castInjuryPartType: CAST_BODY_MAP[formData.q3b_body],
         castType: CAST_TYPE_MAP[formData.q3b_cast],
-    } : null,
+      },
+    }),
 
-    // 치아 - 선택 시에만 포함, 미선택 시 null
-    dentalInfo: formData.q2.includes('dental') ? {
+    // 치아 선택 시에만 포함
+    ...(formData.q2.includes('dental') && {
+      dentalInfo: {
         dentalTreatmentTypes: [DENTAL_TYPE_MAP[formData.q3c_dental]].filter(Boolean),
         dentalTreatmentCountType: formData.q3c_count === 'unknown' ? 'UNKNOWN' : 'EXACT_COUNT',
         dentalTreatmentCount: formData.q3c_count === 'unknown' ? 0 : Number(formData.q3c_count),
-    } : null,
-
-    treatmentStartDateType: formData.q4_type === 'date' ? 'EXACT_DATE' : 'YEAR_MONTH',
-    treatmentStartDate: formData.q4_type === 'date' ? formData.q4_date : null,
-    treatmentStartYear: formData.q4_type === 'yearmonth' ? Number(formData.q4_year) : 0,
-    treatmentStartMonth: formData.q4_type === 'yearmonth' ? Number(formData.q4_month) : 0,
-    };
+      },
+    }),
+  };
 
   const response = await fetch(`${BASE_URL}/api/chat/sessions/${chatSessionId}/messages`, {
     method: 'POST',
