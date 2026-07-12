@@ -31,20 +31,29 @@ export default function UploadPage() {
   const [isLoading, setIsLoading]   = useState(false);
   const fileInputRef = useRef(null);
 
-  const isCert         = step.startsWith('cert');
-  const isUpload       = step === STEP.CERT_UPLOAD    || step === STEP.TERMS_UPLOAD;
-  const isAnalyzing    = step === STEP.CERT_ANALYZING || step === STEP.TERMS_ANALYZING;
-  const isDone         = step === STEP.CERT_DONE      || step === STEP.TERMS_DONE;
-  const activeFiles    = isCert ? certFiles : termsFiles;
-  const setActiveFiles = isCert ? setCertFiles : setTermsFiles;
-  const hasFiles       = activeFiles.length > 0;
+  const isCert      = step.startsWith('cert');
+  const isUpload    = step === STEP.CERT_UPLOAD    || step === STEP.TERMS_UPLOAD;
+  const isAnalyzing = step === STEP.CERT_ANALYZING || step === STEP.TERMS_ANALYZING;
+  const isDone      = step === STEP.CERT_DONE      || step === STEP.TERMS_DONE;
+  const activeFiles = isCert ? certFiles : termsFiles;
+  const hasFiles    = activeFiles.length > 0;
 
+  // step을 직접 참조해서 증권/약관 파일 구분
   const addFiles = useCallback((incoming) => {
-    setActiveFiles(prev => [...prev, ...Array.from(incoming)]);
-  }, [setActiveFiles]);
+    const files = Array.from(incoming);
+    if (step.startsWith('cert')) {
+      setCertFiles(prev => [...prev, ...files]);
+    } else {
+      setTermsFiles(prev => [...prev, ...files]);
+    }
+  }, [step]);
 
   const removeFile = (index) => {
-    setActiveFiles(prev => prev.filter((_, i) => i !== index));
+    if (isCert) {
+      setCertFiles(prev => prev.filter((_, i) => i !== index));
+    } else {
+      setTermsFiles(prev => prev.filter((_, i) => i !== index));
+    }
   };
 
   const handleDragOver   = (e) => { e.preventDefault(); setIsDragging(true); };
@@ -78,7 +87,6 @@ export default function UploadPage() {
 
   const handlePopupNext = async () => {
     if (step === STEP.CERT_DONE) {
-      // 증권 완료 → 약관 업로드로 이동 (isLoading, fileInput 초기화)
       setIsLoading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
       setStep(STEP.TERMS_UPLOAD);
