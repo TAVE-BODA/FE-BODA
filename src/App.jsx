@@ -26,7 +26,9 @@ function App() {
         <Route path="/mypage" element={<MyPage />} />
         <Route path="/faq" element={<FaqPage />} />
         <Route path="/oauth/callback/kakao" element={<KakaoCallbackPage />} />
-        <Route path="/result/:optionNumber" element={<ResultPage />} />
+        {/* /result/:id(DetailPage)와 경로가 겹쳐서 ResultPage가 안 그려지던 문제로
+            /result/option/:optionNumber로 분리함. UploadPage.jsx의 navigate 경로도 함께 수정됨. */}
+        <Route path="/result/option/:optionNumber" element={<ResultPage />} />
       </Routes>
     </BrowserRouter>
   );
