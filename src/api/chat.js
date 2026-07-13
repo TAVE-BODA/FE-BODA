@@ -16,12 +16,13 @@ export const sendInsuranceCondition = async (chatSessionId, formData, selectedOp
     1: 'CHIP_CLAIM',
     2: 'CHIP_AMOUNT',
     3: 'CHIP_DOCUMENTS',
+    4: 'CHIP_OVERVIEW',
   };
 
   const INCIDENT_TYPE_MAP = {
     injury: 'INJURY',
     sick: 'DISEASE',
-    checkup: 'CHECKUP',
+    checkup: 'CHECKUP_FOUND',
   };
 
   const TREATMENT_TYPE_MAP = {
@@ -37,11 +38,11 @@ export const sendInsuranceCondition = async (chatSessionId, formData, selectedOp
   const HOSPITAL_TYPE_MAP = {
     clinic: 'LOCAL_CLINIC',
     general: 'GENERAL_HOSPITAL',
-    university: 'UNIVERSITY_HOSPITAL',
+    university: 'TERTIARY_HOSPITAL',
   };
 
   const ROOM_TYPE_MAP = {
-    single: 'PRIVATE_ROOM',
+    single: 'SINGLE_ROOM',
     double: 'TWO_THREE_ROOM',
     general: 'GENERAL_ROOM',
   };
@@ -53,12 +54,12 @@ export const sendInsuranceCondition = async (chatSessionId, formData, selectedOp
 
   const CAST_TYPE_MAP = {
     full: 'FULL_CAST',
-    partial: 'PARTIAL_CAST',
+    partial: 'HALF_CAST',
   };
 
   const DENTAL_TYPE_MAP = {
     extraction: 'EXTRACTION',
-    crown: 'CROWN',
+    crown: 'CROWN_IMPLANT',
     filling: 'FILLING',
     root_canal: 'ROOT_CANAL',
   };

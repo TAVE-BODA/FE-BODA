@@ -17,6 +17,50 @@
   right: 0;
 }
 
+/* ── 결과 데이터 없을 때(새로고침/직접 진입) 안내 화면 ─────────── */
+.result-empty-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding-top: 220px;
+  text-align: center;
+}
+
+.result-empty-title {
+  font-size: var(--text-heading);
+  font-weight: var(--weight-bold);
+  color: var(--gray-black);
+}
+
+.result-empty-desc {
+  font-size: var(--text-body3);
+  color: var(--gray-05);
+  line-height: 1.6;
+}
+
+.result-empty-btn {
+  margin-top: 12px;
+  padding: 16px 40px;
+  border-radius: 50px;
+  border: none;
+  background-color: var(--Main-06);
+  color: var(--gray-white);
+  font-size: var(--text-body2);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.result-empty-btn:hover {
+  background-color: var(--Main-07);
+  transform: translateY(-2px);
+}
+
 .result-content-wrap {
   display: flex;
   flex-direction: column;

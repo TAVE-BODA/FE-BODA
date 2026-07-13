@@ -40,25 +40,74 @@ function extractUserQuestion(userMessage) {
   return userMessage.messageContent.split('\n\n')[0].trim();
 }
 
+// reasons를 문장 단위로 각각 카드화하지 않고, [입원]/[수술] 같은 대괄호 라벨 기준으로
+// 치료 유형별 카드 하나로 묶어요. 태그는 문장 내용을 추측하는 게 아니라 대괄호 값
+// 그대로 써서(= 실제 데이터) 오분류 위험이 없게 했어요.
+// - 같은 그룹 문장들은 카드 하나에 리스트로 모음
+// - "찾지 못했어요/확인되지 않았어요" 같은 부정 표현이 있으면 뒤로, 확인된 그룹을 앞으로 정렬
+// - 대괄호가 없는 문장은 "확인된 내용" 카드 하나로 별도 모음
+const NEGATIVE_RESULT_PATTERN = /(찾지 못했|확인되지 않|되지 않았)/;
+
 function buildClaimEvidences(claimGuide) {
   if (!claimGuide) return [];
 
-  const reasonCards = (claimGuide.reasons || []).map((reason, idx) => ({
-    id: `reason-${idx}`,
-    tag: '확인된 내용',
-    title: `확인된 내용 ${idx + 1}`,
-    description: reason,
-    // hasSources: false인 케이스라 clauseRef는 없음 -> EvidenceCard가 토글 버튼을 알아서 숨김
-  }));
+  const groups = []; // [{ label, texts: [] }], 등장 순서 유지
+  const groupIndexByLabel = new Map();
+  const ungroupedTexts = [];
 
-  const cautionCards = (claimGuide.cautions || []).map((caution, idx) => ({
-    id: `caution-${idx}`,
-    tag: '주의',
-    title: '이 점은 꼭 확인하세요',
-    description: caution,
-  }));
+  (claimGuide.reasons || []).forEach((reason) => {
+    const match = reason.match(/^\[([^\]]+)\]\s*/);
+    const cleanText = reason.replace(/^\[[^\]]+\]\s*/, '');
 
-  return [...reasonCards, ...cautionCards];
+    if (!match) {
+      ungroupedTexts.push(cleanText);
+      return;
+    }
+
+    const label = match[1];
+    if (!groupIndexByLabel.has(label)) {
+      groupIndexByLabel.set(label, groups.length);
+      groups.push({ label, texts: [] });
+    }
+    groups[groupIndexByLabel.get(label)].texts.push(cleanText);
+  });
+
+  const groupCards = groups
+    .map((group, idx) => {
+      const isNegative = group.texts.some((t) => NEGATIVE_RESULT_PATTERN.test(t));
+      return {
+        id: `reason-group-${idx}`,
+        tag: group.label,
+        title: isNegative ? `${group.label} 보장을 찾지 못했어요` : `${group.label} 보장이 확인돼요`,
+        description: group.texts,
+        _negative: isNegative, // 정렬용, 카드로 안 넘어감
+      };
+    })
+    .sort((a, b) => Number(a._negative) - Number(b._negative))
+    .map(({ _negative, ...card }) => card);
+
+  const ungroupedCard = ungroupedTexts.length
+    ? [{
+        id: 'reason-ungrouped',
+        tag: '확인된 내용',
+        title: '확인된 내용',
+        description: ungroupedTexts,
+      }]
+    : [];
+
+  // cautions는 여러 개여도 카드 하나에 리스트로 모아서 보여줌
+  const cautions = claimGuide.cautions || [];
+  const cautionCard = cautions.length
+    ? [{
+        id: 'caution',
+        tag: '주의',
+        title: '이 점은 꼭 확인하세요',
+        description: cautions,
+        tone: 'caution',
+      }]
+    : [];
+
+  return [...groupCards, ...ungroupedCard, ...cautionCard];
 }
 
 // amountGuide 실제 구조 (2026-07-12 실응답 기준):
@@ -78,14 +127,18 @@ function buildAmountEvidences(amountGuide) {
     description: item.reason || '',
   }));
 
-  const cautionCards = (amountGuide.cautions || []).map((caution, idx) => ({
-    id: `amount-caution-${idx}`,
-    tag: '주의',
-    title: '이 점은 꼭 확인하세요',
-    description: caution,
-  }));
+  const cautions = amountGuide.cautions || [];
+  const cautionCard = cautions.length
+    ? [{
+        id: 'amount-caution',
+        tag: '주의',
+        title: '이 점은 꼭 확인하세요',
+        description: cautions,
+        tone: 'caution',
+      }]
+    : [];
 
-  return [...itemCards, ...cautionCards];
+  return [...itemCards, ...cautionCard];
 }
 
 // documentGuide 실제 구조 (2026-07-13 실응답 기준):
