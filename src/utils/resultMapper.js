@@ -88,17 +88,30 @@ function buildAmountEvidences(amountGuide) {
   return [...itemCards, ...cautionCards];
 }
 
-// NOTE: CHIP_DOCUMENTS 실제 응답 샘플도 아직 없어서 필드명은 추정치예요.
+// documentGuide 실제 구조 (2026-07-13 실응답 기준):
+// {
+//   documents: [{ name, description, required }],
+//   evidences: [{ chunkId, title }],  // 문서별이 아니라 documentGuide 전체에 공통으로 달려있는 근거
+//   evidenceAvailable: boolean,
+//   notice: string
+// }
 function buildDocumentEvidences(documentGuide) {
   if (!documentGuide) return [];
-  const documents = documentGuide.documents || documentGuide.items || [];
+
+  const { documents = [], evidences: clauseEvidences = [] } = documentGuide;
+
+  // 근거가 문서 하나하나에 매칭되어 내려오는 게 아니라 공통 목록이라,
+  // 중복 제목은 정리해서 각 서류 카드에 동일하게 붙여줌
+  const clauseRef = clauseEvidences.length
+    ? [...new Set(clauseEvidences.map((e) => e.title).filter(Boolean))]
+    : undefined;
+
   return documents.map((doc, idx) => ({
     id: `doc-${idx}`,
     tag: doc.required === false ? '선택' : '필수',
-    title: doc.title || doc.name || `서류 ${idx + 1}`,
+    title: doc.name || `서류 ${idx + 1}`,
     description: doc.description || '',
-    tip: doc.tip,
-    clauseRef: doc.clauseRef,
+    clauseRef,
   }));
 }
 
@@ -144,12 +157,15 @@ export function mapApiResponseToResultView(apiResponse) {
       highlightText = estimatedItems?.[0]?.reason || aiMessage.messageContent;
     }
   } else if (questionType === 'CHIP_DOCUMENTS' && aiMessage.documentGuide) {
+    const { documents = [], notice } = aiMessage.documentGuide;
     highlightType = 'amount';
-    highlightLabel = aiMessage.documentGuide.label || '필요 서류';
-    highlightAmount = aiMessage.documentGuide.count
-      ? `${aiMessage.documentGuide.count}가지 서류가 필요해요.`
+    highlightLabel = notice || '필요 서류를 확인했어요';
+    highlightAmount = documents.length
+      ? `${documents.length}가지 서류가 필요해요.`
       : aiMessage.messageContent;
-    resultTitle = aiMessage.messageContent;
+    // messageContent는 줄바꿈 포함 긴 안내문이라 제목에 그대로 넣으면 깨져 보여서
+    // 짧은 고정 문구로 대체 (문서 개수가 없을 때만 원문으로 폴백)
+    resultTitle = documents.length ? '꼭 챙겨야 할 서류예요.' : aiMessage.messageContent;
     evidences = buildDocumentEvidences(aiMessage.documentGuide);
   } else {
     // usedFallback === true 이거나 해당 guide 필드가 null인 경우
