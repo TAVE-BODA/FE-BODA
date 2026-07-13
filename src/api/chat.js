@@ -15,7 +15,7 @@ export const sendInsuranceCondition = async (chatSessionId, formData, selectedOp
   const QUESTION_TYPE_MAP = {
     1: 'CHIP_CLAIM',
     2: 'CHIP_AMOUNT',
-    3: 'CHIP_DOCUMENT',
+    3: 'CHIP_DOCUMENTS',
   };
 
   const INCIDENT_TYPE_MAP = {
