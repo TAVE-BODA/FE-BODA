@@ -4,7 +4,7 @@ import bookmarkIcon from '../assets/images/bookmark-outline.png';
 import docSearchIcon from '../assets/images/doc-search.png';
 import chevronUpIcon from '../assets/images/chevron-up.png';
 
-export default function EvidenceCard({ tag, title, amount, description, tip, clauseRef }) {
+export default function EvidenceCard({ tag, title, amount, description, tip, clauseRef, tone = 'default' }) {
   const [isOpen, setIsOpen] = useState(true);
 
   return (
@@ -13,10 +13,29 @@ export default function EvidenceCard({ tag, title, amount, description, tip, cla
         <img src={bookmarkIcon} alt="" />
       </button>
 
-      {tag && <span className="evidence-tag">{tag}</span>}
+      {tag && (
+        <span
+          className={[
+            'evidence-tag',
+            tone === 'caution' ? 'evidence-tag--caution' : '',
+          ].filter(Boolean).join(' ')}
+        >
+          {tag}
+        </span>
+      )}
       <h4 className="evidence-title">{title}</h4>
       {amount && <p className="evidence-amount">{amount}</p>}
-      <p className="evidence-desc">{description}</p>
+
+      {Array.isArray(description) ? (
+        <ul className="evidence-desc-list">
+          {description.map((line, idx) => (
+            <li key={idx}>{line}</li>
+          ))}
+        </ul>
+      ) : (
+        <p className="evidence-desc">{description}</p>
+      )}
+
       {tip && <p className="evidence-tip">{tip}</p>}
 
       {clauseRef && (
