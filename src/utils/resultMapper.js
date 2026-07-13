@@ -2,7 +2,7 @@
 const THEME_BY_QUESTION_TYPE = {
   CHIP_CLAIM: 'main',
   CHIP_AMOUNT: 'purple',
-  CHIP_DOCUMENT: 'green',
+  CHIP_DOCUMENTS: 'green',
 };
 
 // claimGuide.claimStatus -> 말풍선 타이틀
@@ -26,7 +26,7 @@ const FOLLOWUP_OPTIONS_BY_QUESTION_TYPE = {
     { number: 3, label: '3. 필요 서류를 먼저 알고 싶어요' },
     { number: 4, label: '4. 내 보험의 보장 항목부터 보고 싶어요' },
   ],
-  CHIP_DOCUMENT: [
+  CHIP_DOCUMENTS: [
     { number: 1, label: '1. 청구 가능한지 먼저 알고 싶어요' },
     { number: 2, label: '2. 얼마나 더 받을 수 있어요?' },
     { number: 4, label: '4. 내 보험의 보장 항목부터 보고 싶어요' },
@@ -88,7 +88,7 @@ function buildAmountEvidences(amountGuide) {
   return [...itemCards, ...cautionCards];
 }
 
-// NOTE: CHIP_DOCUMENT 실제 응답 샘플도 아직 없어서 필드명은 추정치예요.
+// NOTE: CHIP_DOCUMENTS 실제 응답 샘플도 아직 없어서 필드명은 추정치예요.
 function buildDocumentEvidences(documentGuide) {
   if (!documentGuide) return [];
   const documents = documentGuide.documents || documentGuide.items || [];
@@ -143,7 +143,7 @@ export function mapApiResponseToResultView(apiResponse) {
       highlightType = 'text';
       highlightText = estimatedItems?.[0]?.reason || aiMessage.messageContent;
     }
-  } else if (questionType === 'CHIP_DOCUMENT' && aiMessage.documentGuide) {
+  } else if (questionType === 'CHIP_DOCUMENTS' && aiMessage.documentGuide) {
     highlightType = 'amount';
     highlightLabel = aiMessage.documentGuide.label || '필요 서류';
     highlightAmount = aiMessage.documentGuide.count
