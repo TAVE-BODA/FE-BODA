@@ -259,6 +259,15 @@
   color: var(--Main-05);
 }
 
+.upload-analyzing__notice {
+  font-size: var(--text-body3);
+  font-weight: var(--weight-regular);
+  color: var(--gray-05);
+  text-align: center;
+  line-height: 1.6;
+  margin-top: -8px;
+}
+
 .upload-analyzing__doc-card {
   background: var(--gray-white);
   border-radius: 20px;

@@ -70,10 +70,13 @@ export default function UploadPage() {
     try {
       if (isCert) {
         const { id } = await uploadPolicy(activeFiles[0], chatSessionId);
-        await pollUntilDone(checkPolicyStatus, id);
+        // 증권 분석도 최대 10분까지 걸릴 수 있음 (5초 간격 x 120번 = 600초)
+        await pollUntilDone(checkPolicyStatus, id, 5000, 120);
       } else {
         const { id } = await uploadTerms(activeFiles[0], chatSessionId);
-        await pollUntilDone(checkTermsStatus, id);
+        // 약관 분석도 최대 10분까지 걸릴 수 있다고 백엔드에서 안내받음
+        // 5초 간격 x 120번 = 600초(10분)
+        await pollUntilDone(checkTermsStatus, id, 5000, 120);
       }
       setStep(nextDone);
     } catch (error) {
@@ -193,6 +196,11 @@ export default function UploadPage() {
             <h2 className="upload-analyzing__title">
               <span className="upload-analyzing__highlight">보다</span>가 열심히 읽고 있어요
             </h2>
+            <p className="upload-analyzing__notice">
+              분량이 많으면 분석에 최대 10분 정도 걸릴 수 있어요.
+              <br />
+              창을 닫지 말고 잠시만 기다려주세요!
+            </p>
           </div>
           <div className="upload-analyzing__doc-card">
             <p className="upload-analyzing__doc-title">
