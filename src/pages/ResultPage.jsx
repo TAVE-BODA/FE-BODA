@@ -1,7 +1,8 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import './ResultPage.css';
 import NavBar from '../components/NavBar';
 import EvidenceCard from '../components/EvidenceCard';
+import { mapApiResponseToResultView } from '../utils/resultMapper';
 import characterResult from '../assets/images/characters/character_result2.png';
 import checkBadge from '../assets/images/check-badge.png';
 import checkBadgePurple from '../assets/images/check-badge-purple.png';
@@ -143,7 +144,14 @@ const DUMMY_DATA_BY_OPTION = {
 
 export default function ResultPage({ data, onSelectFollowup, onCustomInput }) {
   const { optionNumber } = useParams();
-  const resolvedData = data || DUMMY_DATA_BY_OPTION[optionNumber] || DUMMY_DATA_BY_OPTION[1];
+  const location = useLocation();
+
+  // UploadPage가 navigate(`/result/${selectedOption}`, { state: { resultData } })로 넘겨준
+  // messages API 응답을 최우선으로 사용. state가 없으면(새로고침, 직접 URL 진입 등) 더미로 폴백.
+  const apiResultData = location.state?.resultData;
+  const mappedData = apiResultData ? mapApiResponseToResultView(apiResultData) : null;
+
+  const resolvedData = data || mappedData || DUMMY_DATA_BY_OPTION[optionNumber] || DUMMY_DATA_BY_OPTION[1];
 
   const {
     theme = 'main',
@@ -203,6 +211,7 @@ export default function ResultPage({ data, onSelectFollowup, onCustomInput }) {
           </div>
         </div>
 
+        {evidences.length > 0 && (
         <div className="result-evidence-list">
           {evidences.map((item) => (
             <EvidenceCard
@@ -216,6 +225,7 @@ export default function ResultPage({ data, onSelectFollowup, onCustomInput }) {
             />
           ))}
         </div>
+        )}
 
         <div className="result-followup-area">
           <p className="result-followup-lead">더 궁금한 점 있으세요?</p>

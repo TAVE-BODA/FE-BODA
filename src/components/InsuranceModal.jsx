@@ -1,203 +1,362 @@
 import React, { useState } from 'react';
 import './InsuranceModal.css';
-import logoImg from '../assets/images/chat_component_icon.png'; 
-import calendarIcon from '../assets/images/chat_component_calendar.png'; 
+import logoImg from '../assets/images/chat_component_icon.png';
+import calendarIcon from '../assets/images/chat_component_calendar.png';
+
+const Q1_OPTIONS = [
+  { id: 'injury', label: '다쳤어요', desc: '예: 넘어짐, 교통사고, 운동 중 부상, 추락' },
+  { id: 'sick', label: '아파서 병원에 갔어요', desc: '예: 감기, 암, 디스크, 소화불량' },
+  { id: 'checkup', label: '검진에서 발견됐어요', desc: '예: 건강검진, MRI, 내시경 결과' },
+];
+
+const Q2_OPTIONS = [
+  { id: 'diagnosis', label: '진단만 받았어요' },
+  { id: 'surgery', label: '수술받았어요' },
+  { id: 'hospitalized', label: '입원했어요' },
+  { id: 'outpatient', label: '통원·외래 치료만 받았어요', desc: '예: 물리치료, 도수치료' },
+  { id: 'cast', label: '깁스·고정 치료받았어요' },
+  { id: 'dental', label: '치아 치료받았어요' },
+  { id: 'disability', label: '장해·후유장해 진단받았어요' },
+];
+
+const Q3A_HOSPITAL_OPTIONS = [
+  { id: 'clinic', label: '동네 병원·의원' },
+  { id: 'general', label: '종합병원' },
+  { id: 'university', label: '대학병원·상급종합병원' },
+];
+
+const Q3A_ROOM_OPTIONS = [
+  { id: 'single', label: '1인실' },
+  { id: 'double', label: '2, 3인실' },
+  { id: 'general', label: '일반 병실 (4인실 이상)' },
+];
+
+const Q3B_BODY_OPTIONS = [
+  { id: 'limb', label: '팔·다리·발·손가락 등 사지' },
+  { id: 'trunk', label: '척추·갈비뼈·골반 등 몸통' },
+];
+
+const Q3B_CAST_OPTIONS = [
+  { id: 'full', label: '석고붕대로 전체를 감쌌어요' },
+  { id: 'partial', label: '반깁스·부목이었어요' },
+];
+
+const Q3C_DENTAL_OPTIONS = [
+  { id: 'extraction', label: '이를 뽑았어요' },
+  { id: 'crown', label: '씌우거나 심었어요' },
+  { id: 'filling', label: '때웠어요' },
+  { id: 'root_canal', label: '신경치료 받았어요' },
+];
 
 export default function InsuranceModal({ isOpen, onClose, onSubmitSuccess }) {
   if (!isOpen) return null;
 
   const [formData, setFormData] = useState({
-    treatment: '',       
-    hospitalType: '',    
-    visitDateType: '',   
-    visitDate: '',       
-    costType: '',        
-    cost: ''             
+    q1: '',
+    q2: [],
+    q3a_hospital: '',
+    q3a_room: '',
+    q3a_nights: '',
+    q3b_body: '',
+    q3b_cast: '',
+    q3c_dental: '',
+    q3c_count: '',
+    q4_type: '',
+    q4_date: '',
+    q4_year: '',
+    q4_month: '',
   });
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleInputChange = (field, value) => {
+  const handleQ2 = (id) => {
+    setFormData(prev => {
+      const already = prev.q2.includes(id);
+      return {
+        ...prev,
+        q2: already ? prev.q2.filter(v => v !== id) : [...prev.q2, id],
+      };
+    });
+  };
+
+  const handleField = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleCostChange = (e) => {
-    const rawValue = e.target.value.replace(/[^0-9]/g, '');
-    setFormData(prev => ({ ...prev, cost: rawValue }));
-  };
+  const showQ3A = formData.q2.includes('hospitalized');
+  const showQ3B = formData.q2.includes('cast');
+  const showQ3C = formData.q2.includes('dental');
 
-  const formatComma = (num) => {
-    if (!num) return '';
-    return Number(num).toLocaleString();
-  };
+  const isFormValid =
+    formData.q1 !== '' &&
+    formData.q2.length > 0 &&
+    formData.q4_type !== '' &&
+    (formData.q4_type === 'date'
+      ? formData.q4_date !== ''
+      : formData.q4_year !== '' && formData.q4_month !== '');
 
-  const isFormValid = formData.treatment.trim() !== '' && formData.hospitalType !== '';
-
-  const handleNextSubmit = async () => {
+  const handleSubmit = () => {
     if (!isFormValid || isSubmitting) return;
-
-    /* 백엔드 데이터 전송 (디자인 구현을 위해 임시 주석 처리)
-    setIsSubmitting(true);
-    try {
-      const response = await fetch('/api/insurance/submit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          treatment: formData.treatment,
-          hospitalType: formData.hospitalType,
-          visitDateType: formData.visitDateType,
-          visitDate: formData.visitDateType === 'select' ? formData.visitDate : null,
-          costType: formData.costType,
-          cost: formData.cost ? parseInt(formData.cost, 10) : 0
-        }),
-      });
-
-      if (!response.ok) throw new Error('서버 전송 실패');
-
-      const result = await response.json();
-      if (onSubmitSuccess) onSubmitSuccess(result);
-      
-    } catch (error) {
-      console.error(error);
-      alert('데이터 전송 중 오류가 발생했습니다.');
-    } finally {
-      setIsSubmitting(false);
-    }
-    */
-
-    // 모달 조건 완료 후 부모 페이지 컴포넌트로 상태 전달
-    if (onSubmitSuccess) {
-      onSubmitSuccess(formData);
-    }
+    if (onSubmitSuccess) onSubmitSuccess(formData);
   };
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
-
-  const firstDayOfMonth = new Date(year, month, 1).getDay();
-  const lastDateOfMonth = new Date(year, month + 1, 0).getDate();
-
+  const firstDay = new Date(year, month, 1).getDay();
+  const lastDate = new Date(year, month + 1, 0).getDate();
   const daysArray = [];
-  for (let i = 0; i < firstDayOfMonth; i++) {
-    daysArray.push(null);
-  }
-  for (let i = 1; i <= lastDateOfMonth; i++) {
-    daysArray.push(i);
-  }
-
-  const changeMonth = (direction) => {
-    setCurrentDate(new Date(year, month + direction, 1));
-  };
+  for (let i = 0; i < firstDay; i++) daysArray.push(null);
+  for (let i = 1; i <= lastDate; i++) daysArray.push(i);
 
   const handleDateSelect = (day) => {
     if (!day) return;
-    const formattedMonth = String(month + 1).padStart(2, '0');
-    const formattedDay = String(day).padStart(2, '0');
-    const dateString = `${year}-${formattedMonth}-${formattedDay}`;
-    handleInputChange('visitDate', dateString);
+    const m = String(month + 1).padStart(2, '0');
+    const d = String(day).padStart(2, '0');
+    handleField('q4_date', `${year}-${m}-${d}`);
+  };
+
+  const getQ3Num = (type) => {
+    if (type === 'A') return 3;
+    if (type === 'B') return showQ3A ? 4 : 3;
+    if (type === 'C') return (showQ3A ? 1 : 0) + (showQ3B ? 1 : 0) + 3;
+    return (showQ3A ? 1 : 0) + (showQ3B ? 1 : 0) + (showQ3C ? 1 : 0) + 3;
   };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content-box" onClick={(e) => e.stopPropagation()}>
-        
+      <div className="modal-content-box" onClick={e => e.stopPropagation()}>
+
         <div className="modal-header-area">
           <img src={logoImg} alt="boda" className="modal-logo" />
         </div>
 
         <div className="modal-scroll-body">
-          
+
+          {/* Q1 */}
           <div className="question-card">
             <div className="card-title-row">
               <span className="question-number">1</span>
               <span className="question-text">
-                어떤 치료나 사고였나요?<span className="required-badge">*필수</span>
+                어떤 일이 있으셨나요? <span className="required-badge">*필수</span>
               </span>
             </div>
-            <input 
-              type="text" 
-              className="style-text-input"
-              placeholder="예: MRI 촬영, 도수치료, 수술, 골절, 입원 등"
-              value={formData.treatment}
-              onChange={(e) => handleInputChange('treatment', e.target.value)}
-            />
-          </div>
-
-          <div className="question-card">
-            <div className="card-title-row">
-              <span className="question-number">2</span>
-              <span className="question-text">
-                병원은 어떻게 이용하셨나요?<span className="required-badge">*필수</span>
-              </span>
-            </div>
-            <div className="tile-grid-4">
-              {[
-                { id: '통원', label: '통원' },
-                { id: '입원', label: '입원' },
-                { id: '응급실', label: '응급실' },
-                { id: '모르겠어요', label: '모르겠어요' }
-              ].map((tile) => (
-                <div 
-                  key={tile.id}
-                  className={`visual-tile ${formData.hospitalType === tile.id ? 'selected' : ''}`}
-                  onClick={() => handleInputChange('hospitalType', tile.id)}
+            <div className="radio-card-group">
+              {Q1_OPTIONS.map(opt => (
+                <button
+                  key={opt.id}
+                  className={`radio-card ${formData.q1 === opt.id ? 'selected' : ''}`}
+                  onClick={() => handleField('q1', opt.id)}
                 >
-                  <div className="tile-icon-placeholder"></div>
-                  <span className="tile-label">{tile.label}</span>
-                </div>
+                  <span className="radio-dot">
+                    {formData.q1 === opt.id && '✓'}
+                  </span>
+                  <span className="radio-card-label">
+                    <span className="radio-card-main">{opt.label}</span>
+                    {opt.desc && <span className="radio-card-sub">{opt.desc}</span>}
+                  </span>
+                </button>
               ))}
             </div>
           </div>
 
+          {/* Q2 */}
           <div className="question-card">
             <div className="card-title-row">
-              <span className="question-number">3</span>
+              <span className="question-number">2</span>
               <span className="question-text">
-                언제 치료를 받으셨나요?<span className="optional-badge">선택</span>
+                어떤 치료를 받았나요? <span className="required-badge">*필수</span>
+                <span style={{ fontSize: 'var(--text-body4)', color: 'var(--gray-04)', fontWeight: 'normal', marginLeft: '6px' }}>중복 선택 가능</span>
+              </span>
+            </div>
+            <div className="checkbox-card-group">
+              {Q2_OPTIONS.map(opt => (
+                <button
+                  key={opt.id}
+                  className={`checkbox-card ${formData.q2.includes(opt.id) ? 'selected' : ''}`}
+                  onClick={() => handleQ2(opt.id)}
+                >
+                  <span className="checkbox-box">✓</span>
+                  <span className="checkbox-card-label">
+                    <span className="checkbox-card-main">{opt.label}</span>
+                    {opt.desc && <span className="checkbox-card-sub">{opt.desc}</span>}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Q3-A: 입원 */}
+          {showQ3A && (
+            <div className="question-card">
+              <div className="card-title-row">
+                <span className="question-number">{getQ3Num('A')}</span>
+                <span className="question-text">입원 관련 정보</span>
+              </div>
+
+              <p className="sub-question-title" style={{ marginTop: 0 }}>어떤 병원에 입원하셨나요?</p>
+              <div className="toggle-btn-group" style={{ marginBottom: '16px' }}>
+                {Q3A_HOSPITAL_OPTIONS.map(opt => (
+                  <button
+                    key={opt.id}
+                    className={`toggle-btn ${formData.q3a_hospital === opt.id ? 'selected' : ''}`}
+                    onClick={() => handleField('q3a_hospital', opt.id)}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+
+              <p className="sub-question-title">어떤 병실을 사용하셨나요?</p>
+              <div className="toggle-btn-group" style={{ marginBottom: '16px' }}>
+                {Q3A_ROOM_OPTIONS.map(opt => (
+                  <button
+                    key={opt.id}
+                    className={`toggle-btn ${formData.q3a_room === opt.id ? 'selected' : ''}`}
+                    onClick={() => handleField('q3a_room', opt.id)}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+
+              <p className="sub-question-title">몇 박 입원하셨나요?</p>
+              <div className="nights-input-wrap">
+                <input
+                  type="number"
+                  className="nights-input"
+                  placeholder="숫자로 입력해주세요"
+                  value={formData.q3a_nights}
+                  onChange={e => handleField('q3a_nights', e.target.value)}
+                  min="1"
+                />
+                <span className="nights-unit">박</span>
+              </div>
+            </div>
+          )}
+
+          {/* Q3-B: 깁스 */}
+          {showQ3B && (
+            <div className="question-card">
+              <div className="card-title-row">
+                <span className="question-number">{getQ3Num('B')}</span>
+                <span className="question-text">깁스 관련 정보</span>
+              </div>
+
+              <p className="sub-question-title" style={{ marginTop: 0 }}>어느 부위를 다쳤나요?</p>
+              <div className="toggle-btn-group" style={{ marginBottom: '16px' }}>
+                {Q3B_BODY_OPTIONS.map(opt => (
+                  <button
+                    key={opt.id}
+                    className={`toggle-btn ${formData.q3b_body === opt.id ? 'selected' : ''}`}
+                    onClick={() => handleField('q3b_body', opt.id)}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+
+              <p className="sub-question-title">깁스를 어떻게 하셨나요?</p>
+              <div className="toggle-btn-group">
+                {Q3B_CAST_OPTIONS.map(opt => (
+                  <button
+                    key={opt.id}
+                    className={`toggle-btn ${formData.q3b_cast === opt.id ? 'selected' : ''}`}
+                    onClick={() => handleField('q3b_cast', opt.id)}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Q3-C: 치아 */}
+          {showQ3C && (
+            <div className="question-card">
+              <div className="card-title-row">
+                <span className="question-number">{getQ3Num('C')}</span>
+                <span className="question-text">치아 관련 정보</span>
+              </div>
+
+              <p className="sub-question-title" style={{ marginTop: 0 }}>어떤 치아 치료를 받으셨나요?</p>
+              <div className="toggle-btn-group" style={{ flexWrap: 'wrap', marginBottom: '16px' }}>
+                {Q3C_DENTAL_OPTIONS.map(opt => (
+                  <button
+                    key={opt.id}
+                    className={`toggle-btn ${formData.q3c_dental === opt.id ? 'selected' : ''}`}
+                    onClick={() => handleField('q3c_dental', opt.id)}
+                    style={{ minWidth: '140px' }}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+
+              <p className="sub-question-title">총 몇 개의 치아 치료를 받으셨나요?</p>
+              <div className="teeth-count-grid">
+                {[1,2,3,4,5,6,7,8,9,10].map(n => (
+                  <button
+                    key={n}
+                    className={`teeth-count-btn ${formData.q3c_count === String(n) ? 'selected' : ''}`}
+                    onClick={() => handleField('q3c_count', String(n))}
+                  >
+                    {n}개
+                  </button>
+                ))}
+                <button
+                  className={`teeth-count-btn teeth-count-unknown ${formData.q3c_count === 'unknown' ? 'selected' : ''}`}
+                  onClick={() => handleField('q3c_count', 'unknown')}
+                >
+                  잘 모르겠어요
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Q4 */}
+          <div className="question-card">
+            <div className="card-title-row">
+              <span className="question-number">{getQ3Num('Q4')}</span>
+              <span className="question-text">
+                치료를 언제 시작하셨나요? <span className="required-badge">*필수</span>
               </span>
             </div>
             <div className="button-option-group">
-              <button 
-                className={`option-btn ${formData.visitDateType === 'select' ? 'selected' : ''}`}
-                onClick={() => handleInputChange('visitDateType', 'select')}
+              <button
+                className={`option-btn ${formData.q4_type === 'date' ? 'selected' : ''}`}
+                onClick={() => handleField('q4_type', 'date')}
               >
                 <img src={calendarIcon} alt="" className="calendar-icon" />
-                날짜 선택
+                날짜 직접 선택
               </button>
-              <button 
-                className={`option-btn ${formData.visitDateType === 'unknown' ? 'selected' : ''}`}
-                onClick={() => {
-                  handleInputChange('visitDateType', 'unknown');
-                  handleInputChange('visitDate', ''); 
-                }}
+              <button
+                className={`option-btn ${formData.q4_type === 'yearmonth' ? 'selected' : ''}`}
+                onClick={() => handleField('q4_type', 'yearmonth')}
               >
-                아직 몰라요
+                연도·월만 알아요
               </button>
             </div>
 
-            {formData.visitDateType === 'select' && (
+            {formData.q4_type === 'date' && (
               <div className="custom-calendar-container">
                 <div className="calendar-header">
-                  <button type="button" onClick={() => changeMonth(-1)} className="cal-nav-btn">◀</button>
+                  <button type="button" className="cal-nav-btn" onClick={() => setCurrentDate(new Date(year, month - 1, 1))}>◀</button>
                   <span className="calendar-title-ym">{year}년 {month + 1}월</span>
-                  <button type="button" onClick={() => changeMonth(1)} className="cal-nav-btn">▶</button>
+                  <button type="button" className="cal-nav-btn" onClick={() => setCurrentDate(new Date(year, month + 1, 1))}>▶</button>
                 </div>
-                
                 <div className="calendar-weekdays">
-                  {['일', '월', '화', '수', '목', '금', '토'].map(d => <span key={d}>{d}</span>)}
+                  {['일','월','화','수','목','금','토'].map(d => <span key={d}>{d}</span>)}
                 </div>
-
                 <div className="calendar-days-grid">
                   {daysArray.map((day, idx) => {
-                    const formattedMonth = String(month + 1).padStart(2, '0');
-                    const formattedDay = String(day).padStart(2, '0');
-                    const thisDateStr = day ? `${year}-${formattedMonth}-${formattedDay}` : '';
-                    const isSelected = formData.visitDate === thisDateStr;
-
+                    const m = String(month + 1).padStart(2, '0');
+                    const d = String(day).padStart(2, '0');
+                    const dateStr = day ? `${year}-${m}-${d}` : '';
+                    const isSelected = formData.q4_date === dateStr;
                     return (
-                      <div 
-                        key={idx} 
+                      <div
+                        key={idx}
                         className={`calendar-day-cell ${day ? 'active-day' : ''} ${isSelected ? 'selected-day' : ''}`}
                         onClick={() => day && handleDateSelect(day)}
                       >
@@ -206,58 +365,49 @@ export default function InsuranceModal({ isOpen, onClose, onSubmitSuccess }) {
                     );
                   })}
                 </div>
-                
-                {formData.visitDate && (
+                {formData.q4_date && (
                   <div className="selected-date-display">
-                    선택된 날짜: <span>{formData.visitDate}</span>
+                    선택된 날짜: <span>{formData.q4_date}</span>
                   </div>
                 )}
               </div>
             )}
 
-            <p className="info-sub-text">
-              진료 날짜는 면책기간, 보장개시일 확인에 사용돼요.
-            </p>
-          </div>
+            {formData.q4_type === 'yearmonth' && (
+              <div className="custom-calendar-container">
+                <div className="calendar-header">
+                  <button type="button" className="cal-nav-btn" onClick={() => handleField('q4_year', String(Number(formData.q4_year || new Date().getFullYear()) - 1))}>◀</button>
+                  <span className="calendar-title-ym">{formData.q4_year || new Date().getFullYear()}년</span>
+                  <button type="button" className="cal-nav-btn" onClick={() => handleField('q4_year', String(Number(formData.q4_year || new Date().getFullYear()) + 1))}>▶</button>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginTop: '12px' }}>
+                  {[1,2,3,4,5,6,7,8,9,10,11,12].map(m => (
+                    <button
+                      key={m}
+                      className={`toggle-btn ${formData.q4_month === String(m) ? 'selected' : ''}`}
+                      onClick={() => handleField('q4_month', String(m))}
+                      style={{ padding: '12px 8px' }}
+                    >
+                      {m}월
+                    </button>
+                  ))}
+                </div>
+                {formData.q4_year && formData.q4_month && (
+                  <div className="selected-date-display">
+                    선택됨: <span>{formData.q4_year}년 {formData.q4_month}월</span>
+                  </div>
+                )}
+              </div>
+            )}
 
-          <div className="question-card">
-            <div className="card-title-row">
-              <span className="question-number">4</span>
-              <span className="question-text">
-                진료비가 대략 얼마였나요?<span className="optional-badge">선택</span>
-              </span>
-            </div>
-            <div className="currency-input-box">
-              <input 
-                type="text" 
-                className="style-currency-input"
-                placeholder="금액을 입력해주세요. 예) 30000"
-                value={formatComma(formData.cost)}
-                onChange={handleCostChange}
-              />
-              <span className="currency-unit">원</span>
-            </div>
-            <div className="button-option-group">
-              <button 
-                className={`option-btn ${formData.costType === 'unknown' ? 'selected' : ''}`}
-                onClick={() => handleInputChange('costType', 'unknown')}
-              >
-                아직 몰라요
-              </button>
-              <button 
-                className={`option-btn ${formData.costType === 'none' ? 'selected' : ''}`}
-                onClick={() => handleInputChange('costType', 'none')}
-              >
-                해당 없어요
-              </button>
-            </div>
+            <p className="info-sub-text">치료 날짜는 면책기간, 보장개시일 확인에 사용돼요.</p>
           </div>
 
           <div className="modal-next-btn-container">
-            <button 
+            <button
               className="modal-next-btn"
               disabled={!isFormValid || isSubmitting}
-              onClick={handleNextSubmit}
+              onClick={handleSubmit}
             >
               {isSubmitting ? '전송 중...' : '다음으로'}
             </button>

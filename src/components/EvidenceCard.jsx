@@ -19,20 +19,22 @@ export default function EvidenceCard({ tag, title, amount, description, tip, cla
       <p className="evidence-desc">{description}</p>
       {tip && <p className="evidence-tip">{tip}</p>}
 
-      <button
-        className="evidence-toggle-btn"
-        onClick={() => setIsOpen((prev) => !prev)}
-        type="button"
-      >
-        <img src={docSearchIcon} alt="" className="evidence-toggle-icon" />
-        <span>약관 근거 보기</span>
-        <img
-          src={chevronUpIcon}
-          alt=""
-          className="evidence-chevron"
-          style={{ transform: isOpen ? 'rotate(0deg)' : 'rotate(180deg)' }}
-        />
-      </button>
+      {clauseRef && (
+        <button
+          className="evidence-toggle-btn"
+          onClick={() => setIsOpen((prev) => !prev)}
+          type="button"
+        >
+          <img src={docSearchIcon} alt="" className="evidence-toggle-icon" />
+          <span>약관 근거 보기</span>
+          <img
+            src={chevronUpIcon}
+            alt=""
+            className="evidence-chevron"
+            style={{ transform: isOpen ? 'rotate(0deg)' : 'rotate(180deg)' }}
+          />
+        </button>
+      )}
 
       {isOpen && clauseRef && (
         Array.isArray(clauseRef) ? (
