@@ -29,6 +29,9 @@ function App() {
         {/* /result/:id(DetailPage)와 경로가 겹쳐서 ResultPage가 안 그려지던 문제로
             /result/option/:optionNumber로 분리함. UploadPage.jsx의 navigate 경로도 함께 수정됨. */}
         <Route path="/result/option/:optionNumber" element={<ResultPage />} />
+        {/* 업로드/분석 없이 저장해둔 실제 응답 샘플로 결과 화면을 바로 확인하기 위한 라우트.
+            사용 가능한 sampleKey: claim, amount, documents (src/data/resultPreviewSamples.js) */}
+        <Route path="/result/preview/:sampleKey" element={<ResultPage />} />
       </Routes>
     </BrowserRouter>
   );

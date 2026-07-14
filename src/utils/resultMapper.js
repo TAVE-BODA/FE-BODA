@@ -51,6 +51,12 @@ const NEGATIVE_RESULT_PATTERN = /(찾지 못했|확인되지 않|되지 않았)/
 function buildClaimEvidences(claimGuide) {
   if (!claimGuide) return [];
 
+  // claimGuide.sourceChunkIds는 reason 하나하나가 아니라 claimGuide 전체에 걸린
+  // 근거라, 그룹 카드마다 정확히 매칭은 안 되지만 동일하게 붙여줌
+  const sharedChunkIds = claimGuide.hasSources && claimGuide.sourceChunkIds?.length
+    ? claimGuide.sourceChunkIds
+    : undefined;
+
   const groups = []; // [{ label, texts: [] }], 등장 순서 유지
   const groupIndexByLabel = new Map();
   const ungroupedTexts = [];
@@ -80,6 +86,7 @@ function buildClaimEvidences(claimGuide) {
         tag: group.label,
         title: isNegative ? `${group.label} 보장을 찾지 못했어요` : `${group.label} 보장이 확인돼요`,
         description: group.texts,
+        sourceChunkIds: sharedChunkIds,
         _negative: isNegative, // 정렬용, 카드로 안 넘어감
       };
     })
@@ -92,10 +99,11 @@ function buildClaimEvidences(claimGuide) {
         tag: '확인된 내용',
         title: '확인된 내용',
         description: ungroupedTexts,
+        sourceChunkIds: sharedChunkIds,
       }]
     : [];
 
-  // cautions는 여러 개여도 카드 하나에 리스트로 모아서 보여줌
+  // cautions는 여러 개여도 카드 하나에 리스트로 모아서 보여줌 (근거 토글은 없음 - 경고 문구지 조항 인용이 아님)
   const cautions = claimGuide.cautions || [];
   const cautionCard = cautions.length
     ? [{
@@ -110,21 +118,24 @@ function buildClaimEvidences(claimGuide) {
   return [...groupCards, ...ungroupedCard, ...cautionCard];
 }
 
-// amountGuide 실제 구조 (2026-07-12 실응답 기준):
+// amountGuide 실제 구조 (2026-07-14 실응답 기준):
 // {
 //   calculationAvailable: boolean,
-//   estimatedItems: [{ coverageName, amountText, reason }],
+//   estimatedItems: [{ coverageName, amountText, reason, hasSources, sourceChunkIds }],
 //   cautions: [string],
+//   hasSources, sourceChunkIds (전체 합계용, 지금은 안 씀)
 //   totalAmountText?: string  <- 정확히 매칭되는 항목이 있을 때만 내려오는 것으로 추정, 미확인
 // }
 function buildAmountEvidences(amountGuide) {
   if (!amountGuide) return [];
 
+  // 칩1/칩3과 다르게 항목마다 자기 sourceChunkIds가 따로 있어서, 항목별로 정확한 근거만 붙일 수 있음
   const itemCards = (amountGuide.estimatedItems || []).map((item, idx) => ({
     id: `amount-item-${idx}`,
     title: item.coverageName || `보장 항목 ${idx + 1}`,
     amount: item.amountText,
     description: item.reason || '',
+    sourceChunkIds: item.hasSources && item.sourceChunkIds?.length ? item.sourceChunkIds : undefined,
   }));
 
   const cautions = amountGuide.cautions || [];
@@ -141,22 +152,20 @@ function buildAmountEvidences(amountGuide) {
   return [...itemCards, ...cautionCard];
 }
 
-// documentGuide 실제 구조 (2026-07-13 실응답 기준):
+// documentGuide 실제 구조 (2026-07-14 실응답 기준):
 // {
-//   documents: [{ name, description, required }],
-//   evidences: [{ chunkId, title }],  // 문서별이 아니라 documentGuide 전체에 공통으로 달려있는 근거
-//   evidenceAvailable: boolean,
-//   notice: string
+//   documents: [{ name, description, required, hasSources, sourceChunkIds }],  // 문서별 필드는 지금 null로만 옴
+//   hasSources, sourceChunkIds  // documentGuide 전체에 공통으로 달려있는 근거
 // }
 function buildDocumentEvidences(documentGuide) {
   if (!documentGuide) return [];
 
-  const { documents = [], evidences: clauseEvidences = [] } = documentGuide;
+  const { documents = [] } = documentGuide;
 
-  // 근거가 문서 하나하나에 매칭되어 내려오는 게 아니라 공통 목록이라,
-  // 중복 제목은 정리해서 각 서류 카드에 동일하게 붙여줌
-  const clauseRef = clauseEvidences.length
-    ? [...new Set(clauseEvidences.map((e) => e.title).filter(Boolean))]
+  // 문서 하나하나에 근거가 따로 안 내려오고(지금 응답 기준 documents[].sourceChunkIds는 항상 null),
+  // documentGuide 전체 공통 근거를 모든 서류 카드에 동일하게 붙여줌
+  const sharedChunkIds = documentGuide.hasSources && documentGuide.sourceChunkIds?.length
+    ? documentGuide.sourceChunkIds
     : undefined;
 
   return documents.map((doc, idx) => ({
@@ -164,7 +173,7 @@ function buildDocumentEvidences(documentGuide) {
     tag: doc.required === false ? '선택' : '필수',
     title: doc.name || `서류 ${idx + 1}`,
     description: doc.description || '',
-    clauseRef,
+    sourceChunkIds: doc.hasSources && doc.sourceChunkIds?.length ? doc.sourceChunkIds : sharedChunkIds,
   }));
 }
 
@@ -194,18 +203,19 @@ export function mapApiResponseToResultView(apiResponse) {
     highlightText = summary || aiMessage.messageContent;
     evidences = buildClaimEvidences(aiMessage.claimGuide);
   } else if (questionType === 'CHIP_AMOUNT' && aiMessage.amountGuide) {
-    const { estimatedItems, cautions, totalAmountText } = aiMessage.amountGuide;
-    resultTitle = aiMessage.messageContent;
+    const { estimatedItems, totalAmountText } = aiMessage.amountGuide;
     evidences = buildAmountEvidences(aiMessage.amountGuide);
 
     if (totalAmountText) {
       // 정확히 매칭되는 항목이 있어서 합계가 내려오는 경우 (미확인 케이스, 필드명 추정)
+      resultTitle = `받을 수 있어요! 약 ${totalAmountText}예요.`;
       highlightType = 'amount';
       highlightLabel = '예상 수령액';
       highlightAmount = totalAmountText;
     } else {
-      // 지금까지 실제로 확인된 케이스: 정확히 매칭 안 돼서 항목별 "확인 필요" 텍스트만 내려옴
-      // -> 근거 없는 숫자를 지어내지 않고, 메시지 본문을 텍스트로 보여줌
+      // messageContent는 줄바꿈 포함 긴 문장일 수 있어서(CHIP_DOCUMENTS와 같은 이유로)
+      // 제목엔 그대로 안 넣고 짧은 고정 문구로 대체
+      resultTitle = '예상 보험금을 확인했어요.';
       highlightType = 'text';
       highlightText = estimatedItems?.[0]?.reason || aiMessage.messageContent;
     }
@@ -238,5 +248,6 @@ export function mapApiResponseToResultView(apiResponse) {
     highlightAmount,
     evidences,
     followupOptions: FOLLOWUP_OPTIONS_BY_QUESTION_TYPE[questionType] || [],
+    sourceMessageId: aiMessage.hasSources ? aiMessage.messageId : null,
   };
 }
