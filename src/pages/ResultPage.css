@@ -267,6 +267,16 @@
   color: #756EC7;
 }
 
+/* highlightType이 'amount'가 아니라 'text'로 나올 때(합계 없이 항목 reason만 있는 경우)
+   쓰이는 클래스인데 이게 빠져있어서 기본 파란색(--Main-08)이 그대로 나오던 버그 수정 */
+.theme-purple .result-highlight-text {
+  color: #5B4FD9;
+}
+
+.theme-purple .evidence-clause-more-btn {
+  color: #756EC7;
+}
+
 .theme-purple .result-highlight-box {
   background-color: #928BFF1A; /* 928BFF 8% 투명도 배경 */
   border: 1px solid #928BFF;
@@ -291,6 +301,16 @@
 
 /* 초록 테마 (옵션 3: 필요 서류) */
 .theme-green .result-bubble-title {
+  color: #249C00;
+}
+
+/* theme-purple과 같은 이유로 미리 방어: 지금은 서류(green) 쪽이 항상 highlightType 'amount'만
+   쓰지만, 나중에 'text' 분기를 타는 경우가 생겨도 색이 깨지지 않도록 미리 추가 */
+.theme-green .result-highlight-text {
+  color: #249C00;
+}
+
+.theme-green .evidence-clause-more-btn {
   color: #249C00;
 }
 
