@@ -17,6 +17,50 @@
   right: 0;
 }
 
+/* ── 결과 데이터 없을 때(새로고침/직접 진입) 안내 화면 ─────────── */
+.result-empty-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding-top: 220px;
+  text-align: center;
+}
+
+.result-empty-title {
+  font-size: var(--text-heading);
+  font-weight: var(--weight-bold);
+  color: var(--gray-black);
+}
+
+.result-empty-desc {
+  font-size: var(--text-body3);
+  color: var(--gray-05);
+  line-height: 1.6;
+}
+
+.result-empty-btn {
+  margin-top: 12px;
+  padding: 16px 40px;
+  border-radius: 50px;
+  border: none;
+  background-color: var(--Main-06);
+  color: var(--gray-white);
+  font-size: var(--text-body2);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.result-empty-btn:hover {
+  background-color: var(--Main-07);
+  transform: translateY(-2px);
+}
+
 .result-content-wrap {
   display: flex;
   flex-direction: column;
@@ -78,6 +122,8 @@
   font-weight: var(--weight-bold);
   color: var(--Main-06);
   margin-bottom: 14px;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 .result-bubble-desc {
@@ -177,6 +223,20 @@
   box-shadow: 0 6px 15px rgba(47, 128, 237, 0.2);
 }
 
+.result-followup-btn:disabled,
+.result-custom-input-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.result-followup-btn:disabled:hover,
+.result-custom-input-btn:disabled:hover {
+  background-color: var(--gray-white);
+  color: var(--Main-07);
+  box-shadow: 0 4px 10px rgba(47, 128, 237, 0.05);
+}
+
 .result-custom-input-btn {
   display: flex;
   justify-content: center;
@@ -223,6 +283,16 @@
   color: #756EC7;
 }
 
+/* highlightType이 'amount'가 아니라 'text'로 나올 때(합계 없이 항목 reason만 있는 경우)
+   쓰이는 클래스인데 이게 빠져있어서 기본 파란색(--Main-08)이 그대로 나오던 버그 수정 */
+.theme-purple .result-highlight-text {
+  color: #5B4FD9;
+}
+
+.theme-purple .evidence-clause-more-btn {
+  color: #756EC7;
+}
+
 .theme-purple .result-highlight-box {
   background-color: #928BFF1A; /* 928BFF 8% 투명도 배경 */
   border: 1px solid #928BFF;
@@ -247,6 +317,16 @@
 
 /* 초록 테마 (옵션 3: 필요 서류) */
 .theme-green .result-bubble-title {
+  color: #249C00;
+}
+
+/* theme-purple과 같은 이유로 미리 방어: 지금은 서류(green) 쪽이 항상 highlightType 'amount'만
+   쓰지만, 나중에 'text' 분기를 타는 경우가 생겨도 색이 깨지지 않도록 미리 추가 */
+.theme-green .result-highlight-text {
+  color: #249C00;
+}
+
+.theme-green .evidence-clause-more-btn {
   color: #249C00;
 }
 

@@ -40,70 +40,142 @@ function extractUserQuestion(userMessage) {
   return userMessage.messageContent.split('\n\n')[0].trim();
 }
 
+// reasons를 문장 단위로 각각 카드화하지 않고, [입원]/[수술] 같은 대괄호 라벨 기준으로
+// 치료 유형별 카드 하나로 묶어요. 태그는 문장 내용을 추측하는 게 아니라 대괄호 값
+// 그대로 써서(= 실제 데이터) 오분류 위험이 없게 했어요.
+// - 같은 그룹 문장들은 카드 하나에 리스트로 모음
+// - "찾지 못했어요/확인되지 않았어요" 같은 부정 표현이 있으면 뒤로, 확인된 그룹을 앞으로 정렬
+// - 대괄호가 없는 문장은 "확인된 내용" 카드 하나로 별도 모음
+const NEGATIVE_RESULT_PATTERN = /(찾지 못했|확인되지 않|되지 않았)/;
+
+// 말풍선 제목용 축약 표기. 하이라이트 박스의 큰 숫자는 정확한 금액(예: 700,000원)을 그대로 쓰지만,
+// 제목 문장엔 전체 자릿수를 그대로 넣으면 문장이 길어져서 줄바꿈이 이상해지므로
+// "약 70만원" 처럼 짧게 줄여서 씀 (피그마 톤 그대로)
+function toApproxManwonText(amountNumber) {
+  if (amountNumber >= 10000) {
+    return `${Math.round(amountNumber / 10000)}만원`;
+  }
+  return `${amountNumber.toLocaleString('ko-KR')}원`;
+}
+
 function buildClaimEvidences(claimGuide) {
   if (!claimGuide) return [];
 
-  const reasonCards = (claimGuide.reasons || []).map((reason, idx) => ({
-    id: `reason-${idx}`,
-    tag: '확인된 내용',
-    title: `확인된 내용 ${idx + 1}`,
-    description: reason,
-    // hasSources: false인 케이스라 clauseRef는 없음 -> EvidenceCard가 토글 버튼을 알아서 숨김
-  }));
+  // claimGuide.sourceChunkIds는 reason 하나하나가 아니라 claimGuide 전체에 걸린
+  // 근거라, 그룹 카드마다 정확히 매칭은 안 되지만 동일하게 붙여줌
+  const sharedChunkIds = claimGuide.hasSources && claimGuide.sourceChunkIds?.length
+    ? claimGuide.sourceChunkIds
+    : undefined;
 
-  const cautionCards = (claimGuide.cautions || []).map((caution, idx) => ({
-    id: `caution-${idx}`,
-    tag: '주의',
-    title: '이 점은 꼭 확인하세요',
-    description: caution,
-  }));
+  const groups = []; // [{ label, texts: [] }], 등장 순서 유지
+  const groupIndexByLabel = new Map();
+  const ungroupedTexts = [];
 
-  return [...reasonCards, ...cautionCards];
+  (claimGuide.reasons || []).forEach((reason) => {
+    const match = reason.match(/^\[([^\]]+)\]\s*/);
+    const cleanText = reason.replace(/^\[[^\]]+\]\s*/, '');
+
+    if (!match) {
+      ungroupedTexts.push(cleanText);
+      return;
+    }
+
+    const label = match[1];
+    if (!groupIndexByLabel.has(label)) {
+      groupIndexByLabel.set(label, groups.length);
+      groups.push({ label, texts: [] });
+    }
+    groups[groupIndexByLabel.get(label)].texts.push(cleanText);
+  });
+
+  const groupCards = groups
+    .map((group, idx) => {
+      const isNegative = group.texts.some((t) => NEGATIVE_RESULT_PATTERN.test(t));
+      return {
+        id: `reason-group-${idx}`,
+        tag: group.label,
+        title: isNegative ? `${group.label} 보장을 찾지 못했어요` : `${group.label} 보장이 확인돼요`,
+        description: group.texts,
+        sourceChunkIds: sharedChunkIds,
+        _negative: isNegative, // 정렬용, 카드로 안 넘어감
+      };
+    })
+    .sort((a, b) => Number(a._negative) - Number(b._negative))
+    .map(({ _negative, ...card }) => card);
+
+  const ungroupedCard = ungroupedTexts.length
+    ? [{
+        id: 'reason-ungrouped',
+        tag: '확인된 내용',
+        title: '확인된 내용',
+        description: ungroupedTexts,
+        sourceChunkIds: sharedChunkIds,
+      }]
+    : [];
+
+  // cautions는 여러 개여도 카드 하나에 리스트로 모아서 보여줌 (근거 토글은 없음 - 경고 문구지 조항 인용이 아님)
+  const cautions = claimGuide.cautions || [];
+  const cautionCard = cautions.length
+    ? [{
+        id: 'caution',
+        tag: '주의',
+        title: '이 점은 꼭 확인하세요',
+        description: cautions,
+        tone: 'caution',
+      }]
+    : [];
+
+  return [...groupCards, ...ungroupedCard, ...cautionCard];
 }
 
-// amountGuide 실제 구조 (2026-07-12 실응답 기준):
+// amountGuide 실제 구조 (2026-07-14 실응답 기준):
 // {
 //   calculationAvailable: boolean,
-//   estimatedItems: [{ coverageName, amountText, reason }],
+//   estimatedItems: [{ coverageName, amountText, reason, hasSources, sourceChunkIds }],
 //   cautions: [string],
+//   hasSources, sourceChunkIds (전체 합계용, 지금은 안 씀)
 //   totalAmountText?: string  <- 정확히 매칭되는 항목이 있을 때만 내려오는 것으로 추정, 미확인
 // }
 function buildAmountEvidences(amountGuide) {
   if (!amountGuide) return [];
 
+  // 칩1/칩3과 다르게 항목마다 자기 sourceChunkIds가 따로 있어서, 항목별로 정확한 근거만 붙일 수 있음
   const itemCards = (amountGuide.estimatedItems || []).map((item, idx) => ({
     id: `amount-item-${idx}`,
     title: item.coverageName || `보장 항목 ${idx + 1}`,
     amount: item.amountText,
     description: item.reason || '',
+    sourceChunkIds: item.hasSources && item.sourceChunkIds?.length ? item.sourceChunkIds : undefined,
   }));
 
-  const cautionCards = (amountGuide.cautions || []).map((caution, idx) => ({
-    id: `amount-caution-${idx}`,
-    tag: '주의',
-    title: '이 점은 꼭 확인하세요',
-    description: caution,
-  }));
+  const cautions = amountGuide.cautions || [];
+  const cautionCard = cautions.length
+    ? [{
+        id: 'amount-caution',
+        tag: '주의',
+        title: '이 점은 꼭 확인하세요',
+        description: cautions,
+        tone: 'caution',
+      }]
+    : [];
 
-  return [...itemCards, ...cautionCards];
+  return [...itemCards, ...cautionCard];
 }
 
-// documentGuide 실제 구조 (2026-07-13 실응답 기준):
+// documentGuide 실제 구조 (2026-07-14 실응답 기준):
 // {
-//   documents: [{ name, description, required }],
-//   evidences: [{ chunkId, title }],  // 문서별이 아니라 documentGuide 전체에 공통으로 달려있는 근거
-//   evidenceAvailable: boolean,
-//   notice: string
+//   documents: [{ name, description, required, hasSources, sourceChunkIds }],  // 문서별 필드는 지금 null로만 옴
+//   hasSources, sourceChunkIds  // documentGuide 전체에 공통으로 달려있는 근거
 // }
 function buildDocumentEvidences(documentGuide) {
   if (!documentGuide) return [];
 
-  const { documents = [], evidences: clauseEvidences = [] } = documentGuide;
+  const { documents = [] } = documentGuide;
 
-  // 근거가 문서 하나하나에 매칭되어 내려오는 게 아니라 공통 목록이라,
-  // 중복 제목은 정리해서 각 서류 카드에 동일하게 붙여줌
-  const clauseRef = clauseEvidences.length
-    ? [...new Set(clauseEvidences.map((e) => e.title).filter(Boolean))]
+  // 문서 하나하나에 근거가 따로 안 내려오고(지금 응답 기준 documents[].sourceChunkIds는 항상 null),
+  // documentGuide 전체 공통 근거를 모든 서류 카드에 동일하게 붙여줌
+  const sharedChunkIds = documentGuide.hasSources && documentGuide.sourceChunkIds?.length
+    ? documentGuide.sourceChunkIds
     : undefined;
 
   return documents.map((doc, idx) => ({
@@ -111,7 +183,7 @@ function buildDocumentEvidences(documentGuide) {
     tag: doc.required === false ? '선택' : '필수',
     title: doc.name || `서류 ${idx + 1}`,
     description: doc.description || '',
-    clauseRef,
+    sourceChunkIds: doc.hasSources && doc.sourceChunkIds?.length ? doc.sourceChunkIds : sharedChunkIds,
   }));
 }
 
@@ -141,18 +213,29 @@ export function mapApiResponseToResultView(apiResponse) {
     highlightText = summary || aiMessage.messageContent;
     evidences = buildClaimEvidences(aiMessage.claimGuide);
   } else if (questionType === 'CHIP_AMOUNT' && aiMessage.amountGuide) {
-    const { estimatedItems, cautions, totalAmountText } = aiMessage.amountGuide;
-    resultTitle = aiMessage.messageContent;
+    const { estimatedItems = [] } = aiMessage.amountGuide;
     evidences = buildAmountEvidences(aiMessage.amountGuide);
 
-    if (totalAmountText) {
-      // 정확히 매칭되는 항목이 있어서 합계가 내려오는 경우 (미확인 케이스, 필드명 추정)
+    // amountGuide에 합계 필드(totalAmountText)가 따로 안 내려와서, 항목별 amountText를
+    // 직접 더해서 계산함. 숫자로 못 읽는 항목이 하나라도 있으면(예: "확인 필요" 같은
+    // 매칭 실패 placeholder) 억지로 합산하지 않고 안전하게 text 모드로 폴백함.
+    const parsedAmounts = estimatedItems.map((item) => {
+      const digits = (item.amountText || '').replace(/[^\d]/g, '');
+      return digits ? Number(digits) : null;
+    });
+    const allParsed = parsedAmounts.length > 0 && parsedAmounts.every((n) => n !== null);
+
+    if (allParsed) {
+      const total = parsedAmounts.reduce((sum, n) => sum + n, 0);
+      const totalText = `${total.toLocaleString('ko-KR')}원`;
+      resultTitle = `받을 수 있어요! 약 ${toApproxManwonText(total)}이에요.`;
       highlightType = 'amount';
-      highlightLabel = '예상 수령액';
-      highlightAmount = totalAmountText;
+      highlightLabel = estimatedItems.length > 1 ? '예상 수령액(항목 합산)' : '예상 수령액';
+      highlightAmount = totalText;
     } else {
-      // 지금까지 실제로 확인된 케이스: 정확히 매칭 안 돼서 항목별 "확인 필요" 텍스트만 내려옴
-      // -> 근거 없는 숫자를 지어내지 않고, 메시지 본문을 텍스트로 보여줌
+      // messageContent는 줄바꿈 포함 긴 문장일 수 있어서(CHIP_DOCUMENTS와 같은 이유로)
+      // 제목엔 그대로 안 넣고 짧은 고정 문구로 대체
+      resultTitle = '예상 보험금을 확인했어요.';
       highlightType = 'text';
       highlightText = estimatedItems?.[0]?.reason || aiMessage.messageContent;
     }
@@ -185,5 +268,6 @@ export function mapApiResponseToResultView(apiResponse) {
     highlightAmount,
     evidences,
     followupOptions: FOLLOWUP_OPTIONS_BY_QUESTION_TYPE[questionType] || [],
+    sourceMessageId: aiMessage.hasSources ? aiMessage.messageId : null,
   };
 }
