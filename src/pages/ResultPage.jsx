@@ -6,6 +6,7 @@ import EvidenceCard from '../components/EvidenceCard';
 import { mapApiResponseToResultView } from '../utils/resultMapper';
 import { RESULT_PREVIEW_SAMPLES } from '../data/resultPreviewSamples';
 import { getMessageSources } from '../api/evidence';
+import { sendInsuranceCondition } from '../api/chat';
 import characterResult from '../assets/images/characters/character_result2.png';
 import checkBadge from '../assets/images/check-badge.png';
 import checkBadgePurple from '../assets/images/check-badge-purple.png';
@@ -25,7 +26,17 @@ export default function ResultPage({ data, onSelectFollowup, onCustomInput }) {
   // 우선순위: 1) data prop 직접 전달 2) UploadPage가 navigate state로 넘긴 실제 응답
   // 3) /result/preview/:sampleKey로 들어왔으면 저장해둔 샘플 응답
   // (더미 데이터는 더 이상 안 씀 -> 셋 다 없으면 안내 화면으로 대체)
-  const apiResultData = location.state?.resultData || (sampleKey ? RESULT_PREVIEW_SAMPLES[sampleKey] : null);
+  // apiResultData를 state로 들고 있어야 후속 질문(다른 칩) 클릭 시 새 응답으로 교체할 수 있음
+  const [apiResultData, setApiResultData] = useState(
+    location.state?.resultData || (sampleKey ? RESULT_PREVIEW_SAMPLES[sampleKey] : null)
+  );
+  const [isFollowupLoading, setIsFollowupLoading] = useState(false);
+
+  // 후속 질문을 다시 물어보려면 최초 조건 입력 당시의 세션/조건 정보가 필요함.
+  // UploadPage가 navigate state에 같이 실어보내줌 (resultData만 있으면 재요청 불가)
+  const chatSessionId = location.state?.chatSessionId;
+  const conditionData = location.state?.conditionData;
+
   const resolvedData = data || (apiResultData ? mapApiResponseToResultView(apiResultData) : null);
   const sourceMessageId = resolvedData?.sourceMessageId;
 
@@ -56,6 +67,37 @@ export default function ResultPage({ data, onSelectFollowup, onCustomInput }) {
 
     return () => { cancelled = true; };
   }, [sourceMessageId]);
+
+  // 후속 질문(다른 칩) 클릭 시: 같은 세션/조건으로 questionType만 바꿔서 다시 물어봄
+  const handleSelectFollowup = async (optionNumber) => {
+    // 커스텀 override가 주어졌으면(예: 채팅 위젯 안에 임베드된 경우) 그쪽에 위임
+    if (onSelectFollowup) {
+      onSelectFollowup(optionNumber);
+      return;
+    }
+
+    if (!chatSessionId || !conditionData) {
+      alert('다시 조건을 입력해야 다른 결과를 볼 수 있어요. 증권·약관 업로드부터 다시 진행해주세요.');
+      navigate('/upload');
+      return;
+    }
+
+    setIsFollowupLoading(true);
+    try {
+      const result = await sendInsuranceCondition(chatSessionId, conditionData, optionNumber);
+      setApiResultData(result);
+      // 주소도 새 옵션 번호로 맞춰주고, 새로고침해도 유지되도록 state 다시 실어보냄
+      navigate(`/result/option/${optionNumber}`, {
+        state: { resultData: result, chatSessionId, conditionData },
+        replace: true,
+      });
+    } catch (error) {
+      console.error('후속 질문 전송 오류:', error);
+      alert('결과를 불러오지 못했어요. 다시 시도해주세요.');
+    } finally {
+      setIsFollowupLoading(false);
+    }
+  };
 
   if (!resolvedData) {
     return (
@@ -167,12 +209,15 @@ export default function ResultPage({ data, onSelectFollowup, onCustomInput }) {
         )}
 
         <div className="result-followup-area">
-          <p className="result-followup-lead">더 궁금한 점 있으세요?</p>
+          <p className="result-followup-lead">
+            {isFollowupLoading ? '다음 답변을 준비하고 있어요...' : '더 궁금한 점 있으세요?'}
+          </p>
           {followupOptions.map((opt) => (
             <button
               key={opt.number}
               className="result-followup-btn"
-              onClick={() => onSelectFollowup?.(opt.number)}
+              onClick={() => handleSelectFollowup(opt.number)}
+              disabled={isFollowupLoading}
               type="button"
             >
               {opt.label}
@@ -181,6 +226,7 @@ export default function ResultPage({ data, onSelectFollowup, onCustomInput }) {
           <button
             className="result-custom-input-btn"
             onClick={onCustomInput}
+            disabled={isFollowupLoading}
             type="button"
           >
             직접 입력할게요
