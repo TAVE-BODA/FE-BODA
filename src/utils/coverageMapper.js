@@ -29,6 +29,27 @@ export function buildSummaryTile(coverage) {
   return { amountText, inactive: !coverage.isDetected };
 }
 
+// 합산 대시보드(GET /api/dashboard/summary/{chatSessionId})용: 백엔드가 이미 회사 간 합산까지
+// 끝낸 CoverageSummaryDto { coverageType, minAmount, maxAmount, unit, companyNames } 하나를
+// 카드에 뿌릴 형태로 변환. summary가 없으면(=coverageSummaries에 그 타입이 아예 없으면) 비활성 카드.
+export function buildCoverageSummaryTile(summary) {
+  if (!summary) {
+    return { amountText: '', companies: [], inactive: true };
+  }
+
+  const { minAmount, maxAmount, unit, companyNames = [] } = summary;
+  if (minAmount === null && maxAmount === null) {
+    return { amountText: '', companies: companyNames, inactive: companyNames.length === 0 };
+  }
+
+  const min = minAmount ?? maxAmount;
+  const max = maxAmount ?? minAmount;
+  const base = min === max ? formatWon(max) : `${formatWon(min)}~${formatWon(max)}`;
+  const amountText = unit && unit !== '원' ? `${base}/${unit}` : base;
+
+  return { amountText, companies: companyNames, inactive: false };
+}
+
 // 상세페이지용: items -> InsuranceDetailCard가 원하는 rows 배열
 export function buildDetailRows(coverageType, items) {
   const safeItems = items ?? [];

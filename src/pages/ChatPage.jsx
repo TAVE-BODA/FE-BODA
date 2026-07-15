@@ -90,7 +90,8 @@ export default function ChatPage() {
   };
 
   const handleGoToUpload = () => {
-    navigate('/upload', {
+    // 칩4(보장 항목부터 보기)는 다중 업로드 전용 페이지로 분리되어 있음
+    navigate(selectedOption === 4 ? '/upload/overview' : '/upload', {
       state: {
         chatSessionId,
         conditionData,
