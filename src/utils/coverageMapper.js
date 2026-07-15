@@ -94,17 +94,21 @@ export function buildDetailRows(coverageType, items) {
 }
 
 function buildStandardRows(items) {
-  const multiConditionItems = items.filter((item) => item.amounts.length > 1);
+  // 정상 스펙(예: 골절재해 LLM 프롬프트)에서는 항목당 조건이 1개거나, 진단/수술처럼
+  // "이내/초과" 2개뿐이어야 함. 조건이 3개 이상인 건 백엔드가 여러 항목을 하나로
+  // 잘못 합친 경우라 표(2열)로 못 담는데, 그렇다고 금액을 버리면 안 되니 아래에서 따로 처리.
+  const pairConditionItems = items.filter((item) => item.amounts.length === 2);
   const singleConditionItems = items.filter((item) => item.amounts.length <= 1);
+  const overflowItems = items.filter((item) => item.amounts.length > 2);
   const rows = [];
 
-  if (multiConditionItems.length > 0) {
-    const conditions = [...new Set(multiConditionItems.flatMap((item) => item.amounts.map((a) => a.condition)))];
+  if (pairConditionItems.length > 0) {
+    const conditions = [...new Set(pairConditionItems.flatMap((item) => item.amounts.map((a) => a.condition)))];
     const [condition1, condition2] = conditions;
 
     rows.push({ type: 'col-header', col1: condition1, col2: condition2 });
 
-    multiConditionItems.forEach((item) => {
+    pairConditionItems.forEach((item) => {
       const amount1 = item.amounts.find((a) => a.condition === condition1);
       const amount2 = item.amounts.find((a) => a.condition === condition2);
       rows.push({
@@ -118,6 +122,14 @@ function buildStandardRows(items) {
 
   singleConditionItems.forEach((item) => {
     rows.push(buildSingleAmountRow(item.coverageName, item.amounts[0]));
+  });
+
+  // 스펙 위반(조건 3개 이상)에 대한 방어: 표로는 못 담으니 "항목명 · 조건" 한 줄씩 풀어서
+  // 금액이 화면에서 사라지지 않게 함
+  overflowItems.forEach((item) => {
+    item.amounts.forEach((amount) => {
+      rows.push(buildSingleAmountRow(`${item.coverageName} · ${amount.condition}`, amount));
+    });
   });
 
   return rows;
