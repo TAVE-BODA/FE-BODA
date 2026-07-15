@@ -54,7 +54,7 @@ export const sendInsuranceCondition = async (chatSessionId, formData, selectedOp
 
   const CAST_TYPE_MAP = {
     full: 'FULL_CAST',
-    partial: 'HALF_CAST',
+    partial: 'SPLINT', // 스펙 문서엔 HALF_CAST로 돼있었으나 실제 서버는 SPLINT를 기대함 (curl로 확인, 2026-07-15)
   };
 
   const DENTAL_TYPE_MAP = {
