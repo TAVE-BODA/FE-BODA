@@ -58,6 +58,7 @@ export default function SummaryDetailPage() {
 
   const cards = dashcards
     .map((d) => ({
+      analysisId: d.analysisId,
       companyName: d.companyName,
       period: `${d.insuranceStartDate} ~ ${d.insuranceEndDate}`,
       coverage: d.coverages.find((c) => c.coverageType === coverageType),
@@ -97,9 +98,9 @@ export default function SummaryDetailPage() {
         <p className="detail-subtitle">{text.subtitle}</p>
 
         <div className="detail-cards">
-          {cards.map(({ companyName, period, coverage }) => (
+          {cards.map(({ analysisId, companyName, period, coverage }) => (
             <InsuranceDetailCard
-              key={companyName}
+              key={analysisId}
               company={companyName}
               period={period}
               rows={buildDetailRows(coverageType, coverage.items)}
