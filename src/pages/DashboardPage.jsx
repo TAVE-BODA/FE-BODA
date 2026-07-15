@@ -128,7 +128,8 @@ export default function DashboardPage() {
               amount={c.amount}
               companies={c.companies}
               inactive={c.inactive}
-              onClick={() => navigate(`/result/${c.id}`)}
+              // 실손은 상세페이지 디자인이 아직 없어서 클릭해도 이동하지 않음
+              onClick={c.id === 'reimbursement' ? undefined : () => navigate(`/result/${c.id}`)}
             />
           ))}
         </div>

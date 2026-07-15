@@ -14,6 +14,12 @@ export function formatWon(amount) {
 
 // 대시보드 요약 카드용: 카드 안 모든 금액 중 최소~최대 범위 텍스트
 export function buildSummaryTile(coverage) {
+  // 실손은 실비 보상이라 정액(고정 금액) 개념이 없어서 coverageAmount가 항상 null로 옴.
+  // 금액 대신 감지 여부만 "실손 보장" 텍스트로 표시 (상세페이지는 아직 미구현이라 카드에서 안내만).
+  if (coverage.coverageType === '실손') {
+    return { amountText: coverage.isDetected ? '실손 보장' : '', inactive: !coverage.isDetected };
+  }
+
   const allAmounts = (coverage.items ?? [])
     .flatMap((item) => item.amounts.map((a) => a.coverageAmount))
     .filter((a) => a !== null && a !== undefined);
@@ -46,7 +52,19 @@ function formatScale(amount) {
 // 카드에 뿌릴 형태로 변환. summary가 없거나(그 타입 자체가 응답에 없음) minAmount/maxAmount가
 // null이면(백엔드가 미감지 항목도 companyNames 채운 채로 null/null 내려줌) 비활성 카드.
 export function buildCoverageSummaryTile(summary) {
-  if (!summary || summary.minAmount === null || summary.maxAmount === null) {
+  if (!summary) {
+    return { amountText: '', companies: [], inactive: true };
+  }
+
+  // 실손은 항상 min/maxAmount가 null(정액이 없어서)이라, 감지 여부는 companyNames 유무로 판단.
+  if (summary.coverageType === '실손') {
+    const companyNames = summary.companyNames ?? [];
+    return companyNames.length > 0
+      ? { amountText: '실손 보장', companies: companyNames, inactive: false }
+      : { amountText: '', companies: [], inactive: true };
+  }
+
+  if (summary.minAmount === null || summary.maxAmount === null) {
     return { amountText: '', companies: [], inactive: true };
   }
 
