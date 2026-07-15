@@ -141,25 +141,31 @@ function buildStandardRows(items) {
 //   condition 값이 곧 그 그룹의 열 이름("2년 이내"/"2년 초과")이 됨
 // - 그룹 없이 단독으로 오는 항목(예: 크라운치료, 영구치발치)은 그 자체가 하나의 행
 function buildToothRows(items) {
-  return items.map((item) => {
+  return items.flatMap((item) => {
     const isGroupHeader = item.amounts.length > 1
       && item.amounts.every((a) => a.coverageAmount === null || a.coverageAmount === undefined);
 
     if (isGroupHeader) {
       const [first, second] = item.amounts;
-      return { type: 'section', label: item.coverageName, col1: first?.condition, col2: second?.condition };
+      return [{ type: 'section', label: item.coverageName, col1: first?.condition, col2: second?.condition }];
     }
 
-    if (item.amounts.length > 1) {
+    if (item.amounts.length === 2) {
       const [first, second] = item.amounts;
-      return {
+      return [{
         type: 'col-data',
         label: item.coverageName,
         col1: formatWon(first.coverageAmount),
         col2: formatWon(second.coverageAmount),
-      };
+      }];
     }
 
-    return buildSingleAmountRow(item.coverageName, item.amounts[0]);
+    if (item.amounts.length > 2) {
+      // 스펙 위반 방어(골절재해와 동일한 문제): 여러 치료가 item 하나에 뭉쳐서 온 경우,
+      // 조건별로 한 줄씩 풀어서 금액이 화면에서 사라지지 않게 함
+      return item.amounts.map((amount) => buildSingleAmountRow(`${item.coverageName} · ${amount.condition}`, amount));
+    }
+
+    return [buildSingleAmountRow(item.coverageName, item.amounts[0])];
   });
 }
