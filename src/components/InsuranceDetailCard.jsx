@@ -12,6 +12,13 @@ const COMPANY_COLORS = {
   '메트라이프': '#3B82F6',
 };
 
+// 백엔드 companyName이 "삼성생명보험주식회사"처럼 정식 법인명으로 와서 짧은 브랜드명
+// 기준인 COMPANY_COLORS랑 그대로 매칭이 안 됨 (InsuranceBadge.jsx와 동일한 이유).
+function normalizeCompanyName(company) {
+  if (!company) return company;
+  return Object.keys(COMPANY_COLORS).find((name) => company.includes(name)) ?? company;
+}
+
 function getColor(company) {
   return COMPANY_COLORS[company] ?? '#9E9E9E';
 }
@@ -118,13 +125,14 @@ function renderRow(row, idx) {
 
 /* ── 카드 ────────────────────────────────── */
 export default function InsuranceDetailCard({ company, period, rows }) {
-  const color = getColor(company);
+  const displayName = normalizeCompanyName(company);
+  const color = getColor(displayName);
 
   return (
     <div className="detail-card" style={{ '--card-color': color }}>
       <div className="detail-card__header">
         <span className="detail-card__dot" />
-        <span className="detail-card__company">{company}</span>
+        <span className="detail-card__company">{displayName}</span>
         <span className="detail-card__period">{period}</span>
       </div>
       <div className="detail-card__body">

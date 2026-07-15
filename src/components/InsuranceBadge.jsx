@@ -16,6 +16,14 @@ const COMPANY_COLORS = {
 // 분석 정확도 경고 대상 회사
 const LOW_ACCURACY_COMPANIES = ['동양생명'];
 
+// 백엔드 companyName은 "삼성생명보험주식회사"처럼 정식 법인명으로 오는데, 디자인시스템
+// 컬러/표기는 "삼성생명" 같은 짧은 브랜드명 기준이라 그대로 매칭이 안 됨. 알고 있는
+// 짧은 이름이 법인명 안에 포함돼 있는지로 찾아서 짧은 이름으로 바꿔줌.
+function normalizeCompanyName(company) {
+  if (!company) return company;
+  return Object.keys(COMPANY_COLORS).find((name) => company.includes(name)) ?? company;
+}
+
 function getCompanyColor(company) {
   return COMPANY_COLORS[company] ?? { bg: '#F5F5F5', border: '#9E9E9E', text: '#616161' };
 }
@@ -23,8 +31,9 @@ function getCompanyColor(company) {
 export default function InsuranceBadge({ company, year, bold = false }) {
   const [tooltipVisible, setTooltipVisible] = useState(false);
   const timerRef = useRef(null);
-  const colors = getCompanyColor(company);
-  const isLowAccuracy = LOW_ACCURACY_COMPANIES.includes(company);
+  const displayName = normalizeCompanyName(company);
+  const colors = getCompanyColor(displayName);
+  const isLowAccuracy = LOW_ACCURACY_COMPANIES.includes(displayName);
 
   const showTooltip = () => {
     clearTimeout(timerRef.current);
@@ -40,7 +49,7 @@ export default function InsuranceBadge({ company, year, bold = false }) {
       className={['insurance-badge', bold ? 'insurance-badge--bold' : ''].filter(Boolean).join(' ')}
       style={{ '--badge-bg': colors.bg, '--badge-border': colors.border, '--badge-text': colors.text }}
     >
-      {company}{year ? ` ${year}~` : ''}
+      {displayName}{year ? ` ${year}~` : ''}
       {isLowAccuracy && (
         <span
           className="insurance-badge__info"
@@ -50,7 +59,7 @@ export default function InsuranceBadge({ company, year, bold = false }) {
           i
           {tooltipVisible && (
             <span className="insurance-badge__tooltip">
-              {company}은 분석 정확도가 낮을 수 있어요
+              {displayName}은 분석 정확도가 낮을 수 있어요
             </span>
           )}
         </span>
