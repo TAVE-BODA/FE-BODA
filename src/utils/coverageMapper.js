@@ -76,6 +76,17 @@ export function buildCoverageSummaryTile(summary) {
   return { amountText, companies: summary.companyNames ?? [], inactive: false };
 }
 
+// 약관을 안 올려서 LLM이 조건/금액을 못 뽑았을 때, condition 자리에 이 안내 문구가 그대로 옴
+// (실제 응답으로 확인: 골절재해 analysisId=87의 "보장 범위" 항목).
+const NEEDS_TERMS_CONDITION = '약관이 필요해요';
+
+function buildSingleAmountRow(coverageName, amount) {
+  if (amount?.condition === NEEDS_TERMS_CONDITION) {
+    return { type: 'needs-terms', label: coverageName };
+  }
+  return { type: 'simple', label: coverageName, amount: formatWon(amount?.coverageAmount) };
+}
+
 // 상세페이지용: items -> InsuranceDetailCard가 원하는 rows 배열
 export function buildDetailRows(coverageType, items) {
   const safeItems = items ?? [];
@@ -106,24 +117,37 @@ function buildStandardRows(items) {
   }
 
   singleConditionItems.forEach((item) => {
-    const amount = item.amounts[0];
-    rows.push({ type: 'simple', label: item.coverageName, amount: formatWon(amount?.coverageAmount) });
+    rows.push(buildSingleAmountRow(item.coverageName, item.amounts[0]));
   });
 
   return rows;
 }
 
-// 치아 카드: coverageAmount가 null이면 그룹 헤더(section)로 취급
+// 치아 카드 전용 규칙(백엔드 LLM 프롬프트 기준):
+// - 같은 면책기간(예: "2년 이내"/"2년 초과")을 쓰는 치료끼리 그룹으로 묶임
+// - 그룹 제목이 필요하면 coverageAmount가 둘 다 null인 item이 먼저 오고, 그 item의
+//   condition 값이 곧 그 그룹의 열 이름("2년 이내"/"2년 초과")이 됨
+// - 그룹 없이 단독으로 오는 항목(예: 크라운치료, 영구치발치)은 그 자체가 하나의 행
 function buildToothRows(items) {
-  const rows = [];
-  items.forEach((item) => {
-    item.amounts.forEach((a) => {
-      if (a.coverageAmount === null || a.coverageAmount === undefined) {
-        rows.push({ type: 'section', label: item.coverageName });
-      } else {
-        rows.push({ type: 'simple', label: item.coverageName, amount: formatWon(a.coverageAmount) });
-      }
-    });
+  return items.map((item) => {
+    const isGroupHeader = item.amounts.length > 1
+      && item.amounts.every((a) => a.coverageAmount === null || a.coverageAmount === undefined);
+
+    if (isGroupHeader) {
+      const [first, second] = item.amounts;
+      return { type: 'section', label: item.coverageName, col1: first?.condition, col2: second?.condition };
+    }
+
+    if (item.amounts.length > 1) {
+      const [first, second] = item.amounts;
+      return {
+        type: 'col-data',
+        label: item.coverageName,
+        col1: formatWon(first.coverageAmount),
+        col2: formatWon(second.coverageAmount),
+      };
+    }
+
+    return buildSingleAmountRow(item.coverageName, item.amounts[0]);
   });
-  return rows;
 }
