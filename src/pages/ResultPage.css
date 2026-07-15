@@ -223,6 +223,20 @@
   box-shadow: 0 6px 15px rgba(47, 128, 237, 0.2);
 }
 
+.result-followup-btn:disabled,
+.result-custom-input-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.result-followup-btn:disabled:hover,
+.result-custom-input-btn:disabled:hover {
+  background-color: var(--gray-white);
+  color: var(--Main-07);
+  box-shadow: 0 4px 10px rgba(47, 128, 237, 0.05);
+}
+
 .result-custom-input-btn {
   display: flex;
   justify-content: center;
