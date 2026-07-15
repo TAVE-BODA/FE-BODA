@@ -36,14 +36,17 @@ const IconTooth = () => (
   </svg>
 );
 
+// coverageType 키는 analysisId=1처럼 오래된 테스트 데이터에서 보이던 "진단비/수술비/입원비"가
+// 아니라, 실제 최신 데이터(analysisId=84/87/100 등)와 요약 API 양쪽에서 공통으로 확인된
+// "진단/수술/입원" 축약형 기준. 두 API가 같은 이름을 쓰는 걸 확인했으니 별도 별칭 매핑 불필요.
 export const COVERAGE_META = {
-  '진단비':  { id: 'diagnosis',    label: '진단',     icon: <IconDiagnosis /> },
-  '수술비':  { id: 'surgery',      label: '수술',     icon: <IconSurgery />   },
-  '입원비':  { id: 'hospital',     label: '입원',     icon: <IconHospital />  },
+  '진단':    { id: 'diagnosis',    label: '진단',     icon: <IconDiagnosis /> },
+  '수술':    { id: 'surgery',      label: '수술',     icon: <IconSurgery />   },
+  '입원':    { id: 'hospital',     label: '입원',     icon: <IconHospital />  },
   '골절재해': { id: 'bone',        label: '골절·재해', icon: <IconBone />      },
   '치아':    { id: 'tooth',        label: '치아',     icon: <IconTooth />     },
   '실손':    { id: 'reimbursement', label: '실손',    icon: <IconHospital /> },
 };
 
 // 대시보드 카드 고정 노출 순서 (백엔드 응답 순서와 무관하게 항상 이 순서로 렌더링)
-export const COVERAGE_ORDER = ['진단비', '수술비', '입원비', '골절재해', '치아', '실손'];
+export const COVERAGE_ORDER = ['진단', '수술', '입원', '골절재해', '치아', '실손'];

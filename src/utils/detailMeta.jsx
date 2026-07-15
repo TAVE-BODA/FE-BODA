@@ -38,10 +38,12 @@ export const ICONS = {
   ),
 };
 
+// analysisId=1처럼 오래된 테스트 데이터는 "진단비/수술비/입원비"였지만, 실제 최신 데이터
+// (analysisId=84/87/100 등)는 "진단/수술/입원" 축약형을 씀 — coverageMeta.jsx와 동일 기준.
 export const COVERAGE_TYPE_BY_ID = {
-  diagnosis: '진단비',
-  surgery: '수술비',
-  hospital: '입원비',
+  diagnosis: '진단',
+  surgery: '수술',
+  hospital: '입원',
   bone: '골절재해',
   tooth: '치아',
   reimbursement: '실손',

@@ -29,25 +29,33 @@ export function buildSummaryTile(coverage) {
   return { amountText, inactive: !coverage.isDetected };
 }
 
+// formatWon과 달리 "원" 접미사를 안 붙이는 축약형 (만/억 단위만 변환). 합산 대시보드의
+// unit 필드가 "원", "원/일", "원/개"처럼 이미 통화 단위까지 포함해서 오기 때문에 따로 뺌.
+function formatScale(amount) {
+  if (amount >= 100000000) {
+    return `${(amount / 100000000).toLocaleString('ko-KR', { maximumFractionDigits: 1 })}억`;
+  }
+  if (amount >= 10000) {
+    return `${(amount / 10000).toLocaleString('ko-KR', { maximumFractionDigits: 1 })}만`;
+  }
+  return amount.toLocaleString('ko-KR');
+}
+
 // 합산 대시보드(GET /api/dashboard/summary/{chatSessionId})용: 백엔드가 이미 회사 간 합산까지
 // 끝낸 CoverageSummaryDto { coverageType, minAmount, maxAmount, unit, companyNames } 하나를
-// 카드에 뿌릴 형태로 변환. summary가 없으면(=coverageSummaries에 그 타입이 아예 없으면) 비활성 카드.
+// 카드에 뿌릴 형태로 변환. summary가 없거나(그 타입 자체가 응답에 없음) minAmount/maxAmount가
+// null이면(백엔드가 미감지 항목도 companyNames 채운 채로 null/null 내려줌) 비활성 카드.
 export function buildCoverageSummaryTile(summary) {
-  if (!summary) {
+  if (!summary || summary.minAmount === null || summary.maxAmount === null) {
     return { amountText: '', companies: [], inactive: true };
   }
 
-  const { minAmount, maxAmount, unit, companyNames = [] } = summary;
-  if (minAmount === null && maxAmount === null) {
-    return { amountText: '', companies: companyNames, inactive: companyNames.length === 0 };
-  }
+  const { minAmount, maxAmount, unit } = summary;
+  const amountText = minAmount === maxAmount
+    ? `${formatScale(maxAmount)}${unit}`
+    : `${formatScale(minAmount)}~${formatScale(maxAmount)}${unit}`;
 
-  const min = minAmount ?? maxAmount;
-  const max = maxAmount ?? minAmount;
-  const base = min === max ? formatWon(max) : `${formatWon(min)}~${formatWon(max)}`;
-  const amountText = unit && unit !== '원' ? `${base}/${unit}` : base;
-
-  return { amountText, companies: companyNames, inactive: false };
+  return { amountText, companies: summary.companyNames ?? [], inactive: false };
 }
 
 // 상세페이지용: items -> InsuranceDetailCard가 원하는 rows 배열
