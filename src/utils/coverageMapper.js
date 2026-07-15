@@ -80,26 +80,39 @@ export function buildCoverageSummaryTile(summary) {
 // (실제 응답으로 확인: 골절재해 analysisId=87의 "보장 범위" 항목).
 const NEEDS_TERMS_CONDITION = '약관이 필요해요';
 
+// "1회당"/"회당"처럼 건별 지급 조건은 금액 옆에 "/회"로 붙여서 보여줌
+// (실제 화면 기준: "깁스(Cast) 치료 10만원/회"). 그 외 조건("조건없음" 등)은 접미사 없음.
+function formatConditionSuffix(condition) {
+  return condition === '1회당' || condition === '회당' ? '/회' : '';
+}
+
 function buildSingleAmountRow(coverageName, amount) {
   if (amount?.condition === NEEDS_TERMS_CONDITION) {
     return { type: 'needs-terms', label: coverageName };
   }
-  return { type: 'simple', label: coverageName, amount: formatWon(amount?.coverageAmount) };
+  const formatted = formatWon(amount?.coverageAmount);
+  const displayAmount = formatted ? `${formatted}${formatConditionSuffix(amount?.condition)}` : formatted;
+  return { type: 'simple', label: coverageName, amount: displayAmount };
 }
 
 // 상세페이지용: items -> InsuranceDetailCard가 원하는 rows 배열
 export function buildDetailRows(coverageType, items) {
   const safeItems = items ?? [];
-  return coverageType === '치아' ? buildToothRows(safeItems) : buildStandardRows(safeItems);
+  if (coverageType === '치아') return buildToothRows(safeItems);
+  // 골절재해는 진단/수술과 달리 "면책기간 이내/초과" 개념이 없어서(사고는 미리 대비할 수
+  // 없으니 면책기간을 둘 이유가 없음) 실제 화면에서도 표(2열)가 아니라 낱개 줄로만 나열됨.
+  // 조건이 2개 이상이면 표로 묶지 말고 항목별로 풀어서 보여줘야 함.
+  return buildStandardRows(safeItems, { allowPairing: coverageType !== '골절재해' });
 }
 
-function buildStandardRows(items) {
-  // 정상 스펙(예: 골절재해 LLM 프롬프트)에서는 항목당 조건이 1개거나, 진단/수술처럼
-  // "이내/초과" 2개뿐이어야 함. 조건이 3개 이상인 건 백엔드가 여러 항목을 하나로
-  // 잘못 합친 경우라 표(2열)로 못 담는데, 그렇다고 금액을 버리면 안 되니 아래에서 따로 처리.
-  const pairConditionItems = items.filter((item) => item.amounts.length === 2);
+function buildStandardRows(items, { allowPairing = true } = {}) {
+  // 정상 스펙에서는 항목당 조건이 1개거나(골절재해), 진단/수술/입원처럼 "이내/초과" 2개뿐임.
+  // 조건이 그 이상인 건 백엔드가 여러 항목을 하나로 잘못 합친 경우라 표(2열)로 못 담는데,
+  // 그렇다고 금액을 버리면 안 되니 아래에서 "항목명 · 조건" 낱개 줄로 풀어서 처리.
+  const pairConditionItems = allowPairing ? items.filter((item) => item.amounts.length === 2) : [];
   const singleConditionItems = items.filter((item) => item.amounts.length <= 1);
-  const overflowItems = items.filter((item) => item.amounts.length > 2);
+  const overflowThreshold = allowPairing ? 2 : 1;
+  const overflowItems = items.filter((item) => item.amounts.length > overflowThreshold);
   const rows = [];
 
   if (pairConditionItems.length > 0) {
