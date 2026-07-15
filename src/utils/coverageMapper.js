@@ -14,7 +14,7 @@ export function formatWon(amount) {
 
 // 대시보드 요약 카드용: 카드 안 모든 금액 중 최소~최대 범위 텍스트
 export function buildSummaryTile(coverage) {
-  const allAmounts = coverage.items
+  const allAmounts = (coverage.items ?? [])
     .flatMap((item) => item.amounts.map((a) => a.coverageAmount))
     .filter((a) => a !== null && a !== undefined);
 
@@ -31,7 +31,8 @@ export function buildSummaryTile(coverage) {
 
 // 상세페이지용: items -> InsuranceDetailCard가 원하는 rows 배열
 export function buildDetailRows(coverageType, items) {
-  return coverageType === '치아' ? buildToothRows(items) : buildStandardRows(items);
+  const safeItems = items ?? [];
+  return coverageType === '치아' ? buildToothRows(safeItems) : buildStandardRows(safeItems);
 }
 
 function buildStandardRows(items) {

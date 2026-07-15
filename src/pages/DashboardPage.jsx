@@ -45,12 +45,16 @@ const IconTooth = () => (
 
 // 백엔드 coverageType 문자열 <-> 화면 라우트 id / 아이콘 매핑
 const COVERAGE_META = {
-  '진단':   { id: 'diagnosis', icon: <IconDiagnosis /> },
-  '수술':   { id: 'surgery',   icon: <IconSurgery />   },
-  '입원':   { id: 'hospital',  icon: <IconHospital />  },
-  '골절재해': { id: 'bone',    icon: <IconBone />      },
-  '치아':   { id: 'tooth',     icon: <IconTooth />     },
+  '진단비':  { id: 'diagnosis',    label: '진단',     icon: <IconDiagnosis /> },
+  '수술비':  { id: 'surgery',      label: '수술',     icon: <IconSurgery />   },
+  '입원비':  { id: 'hospital',     label: '입원',     icon: <IconHospital />  },
+  '골절재해': { id: 'bone',        label: '골절·재해', icon: <IconBone />      },
+  '치아':    { id: 'tooth',        label: '치아',     icon: <IconTooth />     },
+  '실손':    { id: 'reimbursement', label: '실손',    icon: <IconHospital /> },
 };
+
+// 대시보드 카드 고정 노출 순서 (백엔드 응답 순서와 무관하게 항상 이 순서로 렌더링)
+const COVERAGE_ORDER = ['진단비', '수술비', '입원비', '골절재해', '치아', '실손'];
 
 const NOTICE_BANNER = '진단금, 수술비, 입원일당, 골절·재해는 보험사마다 따로 청구해서 모두 받을 수 있어요.';
 
@@ -101,13 +105,19 @@ export default function DashboardPage() {
   }
 
   const user = JSON.parse(localStorage.getItem('user') ?? '{}');
-  const coverages = data.coverages.map((c) => {
-    const meta = COVERAGE_META[c.coverageType] ?? { id: c.coverageType, icon: null };
+  const coverages = COVERAGE_ORDER.map((coverageType) => {
+    const meta = COVERAGE_META[coverageType];
+    const c = data.coverages.find((x) => x.coverageType === coverageType);
+
+    if (!c) {
+      return { id: meta.id, icon: meta.icon, category: meta.label, amount: '', companies: [], inactive: true };
+    }
+
     const { amountText, inactive } = buildSummaryTile(c);
     return {
       id: meta.id,
       icon: meta.icon,
-      category: c.coverageType,
+      category: meta.label,
       amount: amountText,
       companies: inactive ? [] : [data.companyName],
       inactive,

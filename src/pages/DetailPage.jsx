@@ -38,15 +38,22 @@ const ICONS = {
       <path d="M12 2C9.24 2 7 4.24 7 7c0 1.3.5 2.48 1.3 3.37C7.48 12.2 7 14.05 7 16c0 2.21.9 4 2 4s2-1.79 2-4c0-.55.45-1 1-1s1 .45 1 1c0 2.21.9 4 2 4s2-1.79 2-4c0-1.95-.48-3.8-1.3-5.63C16.5 9.48 17 8.3 17 7c0-2.76-2.24-5-5-5z" stroke="#229cff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   ),
+  reimbursement: (
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+      <rect x="3" y="5" width="18" height="16" rx="2" stroke="#229cff" strokeWidth="1.8"/>
+      <path d="M3 9h18M9 5V3M15 5V3M9 13h2v2h2v-2h2v-2h-2v-2h-2v2H9v2z" stroke="#229cff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  ),
 };
 
 // 화면 라우트 id <-> 백엔드 coverageType 문자열, 페이지 제목/문구
 const COVERAGE_TYPE_BY_ID = {
-  diagnosis: '진단',
-  surgery: '수술',
-  hospital: '입원',
+  diagnosis: '진단비',
+  surgery: '수술비',
+  hospital: '입원비',
   bone: '골절재해',
   tooth: '치아',
+  reimbursement: '실손',
 };
 
 const TEXT_BY_ID = {
@@ -55,6 +62,7 @@ const TEXT_BY_ID = {
   hospital:  { title: '입원비', subtitle: '입원 1일당 지급되는 금액이에요', ctaText: '입원 후 얼마 받을 수 있는지 궁금하다면?' },
   bone:      { title: '골절·재해', subtitle: '재해로 인한 골절·화상 발생 시 지급되는 보험금이에요', ctaText: '내 상황이 재해에 해당하는지 궁금하다면?' },
   tooth:     { title: '치아', subtitle: '치아 치료 시 지급되는 보험금이에요', ctaText: '치아 치료 청구 가능한지 궁금하다면?' },
+  reimbursement: { title: '실손', subtitle: '병원비, 약제비 등 실제 부담한 의료비를 보장해요', ctaText: '실손 청구 가능 여부가 궁금하다면?' },
 };
 
 export default function DetailPage() {
