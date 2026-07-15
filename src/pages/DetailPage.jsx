@@ -1,8 +1,10 @@
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
 import Character from '../components/Character';
 import InsuranceDetailCard from '../components/InsuranceDetailCard';
-import { COVERAGE_DETAIL } from '../data/coverageDetailData';
+import { getDashboard } from '../api/dashboard';
+import { buildDetailRows } from '../utils/coverageMapper';
 import './DetailPage.css';
 
 // 카테고리별 아이콘
@@ -38,12 +40,69 @@ const ICONS = {
   ),
 };
 
+// 화면 라우트 id <-> 백엔드 coverageType 문자열, 페이지 제목/문구
+const COVERAGE_TYPE_BY_ID = {
+  diagnosis: '진단',
+  surgery: '수술',
+  hospital: '입원',
+  bone: '골절재해',
+  tooth: '치아',
+};
+
+const TEXT_BY_ID = {
+  diagnosis: { title: '진단비', subtitle: '암, 뇌, 심장 질환을 진단받았을 때 청구할 수 있는 보장이에요', ctaText: '내 상황에서 청구 가능한지 궁금하다면?' },
+  surgery:   { title: '수술비', subtitle: '수술 종류에 따라 분류되어 지급해요', ctaText: '내 수술이 몇 종인지, 얼마 받는지 궁금하다면?' },
+  hospital:  { title: '입원비', subtitle: '입원 1일당 지급되는 금액이에요', ctaText: '입원 후 얼마 받을 수 있는지 궁금하다면?' },
+  bone:      { title: '골절·재해', subtitle: '재해로 인한 골절·화상 발생 시 지급되는 보험금이에요', ctaText: '내 상황이 재해에 해당하는지 궁금하다면?' },
+  tooth:     { title: '치아', subtitle: '치아 치료 시 지급되는 보험금이에요', ctaText: '치아 치료 청구 가능한지 궁금하다면?' },
+};
+
 export default function DetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const data = COVERAGE_DETAIL[id];
+  const analysisId = localStorage.getItem('analysisId');
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!analysisId) return;
+    getDashboard(analysisId)
+      .then(setData)
+      .catch(() => setError('데이터를 불러오지 못했어요.'));
+  }, [analysisId]);
+
+  if (!analysisId) {
+    return (
+      <div className="detail-page">
+        <NavBar />
+        <p style={{ padding: '120px 40px', color: 'var(--gray-05)' }}>분석 결과를 찾을 수 없어요. 보험증권을 먼저 업로드해주세요.</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="detail-page">
+        <NavBar />
+        <p style={{ padding: '120px 40px', color: 'var(--gray-05)' }}>{error}</p>
+      </div>
+    );
+  }
 
   if (!data) {
+    return (
+      <div className="detail-page">
+        <NavBar />
+        <p style={{ padding: '120px 40px', color: 'var(--gray-05)' }}>불러오는 중이에요...</p>
+      </div>
+    );
+  }
+
+  const coverageType = COVERAGE_TYPE_BY_ID[id];
+  const coverage = data.coverages.find((c) => c.coverageType === coverageType);
+  const text = TEXT_BY_ID[id];
+
+  if (!coverage || !text) {
     return (
       <div className="detail-page">
         <NavBar />
@@ -51,6 +110,9 @@ export default function DetailPage() {
       </div>
     );
   }
+
+  const rows = buildDetailRows(coverageType, coverage.items);
+  const period = `${data.insuranceStartDate} ~ ${data.insuranceEndDate}`;
 
   return (
     <div className="detail-page">
@@ -70,28 +132,21 @@ export default function DetailPage() {
           </button>
           <div className="detail-title-row">
             {ICONS[id]}
-            <h1 className="detail-title">{data.title}</h1>
+            <h1 className="detail-title">{text.title}</h1>
           </div>
         </div>
 
-        <p className="detail-subtitle">{data.subtitle}</p>
+        <p className="detail-subtitle">{text.subtitle}</p>
 
         {/* 보험사별 카드 */}
         <div className="detail-cards">
-          {data.companies.map((c) => (
-            <InsuranceDetailCard
-              key={c.company}
-              company={c.company}
-              period={c.period}
-              rows={c.rows}
-            />
-          ))}
+          <InsuranceDetailCard company={data.companyName} period={period} rows={rows} />
         </div>
 
         {/* 하단 CTA 배너 */}
         <div className="detail-cta">
           <Character size="sm" animate />
-          <p className="detail-cta__text">{data.ctaText}</p>
+          <p className="detail-cta__text">{text.ctaText}</p>
           <button className="detail-cta__btn" onClick={() => navigate('/upload')}>
             약관 업로드하러 가기
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">

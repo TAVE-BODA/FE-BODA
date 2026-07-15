@@ -1,8 +1,11 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
 import Character from '../components/Character';
 import InsuranceBadge from '../components/InsuranceBadge';
 import CoverageCard from '../components/CoverageCard';
+import { getDashboard } from '../api/dashboard';
+import { buildSummaryTile } from '../utils/coverageMapper';
 import './DashboardPage.css';
 
 // ── 아이콘 (SVG 인라인) ────────────────────────────────────
@@ -40,36 +43,76 @@ const IconTooth = () => (
   </svg>
 );
 
-const IconLoss = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-    <line x1="9" y1="12" x2="15" y2="12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-  </svg>
-);
-
-// ── 더미 데이터 (백엔드 연동 전) ───────────────────────────
-const DUMMY_DATA = {
-  userName: '윤아영',
-  analyzedCount: 2,
-  analyzedDate: '2026.06.10',
-  insurances: [
-    { company: '삼성생명', year: 2026 },
-    { company: '동양생명', year: 2002 },
-  ],
-  coverages: [
-    { id: 'diagnosis', icon: <IconDiagnosis />, category: '진단', amount: '최대 4,000만원', companies: ['삼성생명', '동양생명'], inactive: false },
-    { id: 'surgery',   icon: <IconSurgery />,   category: '수술', amount: '3.5만~110만원',  companies: ['삼성생명', '동양생명'], inactive: false },
-    { id: 'hospital',  icon: <IconHospital />,  category: '입원', amount: '1만~7만원/일',   companies: ['삼성생명', '동양생명'], inactive: false },
-    { id: 'bone',      icon: <IconBone />,      category: '골절·재해', amount: '30만~1억원', companies: ['삼성생명', '동양생명'], inactive: false },
-    { id: 'tooth',     icon: <IconTooth />,     category: '치아', amount: '1,600원~5만원', companies: ['삼성생명'],             inactive: false },
-    { id: 'loss',      icon: <IconLoss />,      category: '실손', amount: '',              companies: [],                       inactive: true  },
-  ],
-  noticeBanner: '진단금, 수술비, 입원일당, 골절·재해는 보험사마다 따로 청구해서 모두 받을 수 있어요.',
+// 백엔드 coverageType 문자열 <-> 화면 라우트 id / 아이콘 매핑
+const COVERAGE_META = {
+  '진단':   { id: 'diagnosis', icon: <IconDiagnosis /> },
+  '수술':   { id: 'surgery',   icon: <IconSurgery />   },
+  '입원':   { id: 'hospital',  icon: <IconHospital />  },
+  '골절재해': { id: 'bone',    icon: <IconBone />      },
+  '치아':   { id: 'tooth',     icon: <IconTooth />     },
 };
+
+const NOTICE_BANNER = '진단금, 수술비, 입원일당, 골절·재해는 보험사마다 따로 청구해서 모두 받을 수 있어요.';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const data = DUMMY_DATA;
+  const analysisId = localStorage.getItem('analysisId');
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!analysisId) return;
+    getDashboard(analysisId)
+      .then(setData)
+      .catch(() => setError('데이터를 불러오지 못했어요.'));
+  }, [analysisId]);
+
+  if (!analysisId) {
+    return (
+      <div className="result-page">
+        <header className="result-header"><NavBar /></header>
+        <main className="result-main">
+          <p style={{ padding: '80px 0', textAlign: 'center', color: 'var(--gray-05)' }}>분석 결과를 찾을 수 없어요. 보험증권을 먼저 업로드해주세요.</p>
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="result-page">
+        <header className="result-header"><NavBar /></header>
+        <main className="result-main">
+          <p style={{ padding: '80px 0', textAlign: 'center', color: 'var(--gray-05)' }}>{error}</p>
+        </main>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="result-page">
+        <header className="result-header"><NavBar /></header>
+        <main className="result-main">
+          <p style={{ padding: '80px 0', textAlign: 'center', color: 'var(--gray-05)' }}>불러오는 중이에요...</p>
+        </main>
+      </div>
+    );
+  }
+
+  const user = JSON.parse(localStorage.getItem('user') ?? '{}');
+  const coverages = data.coverages.map((c) => {
+    const meta = COVERAGE_META[c.coverageType] ?? { id: c.coverageType, icon: null };
+    const { amountText, inactive } = buildSummaryTile(c);
+    return {
+      id: meta.id,
+      icon: meta.icon,
+      category: c.coverageType,
+      amount: amountText,
+      companies: inactive ? [] : [data.companyName],
+      inactive,
+    };
+  });
 
   return (
     <div className="result-page">
@@ -85,11 +128,11 @@ export default function DashboardPage() {
             <div className="result-title-row">
               <Character size="sm" animate />
               <h1 className="result-title">
-                {data.userName}님이 보장을 받고 있는 항목들이에요
+                {user.nickname ?? '고객'}님이 보장을 받고 있는 항목들이에요
               </h1>
             </div>
             <p className="result-meta">
-              보험 {data.analyzedCount}개 분석 완료 &bull; {data.analyzedDate}
+              {data.companyName} &bull; {data.insuranceStartDate} ~ {data.insuranceEndDate}
               <span className="result-meta__check">✓</span>
             </p>
           </div>
@@ -103,20 +146,18 @@ export default function DashboardPage() {
 
         {/* 보험사 필터 뱃지 */}
         <div className="result-badges">
-          {data.insurances.map((ins) => (
-            <InsuranceBadge key={ins.company} company={ins.company} year={ins.year} bold />
-          ))}
+          <InsuranceBadge company={data.companyName} year={data.insuranceStartDate?.slice(0, 4)} bold />
         </div>
 
         {/* 공지 배너 */}
         <div className="result-notice">
           <span className="result-notice__icon">!</span>
-          <p className="result-notice__text">{data.noticeBanner}</p>
+          <p className="result-notice__text">{NOTICE_BANNER}</p>
         </div>
 
         {/* 보장 카드 그리드 */}
         <div className="result-grid">
-          {data.coverages.map((c) => (
+          {coverages.map((c) => (
             <CoverageCard
               key={c.id}
               icon={c.icon}
