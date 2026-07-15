@@ -48,6 +48,16 @@ function extractUserQuestion(userMessage) {
 // - 대괄호가 없는 문장은 "확인된 내용" 카드 하나로 별도 모음
 const NEGATIVE_RESULT_PATTERN = /(찾지 못했|확인되지 않|되지 않았)/;
 
+// 말풍선 제목용 축약 표기. 하이라이트 박스의 큰 숫자는 정확한 금액(예: 700,000원)을 그대로 쓰지만,
+// 제목 문장엔 전체 자릿수를 그대로 넣으면 문장이 길어져서 줄바꿈이 이상해지므로
+// "약 70만원" 처럼 짧게 줄여서 씀 (피그마 톤 그대로)
+function toApproxManwonText(amountNumber) {
+  if (amountNumber >= 10000) {
+    return `${Math.round(amountNumber / 10000)}만원`;
+  }
+  return `${amountNumber.toLocaleString('ko-KR')}원`;
+}
+
 function buildClaimEvidences(claimGuide) {
   if (!claimGuide) return [];
 
@@ -203,15 +213,25 @@ export function mapApiResponseToResultView(apiResponse) {
     highlightText = summary || aiMessage.messageContent;
     evidences = buildClaimEvidences(aiMessage.claimGuide);
   } else if (questionType === 'CHIP_AMOUNT' && aiMessage.amountGuide) {
-    const { estimatedItems, totalAmountText } = aiMessage.amountGuide;
+    const { estimatedItems = [] } = aiMessage.amountGuide;
     evidences = buildAmountEvidences(aiMessage.amountGuide);
 
-    if (totalAmountText) {
-      // 정확히 매칭되는 항목이 있어서 합계가 내려오는 경우 (미확인 케이스, 필드명 추정)
-      resultTitle = `받을 수 있어요! 약 ${totalAmountText}예요.`;
+    // amountGuide에 합계 필드(totalAmountText)가 따로 안 내려와서, 항목별 amountText를
+    // 직접 더해서 계산함. 숫자로 못 읽는 항목이 하나라도 있으면(예: "확인 필요" 같은
+    // 매칭 실패 placeholder) 억지로 합산하지 않고 안전하게 text 모드로 폴백함.
+    const parsedAmounts = estimatedItems.map((item) => {
+      const digits = (item.amountText || '').replace(/[^\d]/g, '');
+      return digits ? Number(digits) : null;
+    });
+    const allParsed = parsedAmounts.length > 0 && parsedAmounts.every((n) => n !== null);
+
+    if (allParsed) {
+      const total = parsedAmounts.reduce((sum, n) => sum + n, 0);
+      const totalText = `${total.toLocaleString('ko-KR')}원`;
+      resultTitle = `받을 수 있어요! 약 ${toApproxManwonText(total)}이에요.`;
       highlightType = 'amount';
-      highlightLabel = '예상 수령액';
-      highlightAmount = totalAmountText;
+      highlightLabel = estimatedItems.length > 1 ? '예상 수령액(항목 합산)' : '예상 수령액';
+      highlightAmount = totalText;
     } else {
       // messageContent는 줄바꿈 포함 긴 문장일 수 있어서(CHIP_DOCUMENTS와 같은 이유로)
       // 제목엔 그대로 안 넣고 짧은 고정 문구로 대체

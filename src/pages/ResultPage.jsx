@@ -129,8 +129,8 @@ export default function ResultPage({ data, onSelectFollowup, onCustomInput }) {
               />
               {highlightType === 'amount' ? (
                 <div>
-                  <p className="result-highlight-amount">{highlightAmount}</p>
                   <p className="result-highlight-label">{highlightLabel}</p>
+                  <p className="result-highlight-amount">{highlightAmount}</p>
                 </div>
               ) : (
                 <p className="result-highlight-text">

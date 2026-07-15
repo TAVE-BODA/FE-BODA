@@ -31,7 +31,7 @@ export default function EvidenceCard({
   sourcesLoading,
   sourcesError,
 }) {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [expandedSources, setExpandedSources] = useState({}); // { [chunkId]: true } - 더보기로 펼친 것만 기록
 
   const toggleSourceExpanded = (chunkId) => {
