@@ -67,9 +67,25 @@ export default function ChatPage() {
   const [conditionData, setConditionData] = useState(null);
   const [chatSessionId, setChatSessionId] = useState(null);
 
-  const handleOptionClick = (optionNumber) => {
+  const handleOptionClick = async (optionNumber) => {
     setSelectedOption(optionNumber);
-    if (optionNumber === 4) setIsModalFinished(true);
+    if (optionNumber !== 4) return;
+
+    // 칩4(보장 항목부터 보기)는 조건 입력 모달을 안 거쳐서, chatSessionId를 만들어주는
+    // handleModalSubmitSuccess도 안 타게 됨 -> chatSessionId가 계속 null로 남아서
+    // 업로드/대시보드 이동 시 /result/summary/null로 가버리던 버그. 여기서 직접 생성.
+    setIsLoading(true);
+    try {
+      const session = await createChatSession();
+      setChatSessionId(session.chatSessionId);
+      setIsModalFinished(true);
+    } catch (error) {
+      console.error('세션 생성 오류:', error);
+      alert('오류가 발생했어요. 다시 시도해주세요.');
+      setSelectedOption(null);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleModalSubmitSuccess = async (formData) => {
