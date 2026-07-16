@@ -11,6 +11,9 @@ import ServiceIntroPage from './pages/ServiceIntroPage';
 import FaqPage from './pages/FaqPage';
 import KakaoCallbackPage from './pages/KakaoCallbackPage';
 import ResultPage from './pages/ResultPage';
+import UploadOverviewPage from './pages/UploadOverviewPage';
+import SummaryDashboardPage from './pages/SummaryDashboardPage';
+import SummaryDetailPage from './pages/SummaryDetailPage';
 
 function App() {
   return (
@@ -19,8 +22,13 @@ function App() {
         <Route path="/" element={<LoginPage />} />
         <Route path="/home" element={<HomePage />} />
         <Route path="/upload" element={<UploadPage />} />
+        {/* 칩4(내 보험 보장 항목부터 보기) 전용: 보험증권 최대 3개 업로드 -> 합산 대시보드 */}
+        <Route path="/upload/overview" element={<UploadOverviewPage />} />
         <Route path="/result" element={<DashboardPage />} />
         <Route path="/result/:id" element={<DetailPage />} />
+        {/* 칩4 합산 대시보드/상세: 여러 보험사를 chatSessionId 기준으로 합쳐서 보여줌 */}
+        <Route path="/result/summary/:chatSessionId" element={<SummaryDashboardPage />} />
+        <Route path="/result/summary/:chatSessionId/:id" element={<SummaryDetailPage />} />
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/service" element={<ServiceIntroPage />} />
         <Route path="/mypage" element={<MyPage />} />

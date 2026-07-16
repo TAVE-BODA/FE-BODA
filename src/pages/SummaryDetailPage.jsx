@@ -3,30 +3,34 @@ import { useParams, useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
 import Character from '../components/Character';
 import InsuranceDetailCard from '../components/InsuranceDetailCard';
-import { getDashboard } from '../api/dashboard';
+import { getDashboard, getDashboardSummary } from '../api/dashboard';
 import { buildDetailRows } from '../utils/coverageMapper';
 import { ICONS, COVERAGE_TYPE_BY_ID, TEXT_BY_ID } from '../utils/detailMeta';
 import './DetailPage.css';
 
-export default function DetailPage() {
-  const { id } = useParams();
+// 합산 대시보드(SummaryDashboardPage)의 카드 클릭 시 이동하는 상세 페이지.
+// GET /api/dashboard/summary/{chatSessionId}(DashboardResponse)에는 회사별 상세 항목(items)이
+// 없어서, 응답에 담긴 analysisIds 각각을 기존 GET /api/dashboard/analysis/{analysisId}
+// (DashcardResponse, items 포함)로 다시 조회해서 보험사별 카드를 만든다.
+export default function SummaryDetailPage() {
+  const { chatSessionId, id } = useParams();
   const navigate = useNavigate();
-  const analysisId = localStorage.getItem('analysisId');
-  const [data, setData] = useState(null);
+  const [dashcards, setDashcards] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!analysisId) return;
-    getDashboard(analysisId)
-      .then(setData)
+    if (!chatSessionId) return;
+    getDashboardSummary(chatSessionId)
+      .then((summary) => Promise.all((summary.analysisIds ?? []).map((analysisId) => getDashboard(analysisId))))
+      .then(setDashcards)
       .catch(() => setError('데이터를 불러오지 못했어요.'));
-  }, [analysisId]);
+  }, [chatSessionId]);
 
-  if (!analysisId) {
+  if (!chatSessionId) {
     return (
       <div className="detail-page">
         <NavBar />
-        <p style={{ padding: '120px 40px', color: 'var(--gray-05)' }}>분석 결과를 찾을 수 없어요. 보험증권을 먼저 업로드해주세요.</p>
+        <p style={{ padding: '120px 40px', color: 'var(--gray-05)' }}>세션 정보를 찾을 수 없어요. 보험증권을 먼저 업로드해주세요.</p>
       </div>
     );
   }
@@ -40,7 +44,7 @@ export default function DetailPage() {
     );
   }
 
-  if (!data) {
+  if (!dashcards) {
     return (
       <div className="detail-page">
         <NavBar />
@@ -50,10 +54,18 @@ export default function DetailPage() {
   }
 
   const coverageType = COVERAGE_TYPE_BY_ID[id];
-  const coverage = data.coverages.find((c) => c.coverageType === coverageType);
   const text = TEXT_BY_ID[id];
 
-  if (!coverage || !text) {
+  const cards = dashcards
+    .map((d) => ({
+      analysisId: d.analysisId,
+      companyName: d.companyName,
+      period: `${d.insuranceStartDate} ~ ${d.insuranceEndDate}`,
+      coverage: d.coverages.find((c) => c.coverageType === coverageType),
+    }))
+    .filter(({ coverage }) => coverage?.isDetected);
+
+  if (!coverageType || !text || cards.length === 0) {
     return (
       <div className="detail-page">
         <NavBar />
@@ -61,9 +73,6 @@ export default function DetailPage() {
       </div>
     );
   }
-
-  const rows = buildDetailRows(coverageType, coverage.items);
-  const period = `${data.insuranceStartDate} ~ ${data.insuranceEndDate}`;
 
   return (
     <div className="detail-page">
@@ -73,7 +82,6 @@ export default function DetailPage() {
 
       <main className="detail-main">
 
-        {/* 뒤로가기 + 타이틀 */}
         <div className="detail-top">
           <button className="detail-back-btn" onClick={() => navigate(-1)}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -89,17 +97,22 @@ export default function DetailPage() {
 
         <p className="detail-subtitle">{text.subtitle}</p>
 
-        {/* 보험사별 카드 */}
         <div className="detail-cards">
-          <InsuranceDetailCard company={data.companyName} period={period} rows={rows} />
+          {cards.map(({ analysisId, companyName, period, coverage }) => (
+            <InsuranceDetailCard
+              key={analysisId}
+              company={companyName}
+              period={period}
+              rows={buildDetailRows(coverageType, coverage.items)}
+            />
+          ))}
         </div>
 
-        {/* 하단 CTA 배너 */}
         <div className="detail-cta">
           <Character size="sm" animate />
           <p className="detail-cta__text">{text.ctaText}</p>
-          <button className="detail-cta__btn" onClick={() => navigate('/upload')}>
-            약관 업로드하러 가기
+          <button className="detail-cta__btn" onClick={() => navigate('/upload/overview')}>
+            증권 업로드하러 가기
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
               <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>

@@ -58,6 +58,12 @@
   overflow: hidden;
 }
 
+.mypage-profile-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .mypage-profile-info {
   display: flex;
   flex-direction: column;
@@ -164,102 +170,41 @@
   color: var(--gray-05);
 }
 
-/* 서류 목록 */
-.mypage-doc-list {
+/* 상태 뱃지 */
+.mypage-badge-row {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 4px 0;
-}
-
-.mypage-doc-row {
-  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 14px;
-  padding: 12px 16px;
-  background: var(--gray-01);
-  border-radius: 12px;
+  gap: 8px;
 }
 
-.mypage-doc-type {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: var(--text-body5);
-  font-weight: var(--weight-semibold);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.mypage-doc-type--cert {
-  background: #EBF4FF;
-  color: #057dee;
-}
-
-.mypage-doc-type--terms {
-  background: #F0EEFF;
-  color: #7C55D8;
-}
-
-.mypage-doc-type--empty {
-  background: var(--gray-02);
-  color: var(--gray-04);
-}
-
-.mypage-doc-filename {
-  flex: 1;
-  font-size: var(--text-body4);
-  font-weight: var(--weight-regular);
-  color: var(--gray-07);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.mypage-doc-filename--empty {
-  color: var(--gray-04);
-}
-
-.mypage-doc-status {
+.mypage-badge {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 4px 12px;
+  padding: 5px 12px;
   border-radius: 999px;
   font-size: var(--text-body5);
   font-weight: var(--weight-medium);
   white-space: nowrap;
-  flex-shrink: 0;
 }
 
-.mypage-doc-status--complete {
+.mypage-badge--check {
   background: #E8FAF2;
   color: #1A9E60;
 }
 
-.mypage-add-doc-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  border-radius: 999px;
-  border: 1.5px solid var(--gray-03);
+.mypage-badge--empty {
   background: transparent;
-  color: var(--gray-06);
-  font-size: var(--text-body5);
-  font-weight: var(--weight-medium);
-  font-family: var(--font-base);
-  cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
-  transition: border-color 0.15s, color 0.15s;
+  color: var(--gray-04);
+  border: 1.5px dashed var(--gray-03);
+  padding: 3.5px 12px;
 }
 
-.mypage-add-doc-btn:hover {
-  border-color: var(--Main-05);
-  color: var(--Main-05);
+.mypage-badge--filled {
+  background: #1A9E60;
+  color: var(--gray-white);
+  font-weight: var(--weight-semibold);
 }
 
 /* 상태 바 */
@@ -269,16 +214,9 @@
   gap: 8px;
   padding: 12px 16px;
   border-radius: 12px;
+  background: #EBF6FF;
   font-size: var(--text-body5);
   font-weight: var(--weight-regular);
-}
-
-.mypage-status-bar--complete {
-  background: #EBF6FF;
-}
-
-.mypage-status-bar--partial {
-  background: #FFF6EE;
 }
 
 .mypage-status-dot {
@@ -286,14 +224,7 @@
   height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
-}
-
-.mypage-status-dot--complete {
-  background: #229cff;
-}
-
-.mypage-status-dot--partial {
-  background: #F5A623;
+  background: var(--Main-05);
 }
 
 .mypage-status-text {
@@ -301,19 +232,22 @@
   font-weight: var(--weight-medium);
 }
 
-.mypage-status-divider {
-  color: var(--gray-04);
-}
-
-.mypage-status-date {
-  color: var(--gray-05);
-}
-
 /* 액션 버튼 */
 .mypage-card-actions {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.mypage-action-row {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.mypage-action-row > * {
+  flex: 1;
+  min-width: 0;
 }
 
 .mypage-action-btn {
@@ -347,6 +281,80 @@
 .mypage-action-btn--secondary:hover {
   border-color: var(--gray-05);
   color: var(--gray-07);
+}
+
+/* 채팅 드롭다운 */
+.mypage-dropdown {
+  position: relative;
+}
+
+.mypage-dropdown-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.mypage-dropdown-caret {
+  flex-shrink: 0;
+}
+
+.mypage-dropdown-menu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  background: var(--gray-white);
+  border: 1px solid var(--gray-02);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  z-index: 5;
+}
+
+.mypage-dropdown-item {
+  padding: 10px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--gray-07);
+  font-size: var(--text-body4);
+  font-weight: var(--weight-regular);
+  font-family: var(--font-base);
+  text-align: left;
+  cursor: pointer;
+}
+
+.mypage-dropdown-item:hover {
+  background: var(--gray-01);
+}
+
+.mypage-dropdown-item--new {
+  color: var(--Main-06);
+  font-weight: var(--weight-medium);
+}
+
+/* 서류 추가 CTA */
+.mypage-add-card {
+  width: 100%;
+  padding: 20px;
+  border-radius: 20px;
+  border: 1.5px dashed var(--gray-03);
+  background: transparent;
+  color: var(--gray-05);
+  font-size: var(--text-body4);
+  font-weight: var(--weight-medium);
+  font-family: var(--font-base);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.mypage-add-card:hover {
+  border-color: var(--Main-05);
+  color: var(--Main-05);
 }
 
 /* ── 로그아웃 ────────────────────────────────────────────── */

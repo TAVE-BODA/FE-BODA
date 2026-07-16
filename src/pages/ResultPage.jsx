@@ -78,12 +78,12 @@ export default function ResultPage({ data, onSelectFollowup, onCustomInput }) {
       return;
     }
 
-    // 4번(내 보험의 보장 항목)은 우리 chat messages 흐름이 아니라, 완전히 다른 API로
-    // 만들어진 별도 대시보드(DashboardPage, /result)로 연결됨. 여기서 sendInsuranceCondition을
-    // 호출하면 안 됨 - resultMapper.js가 CHIP_OVERVIEW 구조를 모르기도 하고, 애초에
-    // 이 버튼의 목적지가 다른 페이지임.
+    // 4번(내 보험의 보장 항목)은 우리 chat messages 흐름이 아니라, 증권 업로드 ->
+    // 합산 대시보드(UploadOverviewPage -> SummaryDashboardPage)로 연결됨. 여기서
+    // sendInsuranceCondition을 호출하면 안 됨 - resultMapper.js가 CHIP_OVERVIEW 구조를
+    // 모르기도 하고, ChatPage.jsx의 최초 진입점과 동일하게 기존 chatSessionId를 재사용.
     if (optionNumber === 4) {
-      navigate('/result');
+      navigate('/upload/overview', { state: { chatSessionId } });
       return;
     }
 

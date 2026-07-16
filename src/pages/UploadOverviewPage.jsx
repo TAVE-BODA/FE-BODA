@@ -1,59 +1,44 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-import './UploadPage.css';
+import '../pages/UploadPage.css';
 import Character from '../components/Character';
 import NavBar from '../components/NavBar';
 import logosImg from '../assets/images/home_bottomicon.png';
 import uploadIconSrc from '../assets/icons/upload-icon.svg';
-import { uploadPolicy, uploadTerms, checkPolicyStatus, checkTermsStatus, pollUntilDone } from '../api/upload';
-import { sendInsuranceCondition } from '../api/chat';
+import { uploadPolicy, checkPolicyStatus, pollUntilDone } from '../api/upload';
+
+const MAX_FILES = 3;
 
 const STEP = {
-  CERT_UPLOAD:     'cert-upload',
-  CERT_ANALYZING:  'cert-analyzing',
-  CERT_DONE:       'cert-done',
-  TERMS_UPLOAD:    'terms-upload',
-  TERMS_ANALYZING: 'terms-analyzing',
-  TERMS_DONE:      'terms-done',
+  UPLOAD:     'upload',
+  ANALYZING:  'analyzing',
+  DONE:       'done',
 };
 
-export default function UploadPage() {
+// 칩4(내 보험 보장 항목부터 보기) 전용: 보험증권만 최대 3개까지 업로드 -> 각각 분석 ->
+// 합산 대시보드(SummaryDashboardPage)로 이동. 약관 업로드는 이 플로우엔 없음.
+export default function UploadOverviewPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { chatSessionId } = location.state || {};
 
-  const { chatSessionId, conditionData, selectedOption } = location.state || {};
-
-  const [step, setStep] = useState(STEP.CERT_UPLOAD);
-  const [certFiles, setCertFiles]   = useState([]);
-  const [termsFiles, setTermsFiles] = useState([]);
+  const [step, setStep] = useState(STEP.UPLOAD);
+  const [files, setFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
-  const [isLoading, setIsLoading]   = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [progress, setProgress] = useState({ current: 0, total: 0 });
   const fileInputRef = useRef(null);
 
-  const isCert      = step.startsWith('cert');
-  const isUpload    = step === STEP.CERT_UPLOAD    || step === STEP.TERMS_UPLOAD;
-  const isAnalyzing = step === STEP.CERT_ANALYZING || step === STEP.TERMS_ANALYZING;
-  const isDone      = step === STEP.CERT_DONE      || step === STEP.TERMS_DONE;
-  const activeFiles = isCert ? certFiles : termsFiles;
-  const hasFiles    = activeFiles.length > 0;
+  const hasFiles = files.length > 0;
 
-  // step을 직접 참조해서 증권/약관 파일 구분
   const addFiles = useCallback((incoming) => {
-    const files = Array.from(incoming);
-    if (step.startsWith('cert')) {
-      setCertFiles(prev => [...prev, ...files]);
-    } else {
-      setTermsFiles(prev => [...prev, ...files]);
-    }
-  }, [step]);
+    const nextFiles = Array.from(incoming);
+    setFiles((prev) => [...prev, ...nextFiles].slice(0, MAX_FILES));
+  }, []);
 
   const removeFile = (index) => {
-    if (isCert) {
-      setCertFiles(prev => prev.filter((_, i) => i !== index));
-    } else {
-      setTermsFiles(prev => prev.filter((_, i) => i !== index));
-    }
+    setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleDragOver   = (e) => { e.preventDefault(); setIsDragging(true); };
@@ -62,55 +47,28 @@ export default function UploadPage() {
   const handleFileChange = (e) => { addFiles(e.target.files); e.target.value = ''; };
 
   const handleAnalyze = async () => {
-    const nextAnalyzing = isCert ? STEP.CERT_ANALYZING : STEP.TERMS_ANALYZING;
-    const nextDone      = isCert ? STEP.CERT_DONE      : STEP.TERMS_DONE;
-    setStep(nextAnalyzing);
+    setStep(STEP.ANALYZING);
     setIsLoading(true);
+    setProgress({ current: 0, total: files.length });
 
     try {
-      if (isCert) {
-        const { id } = await uploadPolicy(activeFiles[0], chatSessionId);
-        // 증권 분석: 5초 간격 x 120번 = 600초(10분)
+      for (let i = 0; i < files.length; i++) {
+        const { id } = await uploadPolicy(files[i], chatSessionId);
         await pollUntilDone(checkPolicyStatus, id, 5000, 120);
-        // 대시보드(DashboardPage/DetailPage)가 localStorage의 analysisId로 조회하므로 분석 성공 시 저장
-        localStorage.setItem('analysisId', id);
-      } else {
-        const { id } = await uploadTerms(activeFiles[0], chatSessionId);
-        // 약관 분석: 분량이 많으면 10분도 부족한 경우가 있어서 여유 있게 15분으로 연장
-        // 5초 간격 x 180번 = 900초(15분)
-        await pollUntilDone(checkTermsStatus, id, 5000, 180);
+        setProgress({ current: i + 1, total: files.length });
       }
-      setStep(nextDone);
+      setStep(STEP.DONE);
     } catch (error) {
       console.error('업로드 오류:', error);
       alert(error.message || '업로드 중 오류가 발생했어요. 다시 시도해주세요.');
-      setStep(isCert ? STEP.CERT_UPLOAD : STEP.TERMS_UPLOAD);
+      setStep(STEP.UPLOAD);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handlePopupNext = async () => {
-    if (step === STEP.CERT_DONE) {
-      setIsLoading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      setStep(STEP.TERMS_UPLOAD);
-    }
-    if (step === STEP.TERMS_DONE) {
-      setIsLoading(true);
-      try {
-        const result = await sendInsuranceCondition(chatSessionId, conditionData, selectedOption);
-        console.log('AI 응답:', result);
-        navigate(`/result/option/${selectedOption}`, {
-          state: { resultData: result, chatSessionId, conditionData },
-        });
-      } catch (error) {
-        console.error('보험 조건 전송 오류:', error);
-        alert('분석 중 오류가 발생했어요. 다시 시도해주세요.');
-      } finally {
-        setIsLoading(false);
-      }
-    }
+  const handlePopupNext = () => {
+    navigate(`/result/summary/${chatSessionId}`);
   };
 
   return (
@@ -120,7 +78,7 @@ export default function UploadPage() {
         <NavBar />
       </header>
 
-      {isUpload && (
+      {step === STEP.UPLOAD && (
         <main className="upload-main">
           <div className="upload-character-area">
             <Character size="lg" animate />
@@ -129,7 +87,7 @@ export default function UploadPage() {
             내 보험, <span className="upload-title__highlight">보다</span>에게 물어봐요
           </h1>
           <p className="upload-subtitle">
-            <strong>{isCert ? '보험증권' : '보험약관'}</strong>을 업로드해주세요
+            <strong>보험증권</strong>을 최대 {MAX_FILES}개까지 업로드해주세요
           </p>
 
           <div
@@ -146,6 +104,7 @@ export default function UploadPage() {
               ref={fileInputRef}
               type="file"
               accept=".pdf"
+              multiple
               onChange={handleFileChange}
               style={{ display: 'none' }}
             />
@@ -155,20 +114,22 @@ export default function UploadPage() {
                 <img src={uploadIconSrc} alt="업로드" className="upload-box__icon" />
                 <div className="upload-box__empty-text">
                   <p className="upload-box__drop-text">파일을 여기에 드롭하세요</p>
-                  <p className="upload-box__hint">또는 클릭하여 파일 선택 &middot; PDF만 가능</p>
+                  <p className="upload-box__hint">또는 클릭하여 파일 선택 &middot; PDF만 가능 &middot; 최대 {MAX_FILES}개</p>
                 </div>
               </div>
             ) : (
               <div className="upload-box__content">
                 <div className="upload-box__files">
-                  <button
-                    className="upload-box__add-btn"
-                    onClick={() => fileInputRef.current?.click()}
-                    aria-label="파일 추가"
-                  >
-                    +
-                  </button>
-                  {activeFiles.map((file, i) => (
+                  {files.length < MAX_FILES && (
+                    <button
+                      className="upload-box__add-btn"
+                      onClick={() => fileInputRef.current?.click()}
+                      aria-label="파일 추가"
+                    >
+                      +
+                    </button>
+                  )}
+                  {files.map((file, i) => (
                     <FileThumb key={i} file={file} onRemove={() => removeFile(i)} />
                   ))}
                 </div>
@@ -191,7 +152,7 @@ export default function UploadPage() {
         </main>
       )}
 
-      {isAnalyzing && (
+      {step === STEP.ANALYZING && (
         <main className="upload-main upload-main--analyzing">
           <div className="upload-analyzing__top">
             <Character size="lg" animate />
@@ -199,25 +160,14 @@ export default function UploadPage() {
               <span className="upload-analyzing__highlight">보다</span>가 열심히 읽고 있어요
             </h2>
             <p className="upload-analyzing__notice">
-              분량이 많으면 분석에 최대 {isCert ? '10분' : '15분'} 정도 걸릴 수 있어요.
+              {progress.total > 1 && `${progress.current}/${progress.total}번째 증권 분석 중이에요. `}
+              분량이 많으면 분석에 최대 10분 정도 걸릴 수 있어요.
               <br />
               창을 닫지 말고 잠시만 기다려주세요!
             </p>
           </div>
           <div className="upload-analyzing__doc-card">
-            <p className="upload-analyzing__doc-title">
-              {isCert ? '보험 증권' : '보험 약관'}
-            </p>
-            <div className="upload-analyzing__skeleton-group">
-              <div className="upload-analyzing__skeleton upload-analyzing__skeleton--short" />
-              <div className="upload-analyzing__skeleton upload-analyzing__skeleton--long" />
-              <div className="upload-analyzing__skeleton upload-analyzing__skeleton--mid" />
-            </div>
-            <div className="upload-analyzing__skeleton-group">
-              <div className="upload-analyzing__skeleton upload-analyzing__skeleton--short" />
-              <div className="upload-analyzing__skeleton upload-analyzing__skeleton--long" />
-              <div className="upload-analyzing__skeleton upload-analyzing__skeleton--mid" />
-            </div>
+            <p className="upload-analyzing__doc-title">보험 증권</p>
             <div className="upload-analyzing__skeleton-group">
               <div className="upload-analyzing__skeleton upload-analyzing__skeleton--short" />
               <div className="upload-analyzing__skeleton upload-analyzing__skeleton--long" />
@@ -227,28 +177,20 @@ export default function UploadPage() {
         </main>
       )}
 
-      {isDone && (
+      {step === STEP.DONE && (
         <div className="upload-popup-overlay">
           <div className="upload-popup">
             <Character size="sm" />
-            <h2 className="upload-popup__title">
-              {step === STEP.TERMS_DONE ? '증권, 약관 분석이 끝났어요!' : '보험증권 분석이 끝났어요!'}
-            </h2>
-            <p className="upload-popup__desc">
-              {step === STEP.TERMS_DONE ? '이제 보험금을 확인할 수 있어요' : '이번엔 보험약관을 업로드해주세요'}
-            </p>
-            <button
-              className="upload-popup__btn"
-              onClick={handlePopupNext}
-              disabled={isLoading}
-            >
-              {isLoading ? '분석 중...' : step === STEP.TERMS_DONE ? '결과 보러가기' : '다음으로'}
+            <h2 className="upload-popup__title">보험증권 분석이 끝났어요!</h2>
+            <p className="upload-popup__desc">보장 항목을 한눈에 확인할 수 있어요</p>
+            <button className="upload-popup__btn" onClick={handlePopupNext}>
+              결과 보러가기
             </button>
           </div>
         </div>
       )}
 
-      {isUpload && (
+      {step === STEP.UPLOAD && (
         <footer className="upload-footer">
           <p className="upload-footer__notice">
             BODA가 정확하게 분석할 수 있는 보험사는 아래와 같아요
