@@ -213,17 +213,25 @@ export function mapApiResponseToResultView(apiResponse) {
     highlightText = summary || aiMessage.messageContent;
     evidences = buildClaimEvidences(aiMessage.claimGuide);
   } else if (questionType === 'CHIP_AMOUNT' && aiMessage.amountGuide) {
-    const { estimatedItems = [] } = aiMessage.amountGuide;
+    const { estimatedItems = [], calculationAvailable } = aiMessage.amountGuide;
     evidences = buildAmountEvidences(aiMessage.amountGuide);
 
     // amountGuide에 합계 필드(totalAmountText)가 따로 안 내려와서, 항목별 amountText를
-    // 직접 더해서 계산함. 숫자로 못 읽는 항목이 하나라도 있으면(예: "확인 필요" 같은
-    // 매칭 실패 placeholder) 억지로 합산하지 않고 안전하게 text 모드로 폴백함.
+    // 직접 더해서 계산함. 단, amountText가 항상 깔끔한 "700,000원" 형태인 건 아니고
+    // "2년 초과 50,000원, 2년 이내 20,000원"처럼 조건별로 여러 숫자가 섞인 문장일 수도
+    // 있어서, 문자열 전체가 "숫자원" 하나로만 이루어진 경우에만 안전하게 숫자로 인정함.
+    // (예전엔 숫자만 다 뽑아 이어붙이는 방식이라 "250000220000원" 같은 말도 안 되는
+    // 값이 나오는 버그가 있었음)
     const parsedAmounts = estimatedItems.map((item) => {
-      const digits = (item.amountText || '').replace(/[^\d]/g, '');
+      const trimmed = (item.amountText || '').trim();
+      const match = trimmed.match(/^([\d,]+)\s*원$/);
+      if (!match) return null;
+      const digits = match[1].replace(/,/g, '');
       return digits ? Number(digits) : null;
     });
-    const allParsed = parsedAmounts.length > 0 && parsedAmounts.every((n) => n !== null);
+    const allParsed = calculationAvailable !== false
+      && parsedAmounts.length > 0
+      && parsedAmounts.every((n) => n !== null);
 
     if (allParsed) {
       const total = parsedAmounts.reduce((sum, n) => sum + n, 0);
@@ -233,11 +241,20 @@ export function mapApiResponseToResultView(apiResponse) {
       highlightLabel = estimatedItems.length > 1 ? '예상 수령액(항목 합산)' : '예상 수령액';
       highlightAmount = totalText;
     } else {
-      // messageContent는 줄바꿈 포함 긴 문장일 수 있어서(CHIP_DOCUMENTS와 같은 이유로)
-      // 제목엔 그대로 안 넣고 짧은 고정 문구로 대체
-      resultTitle = '예상 보험금을 확인했어요.';
-      highlightType = 'text';
-      highlightText = estimatedItems?.[0]?.reason || aiMessage.messageContent;
+      // 합산이 불가능한 케이스(calculationAvailable: false 포함) -> messageContent 앞부분을
+      // 짧게 요약해서 제목/하이라이트에 사용. "[확인된 후보]" 같은 상세 목록 마커 이후는
+      // 어차피 evidence 카드로 이미 보여주므로 중복 방지 차원에서 제외함.
+      const marker = aiMessage.messageContent?.indexOf('[확인된');
+      const summaryPart = marker && marker >= 0
+        ? aiMessage.messageContent.slice(0, marker)
+        : aiMessage.messageContent;
+      const summaryText = (summaryPart || '').replace(/\n{2,}/g, '\n').trim();
+
+      resultTitle = aiMessage.messageContent?.split('\n')[0]?.trim() || '예상 보험금을 확인했어요.';
+      highlightType = 'text';      highlightText = summaryText.split('\n').slice(1).join('\n').trim()
+        || summaryText
+        || estimatedItems?.[0]?.reason
+        || '';
     }
   } else if (questionType === 'CHIP_DOCUMENTS' && aiMessage.documentGuide) {
     const { documents = [], notice } = aiMessage.documentGuide;
