@@ -142,4 +142,84 @@ export const RESULT_PREVIEW_SAMPLES = {
       amountGuide: null,
     },
   },
+
+  // 옵션2 - 치아 치료(여러 후보라 합산 불가한 케이스, calculationAvailable: false)
+  // (2026-07-16, chatSessionId 64, messageId 542)
+  amountDental: {
+    chatSessionId: 64,
+    userMessage: {
+      messageId: 541,
+      senderType: 'USER',
+      questionType: 'CHIP_AMOUNT',
+      messageContent:
+        '예상 보험금을 먼저 알고 싶어요\n\n[사용자 입력 조건]\n- 발생 상황: INJURY\n- 받은 치료: DENTAL\n- 치아 치료: [CROWN_IMPLANT]\n- 치료 치아 개수: 5개\n- 치료 시작일: 2026-07-03',
+      usedFallback: false,
+      disclaimerText: null,
+      hasSources: false,
+      createdAt: '2026-07-16T12:42:44.913886985',
+      documentGuide: null,
+      claimGuide: null,
+      amountGuide: null,
+    },
+    aiMessage: {
+      messageId: 542,
+      senderType: 'AI',
+      questionType: 'CHIP_AMOUNT',
+      messageContent:
+        '치료 종류 확인이 필요해요.\n\n선택하신 치아치료 항목에는 여러 치료가 포함될 수 있어요.\n치료 종류에 따라 금액이 달라 하나의 예상 보험금으로 합산하기 어렵습니다.\n\n[확인된 후보]\n- 영구치보철치료보험금: 2년 초과 50,000원, 2년 이내 20,000원\n- 가철성의치(틀니)치료: 2년 초과 50,000원, 2년 이내 25,000원\n- 고정성가공의치(브릿지)치료: 2년 초과 30,000원, 2년 이내 10,000원\n- 임플란트치료: 2년 초과 30,000원, 2년 이내 15,000원\n- 크라운치료보험금: 1년 초과 20,000원, 1년 이내 10,000원\n\n정확한 총액 계산을 위해서는 실제 치료명이 필요해요.\n예: 임플란트, 브릿지, 크라운, 레진, 인레이 등\n',
+      usedFallback: false,
+      disclaimerText: '실제 보험금 지급 여부는 보험사 심사 결과 및 약관에 따라 달라질 수 있습니다.',
+      hasSources: true,
+      createdAt: '2026-07-16T12:42:45.990587292',
+      documentGuide: null,
+      claimGuide: null,
+      amountGuide: {
+        calculationAvailable: false,
+        estimatedItems: [
+          {
+            coverageName: '영구치보철치료보험금',
+            amountText: '2년 초과 50,000원, 2년 이내 20,000원',
+            reason: '실제 치료 종류와 가입 시점 조건에 따라 금액이 달라질 수 있어요.',
+            hasSources: true,
+            sourceChunkIds: [50474, 50705],
+          },
+          {
+            coverageName: '가철성의치(틀니)치료',
+            amountText: '2년 초과 50,000원, 2년 이내 25,000원',
+            reason: '실제 치료 종류와 가입 시점 조건에 따라 금액이 달라질 수 있어요.',
+            hasSources: true,
+            sourceChunkIds: [50474, 50705],
+          },
+          {
+            coverageName: '고정성가공의치(브릿지)치료',
+            amountText: '2년 초과 30,000원, 2년 이내 10,000원',
+            reason: '실제 치료 종류와 가입 시점 조건에 따라 금액이 달라질 수 있어요.',
+            hasSources: true,
+            sourceChunkIds: [50474, 50705],
+          },
+          {
+            coverageName: '임플란트치료',
+            amountText: '2년 초과 30,000원, 2년 이내 15,000원',
+            reason: '실제 치료 종류와 가입 시점 조건에 따라 금액이 달라질 수 있어요.',
+            hasSources: true,
+            sourceChunkIds: [50703, 50669],
+          },
+          {
+            coverageName: '크라운치료보험금',
+            amountText: '1년 초과 20,000원, 1년 이내 10,000원',
+            reason: '실제 치료 종류와 가입 시점 조건에 따라 금액이 달라질 수 있어요.',
+            hasSources: true,
+            sourceChunkIds: [50703, 50705],
+          },
+        ],
+        cautions: [
+          '선택한 항목에 여러 치료가 포함된 경우 실제 치료명을 확인해야 정확한 금액을 계산할 수 있어요.',
+          '가입 후 경과 기간에 따라 지급금액이 달라질 수 있어요.',
+          '실제 지급 여부는 보험사 심사 결과 및 약관 조건에 따라 달라질 수 있어요.',
+        ],
+        hasSources: true,
+        sourceChunkIds: [50474, 50705, 50703, 50669],
+      },
+    },
+  },
 };

@@ -71,6 +71,7 @@ export const sendInsuranceCondition = async (chatSessionId, formData, selectedOp
     questionType,
     incidentType: INCIDENT_TYPE_MAP[formData.q1],
     treatmentTypes: formData.q2.map(t => TREATMENT_TYPE_MAP[t]).filter(Boolean),
+    message: formData.q5_message,
 
     // 날짜
     treatmentStartDateType: formData.q4_type === 'date' ? 'EXACT_DATE' : 'YEAR_MONTH',

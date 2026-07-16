@@ -65,6 +65,7 @@ export default function InsuranceModal({ isOpen, onClose, onSubmitSuccess }) {
     q4_date: '',
     q4_year: '',
     q4_month: '',
+    q5_message: '',
   });
 
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -94,7 +95,8 @@ export default function InsuranceModal({ isOpen, onClose, onSubmitSuccess }) {
     formData.q4_type !== '' &&
     (formData.q4_type === 'date'
       ? formData.q4_date !== ''
-      : formData.q4_year !== '' && formData.q4_month !== '');
+      : formData.q4_year !== '' && formData.q4_month !== '') &&
+    formData.q5_message.trim() !== '';
 
   const handleSubmit = () => {
     if (!isFormValid || isSubmitting) return;
@@ -120,6 +122,7 @@ export default function InsuranceModal({ isOpen, onClose, onSubmitSuccess }) {
     if (type === 'A') return 3;
     if (type === 'B') return showQ3A ? 4 : 3;
     if (type === 'C') return (showQ3A ? 1 : 0) + (showQ3B ? 1 : 0) + 3;
+    if (type === 'Q5') return (showQ3A ? 1 : 0) + (showQ3B ? 1 : 0) + (showQ3C ? 1 : 0) + 4;
     return (showQ3A ? 1 : 0) + (showQ3B ? 1 : 0) + (showQ3C ? 1 : 0) + 3;
   };
 
@@ -401,6 +404,23 @@ export default function InsuranceModal({ isOpen, onClose, onSubmitSuccess }) {
             )}
 
             <p className="info-sub-text">치료 날짜는 면책기간, 보장개시일 확인에 사용돼요.</p>
+          </div>
+
+          {/* Q5 */}
+          <div className="question-card">
+            <div className="card-title-row">
+              <span className="question-number">{getQ3Num('Q5')}</span>
+              <span className="question-text">
+                진단서나 진료확인서에 적힌 병명·수술명·치료명을 적어주세요 <span className="required-badge">*필수</span>
+              </span>
+            </div>
+            <textarea
+              className="message-textarea"
+              placeholder="예: 화상 진단, 허리디스크, 무릎인대 수술, 아킬레스힘줄 수술, 임플란트, 크라운, 도수치료, MRI 검사"
+              value={formData.q5_message}
+              onChange={e => handleField('q5_message', e.target.value)}
+              rows={3}
+            />
           </div>
 
           <div className="modal-next-btn-container">
