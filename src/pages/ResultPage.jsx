@@ -31,6 +31,8 @@ export default function ResultPage({ data, onSelectFollowup, onCustomInput }) {
     location.state?.resultData || (sampleKey ? RESULT_PREVIEW_SAMPLES[sampleKey] : null)
   );
   const [isFollowupLoading, setIsFollowupLoading] = useState(false);
+  const [isCustomInputOpen, setIsCustomInputOpen] = useState(false);
+  const [customInputText, setCustomInputText] = useState('');
 
   // 후속 질문을 다시 물어보려면 최초 조건 입력 당시의 세션/조건 정보가 필요함.
   // UploadPage가 navigate state에 같이 실어보내줌 (resultData만 있으면 재요청 불가)
@@ -76,6 +78,15 @@ export default function ResultPage({ data, onSelectFollowup, onCustomInput }) {
       return;
     }
 
+    // 4번(내 보험의 보장 항목)은 우리 chat messages 흐름이 아니라, 완전히 다른 API로
+    // 만들어진 별도 대시보드(DashboardPage, /result)로 연결됨. 여기서 sendInsuranceCondition을
+    // 호출하면 안 됨 - resultMapper.js가 CHIP_OVERVIEW 구조를 모르기도 하고, 애초에
+    // 이 버튼의 목적지가 다른 페이지임.
+    if (optionNumber === 4) {
+      navigate('/result');
+      return;
+    }
+
     if (!chatSessionId || !conditionData) {
       alert('다시 조건을 입력해야 다른 결과를 볼 수 있어요. 증권·약관 업로드부터 다시 진행해주세요.');
       navigate('/upload');
@@ -97,6 +108,25 @@ export default function ResultPage({ data, onSelectFollowup, onCustomInput }) {
     } finally {
       setIsFollowupLoading(false);
     }
+  };
+
+  const handleCustomInputClick = () => {
+    // 커스텀 override가 주어졌으면 그쪽에 위임 (기존 onCustomInput prop 방식 유지)
+    if (onCustomInput) {
+      onCustomInput();
+      return;
+    }
+    setIsCustomInputOpen(true);
+  };
+
+  // TODO: 백엔드 결과 화면(FREE_TEXT 응답) 개발 완료되면 여기서 chat.js의 자유 입력 질문
+  // API를 호출하도록 연결하면 됨. 지금은 입력창 UI만 만들어둔 상태라 실제 전송은 안 함.
+  const handleCustomSubmit = () => {
+    const text = customInputText.trim();
+    if (!text) return;
+    console.log('[직접 입력] 전송 예정 텍스트 (백엔드 연동 전):', text);
+    setCustomInputText('');
+    setIsCustomInputOpen(false);
   };
 
   if (!resolvedData) {
@@ -199,6 +229,7 @@ export default function ResultPage({ data, onSelectFollowup, onCustomInput }) {
               description={item.description}
               tip={item.tip}
               tone={item.tone}
+              highlight={item.highlight}
               sourceChunkIds={item.sourceChunkIds}
               allSources={sources}
               sourcesLoading={sourcesLoading}
@@ -223,14 +254,39 @@ export default function ResultPage({ data, onSelectFollowup, onCustomInput }) {
               {opt.label}
             </button>
           ))}
-          <button
-            className="result-custom-input-btn"
-            onClick={onCustomInput}
-            disabled={isFollowupLoading}
-            type="button"
-          >
-            직접 입력할게요
-          </button>
+          {isCustomInputOpen ? (
+            <div className="result-custom-input-box">
+              <input
+                type="text"
+                className="result-custom-input-field"
+                placeholder="궁금한 점을 자유롭게 입력해보세요"
+                value={customInputText}
+                onChange={(e) => setCustomInputText(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleCustomSubmit(); }}
+                autoFocus
+              />
+              <button
+                className="result-custom-input-send-btn"
+                onClick={handleCustomSubmit}
+                disabled={!customInputText.trim()}
+                type="button"
+                aria-label="전송"
+              >
+                <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                  <path d="M10 15V5M10 5L5 10M10 5L15 10" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          ) : (
+            <button
+              className="result-custom-input-btn"
+              onClick={handleCustomInputClick}
+              disabled={isFollowupLoading}
+              type="button"
+            >
+              직접 입력할게요
+            </button>
+          )}
         </div>
       </div>
     </div>
