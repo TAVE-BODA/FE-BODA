@@ -11,64 +11,62 @@ export const createChatSession = async () => {
   return response.json();
 };
 
-export const sendInsuranceCondition = async (chatSessionId, formData, selectedOption) => {
-  const QUESTION_TYPE_MAP = {
-    1: 'CHIP_CLAIM',
-    2: 'CHIP_AMOUNT',
-    3: 'CHIP_DOCUMENTS',
-    4: 'CHIP_OVERVIEW',
-  };
+const QUESTION_TYPE_MAP = {
+  1: 'CHIP_CLAIM',
+  2: 'CHIP_AMOUNT',
+  3: 'CHIP_DOCUMENTS',
+  4: 'CHIP_OVERVIEW',
+};
 
-  const INCIDENT_TYPE_MAP = {
-    injury: 'INJURY',
-    sick: 'DISEASE',
-    checkup: 'CHECKUP_FOUND',
-  };
+const INCIDENT_TYPE_MAP = {
+  injury: 'INJURY',
+  sick: 'DISEASE',
+  checkup: 'CHECKUP_FOUND',
+};
 
-  const TREATMENT_TYPE_MAP = {
-    diagnosis: 'DIAGNOSIS_ONLY',
-    surgery: 'SURGERY',
-    hospitalized: 'HOSPITALIZATION',
-    outpatient: 'OUTPATIENT',
-    cast: 'CAST',
-    dental: 'DENTAL',
-    disability: 'DISABILITY',
-  };
+const TREATMENT_TYPE_MAP = {
+  diagnosis: 'DIAGNOSIS_ONLY',
+  surgery: 'SURGERY',
+  hospitalized: 'HOSPITALIZATION',
+  outpatient: 'OUTPATIENT',
+  cast: 'CAST',
+  dental: 'DENTAL',
+  disability: 'DISABILITY',
+};
 
-  const HOSPITAL_TYPE_MAP = {
-    clinic: 'LOCAL_CLINIC',
-    general: 'GENERAL_HOSPITAL',
-    university: 'TERTIARY_HOSPITAL',
-  };
+const HOSPITAL_TYPE_MAP = {
+  clinic: 'LOCAL_CLINIC',
+  general: 'GENERAL_HOSPITAL',
+  university: 'TERTIARY_HOSPITAL',
+};
 
-  const ROOM_TYPE_MAP = {
-    single: 'SINGLE_ROOM',
-    double: 'TWO_THREE_ROOM',
-    general: 'GENERAL_ROOM',
-  };
+const ROOM_TYPE_MAP = {
+  single: 'SINGLE_ROOM',
+  double: 'TWO_THREE_ROOM',
+  general: 'GENERAL_ROOM',
+};
 
-  const CAST_BODY_MAP = {
-    limb: 'LIMBS',
-    trunk: 'TRUNK',
-  };
+const CAST_BODY_MAP = {
+  limb: 'LIMBS',
+  trunk: 'TRUNK',
+};
 
-  const CAST_TYPE_MAP = {
-    full: 'FULL_CAST',
-    partial: 'HALF_CAST',
-  };
+const CAST_TYPE_MAP = {
+  full: 'FULL_CAST',
+  partial: 'SPLINT', // 스펙 문서엔 HALF_CAST로 돼있었으나 실제 서버는 SPLINT를 기대함 (curl로 확인, 2026-07-15)
+};
 
-  const DENTAL_TYPE_MAP = {
-    extraction: 'EXTRACTION',
-    crown: 'CROWN_IMPLANT',
-    filling: 'FILLING',
-    root_canal: 'ROOT_CANAL',
-  };
+const DENTAL_TYPE_MAP = {
+  extraction: 'EXTRACTION',
+  crown: 'CROWN_IMPLANT',
+  filling: 'FILLING',
+  root_canal: 'ROOT_CANAL',
+};
 
-  const questionType = QUESTION_TYPE_MAP[selectedOption];
-
-  // 선택한 항목만 포함 (null, undefined 필드 제거)
-  const body = {
-    questionType,
+// 조건 입력 모달(formData)에서 questionType/message를 뺀 나머지 필드들을 조립.
+// (나중에 자유 입력 질문 API가 추가되면 이 함수를 그대로 재사용할 수 있음)
+function buildConditionFields(formData) {
+  return {
     incidentType: INCIDENT_TYPE_MAP[formData.q1],
     treatmentTypes: formData.q2.map(t => TREATMENT_TYPE_MAP[t]).filter(Boolean),
 
@@ -108,7 +106,9 @@ export const sendInsuranceCondition = async (chatSessionId, formData, selectedOp
       },
     }),
   };
+}
 
+async function postChatMessage(chatSessionId, body) {
   const response = await fetch(`${BASE_URL}/api/chat/sessions/${chatSessionId}/messages`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -116,6 +116,19 @@ export const sendInsuranceCondition = async (chatSessionId, formData, selectedOp
     body: JSON.stringify(body),
   });
 
-  if (!response.ok) throw new Error('보험 조건 전송 실패');
+  if (!response.ok) throw new Error('메시지 전송 실패');
   return response.json();
+}
+
+export const sendInsuranceCondition = async (chatSessionId, formData, selectedOption) => {
+  const body = {
+    questionType: QUESTION_TYPE_MAP[selectedOption],
+    message: formData.q5_message,
+    ...buildConditionFields(formData),
+  };
+  return postChatMessage(chatSessionId, body);
 };
+
+// TODO: "직접 입력할게요"(자유 입력 질문) 결과 화면은 백엔드가 아직 개발 중이라
+// API 연동은 보류. 지금은 ResultPage.jsx에 입력창 UI만 만들어둔 상태.
+// 백엔드 준비되면 여기에 sendFreeTextQuestion(chatSessionId, formData, customMessage) 추가하면 됨.
