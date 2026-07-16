@@ -82,6 +82,13 @@ export default function ResultPage({ data, onSelectFollowup, onCustomInput }) {
       return;
     }
 
+    // 칩4(내 보험 보장 항목부터 보기)는 채팅 답변이 아니라 증권 업로드 -> 합산 대시보드로
+    // 가야 함(ChatPage.jsx의 최초 진입점과 동일한 분기). 기존 chatSessionId 그대로 재사용.
+    if (optionNumber === 4) {
+      navigate('/upload/overview', { state: { chatSessionId } });
+      return;
+    }
+
     setIsFollowupLoading(true);
     try {
       const result = await sendInsuranceCondition(chatSessionId, conditionData, optionNumber);
