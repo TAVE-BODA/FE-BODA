@@ -35,9 +35,35 @@ const FOLLOWUP_OPTIONS_BY_QUESTION_TYPE = {
 
 // userMessage.messageContent는 "청구 가능한지 먼저 알고 싶어요\n\n[사용자 입력 조건]\n..." 형태라
 // 말풍선에는 첫 줄(사용자가 실제로 고른 질문 문구)만 보여줘요.
-function extractUserQuestion(userMessage) {
+// 말풍선에 보여줄 사용자 질문 문구. questionType별로 고정해서, userMessage.messageContent의
+// 구성이 바뀌어도(예: 5번 질문인 진단명이 맨 앞에 붙는 것으로 바뀜) 영향 안 받게 함.
+const USER_QUESTION_BY_TYPE = {
+  CHIP_CLAIM: '청구 가능한지 먼저 알고 싶어요',
+  CHIP_AMOUNT: '예상 보험금을 먼저 알고 싶어요',
+  CHIP_DOCUMENTS: '필요 서류를 먼저 알고 싶어요',
+  CHIP_OVERVIEW: '내 보험의 보장 항목부터 보고 싶어요',
+};
+
+// 5번 질문(진단서/치료명 직접 입력)으로 사용자가 입력한 값. 백엔드가 이걸
+// userMessage.messageContent의 맨 첫 줄에 넣어주고 있어서 그대로 뽑아씀.
+function extractDiagnosisName(userMessage) {
   if (!userMessage?.messageContent) return '';
-  return userMessage.messageContent.split('\n\n')[0].trim();
+  const firstLine = userMessage.messageContent.split('\n\n')[0].trim();
+  // 고정 질문 문구랑 우연히 겹치면(구버전 응답 등) 진단명이 아니므로 표시 안 함
+  const isFixedPhrase = Object.values(USER_QUESTION_BY_TYPE).includes(firstLine);
+  return isFixedPhrase ? '' : firstLine;
+}
+
+// 말풍선 문구를 자연스러운 한 문장으로 합침: "허리디스크일 때 청구 가능한지 먼저 알고 싶어요"
+// "~일 때"는 받침 유무 상관없이 그대로 붙일 수 있어서 별도 조사 처리가 필요 없음.
+function buildUserQuestionText(userMessage, questionType) {
+  const phrase = USER_QUESTION_BY_TYPE[questionType];
+  if (!phrase) {
+    // 모르는 questionType이면 예전 방식(messageContent 첫 줄)으로 폴백
+    return userMessage?.messageContent?.split('\n\n')[0]?.trim() || '';
+  }
+  const diagnosisName = extractDiagnosisName(userMessage);
+  return diagnosisName ? `${diagnosisName}일 때 ${phrase}` : phrase;
 }
 
 // reasons를 문장 단위로 각각 카드화하지 않고, [입원]/[수술] 같은 대괄호 라벨 기준으로
@@ -97,6 +123,7 @@ function buildClaimEvidences(claimGuide) {
         title: isNegative ? `${group.label} 보장을 찾지 못했어요` : `${group.label} 보장이 확인돼요`,
         description: group.texts,
         sourceChunkIds: sharedChunkIds,
+        highlight: true, // 칩1(청구 가능 여부) 전용 - 여러 문장이 카드 하나에 모여서 강조가 필요함
         _negative: isNegative, // 정렬용, 카드로 안 넘어감
       };
     })
@@ -110,6 +137,7 @@ function buildClaimEvidences(claimGuide) {
         title: '확인된 내용',
         description: ungroupedTexts,
         sourceChunkIds: sharedChunkIds,
+        highlight: true,
       }]
     : [];
 
@@ -122,6 +150,7 @@ function buildClaimEvidences(claimGuide) {
         title: '이 점은 꼭 확인하세요',
         description: cautions,
         tone: 'caution',
+        highlight: true,
       }]
     : [];
 
@@ -276,7 +305,7 @@ export function mapApiResponseToResultView(apiResponse) {
 
   return {
     theme,
-    userQuestion: extractUserQuestion(userMessage),
+    userQuestion: buildUserQuestionText(userMessage, questionType),
     resultTitle,
     resultSummary: aiMessage.disclaimerText || '',
     highlightType,

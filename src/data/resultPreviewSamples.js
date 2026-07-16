@@ -9,49 +9,49 @@
 // 사용법: /result/preview/claim, /result/preview/amount, /result/preview/documents
 
 export const RESULT_PREVIEW_SAMPLES = {
-  // 옵션1 - 깁스 청구 가능 여부 (2026-07-14, chatSessionId 17, messageId 484)
+  // 옵션1 - 허리디스크 입원 청구 가능 여부, 진단명(5번 질문) 포함 (2026-07-16, chatSessionId 65, messageId 550)
   claim: {
-    chatSessionId: 17,
+    chatSessionId: 65,
     userMessage: {
-      messageId: 483,
+      messageId: 549,
       senderType: 'USER',
       questionType: 'CHIP_CLAIM',
       messageContent:
-        '청구 가능한지 먼저 알고 싶어요\n\n[사용자 입력 조건]\n- 발생 상황: INJURY\n- 받은 치료: CAST\n- 깁스 정보: 부위=LIMBS, 깁스 방식=FULL_CAST\n- 치료 시작일: 2026-07-09',
+        '허리디스크\n\n[사용자 입력 조건]\n- 발생 상황: DISEASE\n- 받은 치료: HOSPITALIZATION\n- 입원 정보: 병원 종류=TERTIARY_HOSPITAL, 병실=TWO_THREE_ROOM, 입원 기간=1박\n- 치료 시작일: 2026-07-03',
       usedFallback: false,
       disclaimerText: null,
       hasSources: false,
-      createdAt: '2026-07-14T20:15:16.0529316',
+      createdAt: '2026-07-16T13:35:59.835278581',
       documentGuide: null,
       claimGuide: null,
       amountGuide: null,
     },
     aiMessage: {
-      messageId: 484,
+      messageId: 550,
       senderType: 'AI',
       questionType: 'CHIP_CLAIM',
       messageContent:
-        '청구 가능성이 있어요.\n\n가입하신 증권에서 깁스(Cast) 치료 보장이 확인돼요.\n입력하신 치료가 반깁스·부목이 아니라 정식 깁스라면 청구 가능성이 있습니다.\n\n[확인된 보장]\n- 깁스(Cast) 치료 (부목 제외): 1회당 100,000원\n\n[주의사항]\n- 부목 제외\n- 동일 원인 깁스치료 2회 이상 또는 동시에 다른 신체부위 치료 시 1회만 지급\n',
+        '청구 가능성이 있어요.\n\n가입하신 증권에서 2·3인실 입원(종합병원이상) 보장이 확인돼요.\n입력하신 병원/병실 조건이 해당 보장 조건과 일치하면 청구 가능성이 있습니다.\n\n[확인된 보장]\n- 2·3인실 입원(종합병원이상): 계약일부터 1년 초과 1일당 10,000원\n',
       usedFallback: false,
       disclaimerText: '실제 보험금 지급 여부는 보험사 심사 결과 및 약관에 따라 달라질 수 있습니다.',
       hasSources: true,
-      createdAt: '2026-07-14T20:15:16.3231161',
+      createdAt: '2026-07-16T13:35:59.871552708',
       documentGuide: null,
       claimGuide: {
         claimStatus: 'POSSIBLE',
-        summary: '정식 깁스 치료는 청구 가능성이 있어요.',
+        summary: '입력하신 입원 조건은 가입한 보장과 일치해 청구 가능성이 있어요.',
         reasons: [
-          '가입하신 증권에서 깁스(Cast) 치료 (부목 제외) 보장이 확인돼요.',
-          '입력하신 치료 방식은 정식 깁스예요.',
-          '깁스 치료 시 100,000원의 보장금액이 확인됐어요.',
+          '가입하신 증권에서 2·3인실 입원(종합병원이상) 보장이 확인돼요.',
+          '입력하신 조건은 상급종합병원, 2·3인실이에요.',
+          '입력하신 입원 기간은 1박 2일이에요.',
+          '입원 보장금액은 계약일부터 1년 초과 1일당 10,000원으로 확인돼요.',
         ],
         cautions: [
-          '부목 제외',
-          '동일 원인 깁스치료 2회 이상 또는 동시에 다른 신체부위 치료 시 1회만 지급',
+          '실제 병원 및 병실 분류가 약관상 지급 조건과 일치해야 해요.',
           '실제 지급 여부는 보험사 심사 결과 및 약관 조건에 따라 달라질 수 있어요.',
         ],
         hasSources: true,
-        sourceChunkIds: [7149, 6303, 7123, 7125, 7126, 7138],
+        sourceChunkIds: [51176, 51661, 51722, 51786, 51512, 51582],
       },
       amountGuide: null,
     },
