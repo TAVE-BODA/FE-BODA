@@ -6,7 +6,7 @@ import EvidenceCard from '../components/EvidenceCard';
 import { mapApiResponseToResultView } from '../utils/resultMapper';
 import { RESULT_PREVIEW_SAMPLES } from '../data/resultPreviewSamples';
 import { getMessageSources } from '../api/evidence';
-import { sendInsuranceCondition } from '../api/chat';
+import { sendInsuranceCondition, createChatSession } from '../api/chat';
 import characterResult from '../assets/images/characters/character_result2.png';
 import checkBadge from '../assets/images/check-badge.png';
 import checkBadgePurple from '../assets/images/check-badge-purple.png';
@@ -82,8 +82,22 @@ export default function ResultPage({ data, onSelectFollowup, onCustomInput }) {
     // 합산 대시보드(UploadOverviewPage -> SummaryDashboardPage)로 연결됨. 여기서
     // sendInsuranceCondition을 호출하면 안 됨 - resultMapper.js가 CHIP_OVERVIEW 구조를
     // 모르기도 하고, ChatPage.jsx의 최초 진입점과 동일하게 기존 chatSessionId를 재사용.
+    //
+    // NOTE: 기존 chatSessionId를 재사용하면 증권 업로드(POST /api/upload/policy)에서
+    // 500 INTERNAL_SERVER_ERROR가 나는 이슈가 있어서, 원인 확정 전까지 임시로
+    // 새 채팅 세션을 만들어서 그걸로 진입하도록 우회함. 백엔드 확인되면 이 부분 되돌리거나
+    // 정리하면 됨.
     if (optionNumber === 4) {
-      navigate('/upload/overview', { state: { chatSessionId } });
+      setIsFollowupLoading(true);
+      try {
+        const { chatSessionId: newChatSessionId } = await createChatSession();
+        navigate('/upload/overview', { state: { chatSessionId: newChatSessionId } });
+      } catch (error) {
+        console.error('새 세션 생성 오류:', error);
+        alert('보험증권 업로드 화면으로 이동하지 못했어요. 다시 시도해주세요.');
+      } finally {
+        setIsFollowupLoading(false);
+      }
       return;
     }
 
