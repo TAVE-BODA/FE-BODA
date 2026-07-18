@@ -454,6 +454,12 @@
   color: #756EC7;
 }
 
+.theme-purple .evidence-tag {
+  background-color: #F3F1FF;
+  border-color: #928BFF;
+  color: #6D5CE0;
+}
+
 .theme-purple .evidence-highlight-amount {
   color: #756EC7;
 }
