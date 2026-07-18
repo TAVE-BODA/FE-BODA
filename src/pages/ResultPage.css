@@ -261,13 +261,97 @@
   box-shadow: 0 6px 15px rgba(47, 128, 237, 0.2);
 }
 
+.result-freechat-composer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 560px;
+  align-self: flex-end;
+  background-color: var(--gray-white);
+  border-radius: 30px;
+  padding: 18px 20px;
+  box-shadow: 0 10px 25px rgba(211, 214, 252, 0.2);
+  box-sizing: border-box;
+}
+
 .result-custom-input-box {
   display: flex;
   align-items: center;
   gap: 10px;
   width: 100%;
-  max-width: 560px;
+}
+
+.result-freechat-area {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+}
+
+.result-freechat-turn {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.result-freechat-user-bubble {
   align-self: flex-end;
+  background-color: var(--gray-02);
+  color: var(--gray-black);
+  border-radius: 50px;
+  padding: 24px 45px;
+  font-size: var(--text-body1);
+  font-weight: var(--weight-medium);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.04);
+  width: fit-content;
+  max-width: 600px;
+  text-align: right;
+}
+
+.result-freechat-answer-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 28px;
+  align-self: flex-start;
+  width: calc(100% + 168px);
+  margin-left: -168px;
+}
+
+.result-freechat-answer-bubble {
+  background-color: var(--gray-white);
+  box-shadow: 0 15px 35px rgba(211, 214, 252, 0.25);
+  border-radius: 25px;
+  padding: 30px 38px;
+  font-size: var(--text-body1);
+  line-height: 1.7;
+  color: var(--gray-black);
+  width: 100%;
+  max-width: 600px;
+  box-sizing: border-box;
+}
+
+.result-freechat-composer-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--gray-02);
+}
+
+.result-freechat-end-btn {
+  background: none;
+  border: none;
+  color: var(--gray-05);
+  font-size: var(--text-body4);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  padding: 4px 6px;
+  transition: color 0.15s ease;
+}
+
+.result-freechat-end-btn:hover {
+  color: var(--gray-07);
+  text-decoration: underline;
 }
 
 .result-custom-input-field {
@@ -275,8 +359,8 @@
   background-color: var(--gray-02);
   border: none;
   border-radius: 50px;
-  padding: 20px 32px;
-  font-size: var(--text-body1);
+  padding: 16px 24px;
+  font-size: var(--text-body2);
   font-weight: var(--weight-medium);
   color: var(--gray-black);
   outline: none;
@@ -295,8 +379,8 @@
 
 .result-custom-input-send-btn {
   flex-shrink: 0;
-  width: 52px;
-  height: 52px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: none;
   background-color: var(--Main-05);
@@ -324,6 +408,7 @@
   .result-bubble { max-width: 80%; }
   .result-evidence-list, .result-followup-area { padding-left: 138px; }
   .result-evidence-list { max-width: none; }
+  .result-freechat-answer-row { width: calc(100% + 138px); margin-left: -138px; }
 }
 
 @media screen and (max-width: 768px) {
@@ -332,6 +417,7 @@
   .result-bubble { max-width: 100%; padding: 22px 28px; }
   .result-evidence-list, .result-followup-area { padding-left: 0; }
   .result-evidence-list { max-width: none; }
+  .result-freechat-answer-row { width: 100%; margin-left: 0; flex-direction: column; }
 }
 
 /* 보라색 테마 (옵션 2: 예상 보험금) */

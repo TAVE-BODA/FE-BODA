@@ -6,7 +6,7 @@ import EvidenceCard from '../components/EvidenceCard';
 import { mapApiResponseToResultView } from '../utils/resultMapper';
 import { RESULT_PREVIEW_SAMPLES } from '../data/resultPreviewSamples';
 import { getMessageSources } from '../api/evidence';
-import { sendInsuranceCondition } from '../api/chat';
+import { sendInsuranceCondition, sendFreeTextMessage } from '../api/chat';
 import characterResult from '../assets/images/characters/character_result2.png';
 import checkBadge from '../assets/images/check-badge.png';
 import checkBadgePurple from '../assets/images/check-badge-purple.png';
@@ -33,6 +33,8 @@ export default function ResultPage({ data, onSelectFollowup, onCustomInput }) {
   const [isFollowupLoading, setIsFollowupLoading] = useState(false);
   const [isCustomInputOpen, setIsCustomInputOpen] = useState(false);
   const [customInputText, setCustomInputText] = useState('');
+  const [freeTextTurns, setFreeTextTurns] = useState([]); // [{ userText, aiText }] - 직접 입력으로 이어가는 대화 기록
+  const [isCustomSending, setIsCustomSending] = useState(false);
 
   // 후속 질문을 다시 물어보려면 최초 조건 입력 당시의 세션/조건 정보가 필요함.
   // UploadPage가 navigate state에 같이 실어보내줌 (resultData만 있으면 재요청 불가)
@@ -119,14 +121,50 @@ export default function ResultPage({ data, onSelectFollowup, onCustomInput }) {
     setIsCustomInputOpen(true);
   };
 
-  // TODO: 백엔드 결과 화면(FREE_TEXT 응답) 개발 완료되면 여기서 chat.js의 자유 입력 질문
-  // API를 호출하도록 연결하면 됨. 지금은 입력창 UI만 만들어둔 상태라 실제 전송은 안 함.
-  const handleCustomSubmit = () => {
+  // FREE_TEXT로 질문 보내고, 응답의 aiMessage.messageContent를 대화 턴으로 추가.
+  // 계속 이어서 물어볼 수 있게 입력창은 매 턴마다 다시 뜸.
+  const handleCustomSubmit = async () => {
     const text = customInputText.trim();
-    if (!text) return;
-    console.log('[직접 입력] 전송 예정 텍스트 (백엔드 연동 전):', text);
-    setCustomInputText('');
-    setIsCustomInputOpen(false);
+    if (!text || isCustomSending) return;
+
+    if (!chatSessionId) {
+      // 프리뷰 모드(/result/preview/:sampleKey)는 진짜 chatSessionId가 없어서 API를
+      // 호출할 수 없음 -> 실제 백엔드 없이도 대화가 쌓이는 레이아웃/스크롤 동작만
+      // 로컬에서 확인할 수 있게 가짜 응답으로 대체함. 실제 플로우엔 영향 없음.
+      if (sampleKey) {
+        setIsCustomSending(true);
+        setTimeout(() => {
+          setFreeTextTurns((prev) => [...prev, {
+            userText: text,
+            aiText: `(프리뷰 모드라 실제 API 호출은 안 했어요)\n"${text}"에 대한 답변은 이 자리에 이렇게 나올 거예요.\n실제 배포/로그인 환경에서는 여기에 진짜 백엔드 답변이 표시돼요.`,
+          }]);
+          setCustomInputText('');
+          setIsCustomSending(false);
+        }, 500);
+        return;
+      }
+
+      alert('세션 정보가 없어서 질문할 수 없어요. 증권·약관 업로드부터 다시 진행해주세요.');
+      navigate('/upload');
+      return;
+    }
+
+    setIsCustomSending(true);
+    try {
+      const result = await sendFreeTextMessage(chatSessionId, text);
+      const aiText = result?.aiMessage?.messageContent || '답변을 받지 못했어요.';
+      setFreeTextTurns((prev) => [...prev, { userText: text, aiText }]);
+      setCustomInputText('');
+    } catch (error) {
+      console.error('자유 입력 질문 전송 오류:', error);
+      alert('답변을 불러오지 못했어요. 다시 시도해주세요.');
+    } finally {
+      setIsCustomSending(false);
+    }
+  };
+
+  const handleEndConversation = () => {
+    navigate('/home');
   };
 
   if (!resolvedData) {
@@ -255,27 +293,63 @@ export default function ResultPage({ data, onSelectFollowup, onCustomInput }) {
             </button>
           ))}
           {isCustomInputOpen ? (
-            <div className="result-custom-input-box">
-              <input
-                type="text"
-                className="result-custom-input-field"
-                placeholder="궁금한 점을 자유롭게 입력해보세요"
-                value={customInputText}
-                onChange={(e) => setCustomInputText(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleCustomSubmit(); }}
-                autoFocus
-              />
-              <button
-                className="result-custom-input-send-btn"
-                onClick={handleCustomSubmit}
-                disabled={!customInputText.trim()}
-                type="button"
-                aria-label="전송"
-              >
-                <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                  <path d="M10 15V5M10 5L5 10M10 5L15 10" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
+            <div className="result-freechat-area">
+              {freeTextTurns.map((turn, idx) => (
+                <div key={idx} className="result-freechat-turn">
+                  <div className="result-freechat-user-bubble">{turn.userText}</div>
+                  <div className="result-freechat-answer-row">
+                    <div className="result-avatar-area">
+                      <img src={characterResult} alt="" className="result-character" />
+                    </div>
+                    <div className="result-freechat-answer-bubble">
+                      {turn.aiText.split('\n').map((line, i, arr) => (
+                        <span key={i}>
+                          {line}
+                          {i < arr.length - 1 && <br />}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              <div className="result-freechat-composer">
+                <div className="result-custom-input-box">
+                  <input
+                    type="text"
+                    className="result-custom-input-field"
+                    placeholder="궁금한 점을 자유롭게 입력해보세요"
+                    value={customInputText}
+                    onChange={(e) => setCustomInputText(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleCustomSubmit(); }}
+                    disabled={isCustomSending}
+                    autoFocus
+                  />
+                  <button
+                    className="result-custom-input-send-btn"
+                    onClick={handleCustomSubmit}
+                    disabled={isCustomSending || !customInputText.trim()}
+                    type="button"
+                    aria-label="전송"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                      <path d="M10 15V5M10 5L5 10M10 5L15 10" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
+                </div>
+
+                {freeTextTurns.length > 0 && (
+                  <div className="result-freechat-composer-footer">
+                    <button
+                      className="result-freechat-end-btn"
+                      onClick={handleEndConversation}
+                      type="button"
+                    >
+                      대화 끝내기
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
             <button
