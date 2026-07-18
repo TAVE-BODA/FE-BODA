@@ -21,7 +21,10 @@ export default function SummaryDetailPage() {
   useEffect(() => {
     if (!chatSessionId) return;
     getDashboardSummary(chatSessionId)
-      .then((summary) => Promise.all((summary.analysisIds ?? []).map((analysisId) => getDashboard(analysisId))))
+      .then((summary) => Promise.allSettled((summary.analysisIds ?? []).map((analysisId) => getDashboard(analysisId))))
+      // analysisId 중 하나라도 조회 실패하면(실제로 발생: 특정 analysisId가 500을 내는 경우가
+      // 있었음) 전체를 다 못 보여주는 게 아니라, 성공한 것만이라도 보여줘야 함
+      .then((results) => results.filter((r) => r.status === 'fulfilled').map((r) => r.value))
       .then(setDashcards)
       .catch(() => setError('데이터를 불러오지 못했어요.'));
   }, [chatSessionId]);
