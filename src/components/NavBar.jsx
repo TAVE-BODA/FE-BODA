@@ -13,7 +13,14 @@ export default function NavBar() {
 
   return (
     <nav className="navbar">
-      <img src={bodaLogoImg} alt="BODA 로고" className="navbar-logo" />
+      <button
+        type="button"
+        className="navbar-logo-btn"
+        onClick={() => navigate('/home')}
+        aria-label="홈으로 이동"
+      >
+        <img src={bodaLogoImg} alt="BODA 로고" className="navbar-logo" />
+      </button>
       <div className="navbar-links">
         {NAV_ITEMS.map(({ label, href }) => (
           <a
