@@ -16,8 +16,10 @@ export const uploadPolicy = async (file, chatSessionId) => {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || '보험증권 업로드 실패');
+    const errorBody = await response.json();
+    const err = new Error(errorBody.error || '보험증권 업로드 실패');
+    err.code = errorBody.code;
+    throw err;
   }
   return response.json(); // { status, id, message }
 };
@@ -38,8 +40,10 @@ export const uploadTerms = async (file, chatSessionId) => {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || '보험약관 업로드 실패');
+    const errorBody = await response.json();
+    const err = new Error(errorBody.error || '보험약관 업로드 실패');
+    err.code = errorBody.code;
+    throw err;
   }
   return response.json(); // { status, id, message }
 };

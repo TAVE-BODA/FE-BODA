@@ -18,6 +18,10 @@ const STEP = {
   TERMS_DONE:      'terms-done',
 };
 
+// b타입(프론트에서 먼저 걸러내는 것) 검증 기준 - 백엔드 요청 스펙 기준
+const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB
+const ACCEPTED_FILE_TYPE = 'application/pdf';
+
 export default function UploadPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -29,6 +33,7 @@ export default function UploadPage() {
   const [termsFiles, setTermsFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading]   = useState(false);
+  const [errorPopup, setErrorPopup] = useState(null); // { code, message } - 기존 완료 팝업을 재사용해서 에러도 보여줌
   const fileInputRef = useRef(null);
 
   const isCert      = step.startsWith('cert');
@@ -38,15 +43,35 @@ export default function UploadPage() {
   const activeFiles = isCert ? certFiles : termsFiles;
   const hasFiles    = activeFiles.length > 0;
 
-  // step을 직접 참조해서 증권/약관 파일 구분
+  const showErrorPopup = (code, message) => setErrorPopup({ code, message });
+
+  // step을 직접 참조해서 증권/약관 파일 구분 + b타입(형식/크기/약관 개수) 프론트 검증
   const addFiles = useCallback((incoming) => {
     const files = Array.from(incoming);
+    if (files.length === 0) return;
+
+    const invalidType = files.find((f) => f.type !== ACCEPTED_FILE_TYPE);
+    if (invalidType) {
+      showErrorPopup('INVALID_FILE_TYPE', '지원하지 않는 파일 형식이에요. PDF 파일만 업로드할 수 있어요.');
+      return;
+    }
+
+    const tooLarge = files.find((f) => f.size > MAX_FILE_SIZE);
+    if (tooLarge) {
+      showErrorPopup('FILE_TOO_LARGE', '파일 크기가 너무 커요. 15MB 이하의 PDF만 업로드할 수 있어요.');
+      return;
+    }
+
     if (step.startsWith('cert')) {
       setCertFiles(prev => [...prev, ...files]);
     } else {
+      if (termsFiles.length + files.length > 1) {
+        showErrorPopup('TERMS_TOO_MANY_FILES', '약관 파일은 1개만 업로드할 수 있어요.');
+        return;
+      }
       setTermsFiles(prev => [...prev, ...files]);
     }
-  }, [step]);
+  }, [step, termsFiles]);
 
   const removeFile = (index) => {
     if (isCert) {
@@ -83,7 +108,7 @@ export default function UploadPage() {
       setStep(nextDone);
     } catch (error) {
       console.error('업로드 오류:', error);
-      alert(error.message || '업로드 중 오류가 발생했어요. 다시 시도해주세요.');
+      showErrorPopup(error.code, error.message || '업로드 중 오류가 발생했어요. 다시 시도해주세요.');
       setStep(isCert ? STEP.CERT_UPLOAD : STEP.TERMS_UPLOAD);
     } finally {
       setIsLoading(false);
@@ -243,6 +268,22 @@ export default function UploadPage() {
               disabled={isLoading}
             >
               {isLoading ? '분석 중...' : step === STEP.TERMS_DONE ? '결과 보러가기' : '다음으로'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {errorPopup && (
+        <div className="upload-popup-overlay">
+          <div className="upload-popup">
+            <Character size="sm" />
+            <h2 className="upload-popup__title">업로드에 문제가 있어요</h2>
+            <p className="upload-popup__desc">{errorPopup.message}</p>
+            <button
+              className="upload-popup__btn"
+              onClick={() => setErrorPopup(null)}
+            >
+              확인
             </button>
           </div>
         </div>
