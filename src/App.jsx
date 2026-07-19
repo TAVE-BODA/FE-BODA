@@ -24,8 +24,10 @@ function App() {
         <Route path="/upload" element={<UploadPage />} />
         {/* 칩4(내 보험 보장 항목부터 보기) 전용: 보험증권 최대 3개 업로드 -> 합산 대시보드 */}
         <Route path="/upload/overview" element={<UploadOverviewPage />} />
-        <Route path="/result" element={<DashboardPage />} />
-        <Route path="/result/:id" element={<DetailPage />} />
+        {/* 마이페이지에서 특정 analysisId의 저장된 대시보드를 열람하는 경로.
+            analysisId를 URL로 받아야 마이페이지 카드마다 다른 분석 결과를 보여줄 수 있음. */}
+        <Route path="/result/analysis/:analysisId" element={<DashboardPage />} />
+        <Route path="/result/analysis/:analysisId/:id" element={<DetailPage />} />
         {/* 칩4 합산 대시보드/상세: 여러 보험사를 chatSessionId 기준으로 합쳐서 보여줌 */}
         <Route path="/result/summary/:chatSessionId" element={<SummaryDashboardPage />} />
         <Route path="/result/summary/:chatSessionId/:id" element={<SummaryDetailPage />} />

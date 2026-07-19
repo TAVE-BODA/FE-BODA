@@ -72,8 +72,6 @@ export default function UploadPage() {
         const { id } = await uploadPolicy(activeFiles[0], chatSessionId);
         // 증권 분석: 5초 간격 x 120번 = 600초(10분)
         await pollUntilDone(checkPolicyStatus, id, 5000, 120);
-        // 대시보드(DashboardPage/DetailPage)가 localStorage의 analysisId로 조회하므로 분석 성공 시 저장
-        localStorage.setItem('analysisId', id);
       } else {
         const { id } = await uploadTerms(activeFiles[0], chatSessionId);
         // 약관 분석: 분량이 많으면 10분도 부족한 경우가 있어서 여유 있게 15분으로 연장

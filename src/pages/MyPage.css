@@ -207,31 +207,6 @@
   font-weight: var(--weight-semibold);
 }
 
-/* 상태 바 */
-.mypage-status-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
-  border-radius: 12px;
-  background: #EBF6FF;
-  font-size: var(--text-body5);
-  font-weight: var(--weight-regular);
-}
-
-.mypage-status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  background: var(--Main-05);
-}
-
-.mypage-status-text {
-  color: var(--gray-07);
-  font-weight: var(--weight-medium);
-}
-
 /* 액션 버튼 */
 .mypage-card-actions {
   display: flex;
@@ -281,60 +256,6 @@
 .mypage-action-btn--secondary:hover {
   border-color: var(--gray-05);
   color: var(--gray-07);
-}
-
-/* 채팅 드롭다운 */
-.mypage-dropdown {
-  position: relative;
-}
-
-.mypage-dropdown-trigger {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-}
-
-.mypage-dropdown-caret {
-  flex-shrink: 0;
-}
-
-.mypage-dropdown-menu {
-  position: absolute;
-  bottom: calc(100% + 8px);
-  left: 0;
-  right: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 6px;
-  background: var(--gray-white);
-  border: 1px solid var(--gray-02);
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  z-index: 5;
-}
-
-.mypage-dropdown-item {
-  padding: 10px 12px;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--gray-07);
-  font-size: var(--text-body4);
-  font-weight: var(--weight-regular);
-  font-family: var(--font-base);
-  text-align: left;
-  cursor: pointer;
-}
-
-.mypage-dropdown-item:hover {
-  background: var(--gray-01);
-}
-
-.mypage-dropdown-item--new {
-  color: var(--Main-06);
-  font-weight: var(--weight-medium);
 }
 
 /* 서류 추가 CTA */

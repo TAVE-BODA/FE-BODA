@@ -9,9 +9,8 @@ import { ICONS, COVERAGE_TYPE_BY_ID, TEXT_BY_ID } from '../utils/detailMeta';
 import './DetailPage.css';
 
 export default function DetailPage() {
-  const { id } = useParams();
+  const { analysisId, id } = useParams();
   const navigate = useNavigate();
-  const analysisId = localStorage.getItem('analysisId');
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import NavBar from '../components/NavBar';
 import Character from '../components/Character';
 import InsuranceBadge from '../components/InsuranceBadge';
@@ -13,7 +13,7 @@ const NOTICE_BANNER = '진단금, 수술비, 입원일당, 골절·재해는 보
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const analysisId = localStorage.getItem('analysisId');
+  const { analysisId } = useParams();
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
 
@@ -129,7 +129,7 @@ export default function DashboardPage() {
               companies={c.companies}
               inactive={c.inactive}
               // 실손은 상세페이지 디자인이 아직 없어서 클릭해도 이동하지 않음
-              onClick={c.id === 'reimbursement' ? undefined : () => navigate(`/result/${c.id}`)}
+              onClick={c.id === 'reimbursement' ? undefined : () => navigate(`/result/analysis/${analysisId}/${c.id}`)}
             />
           ))}
         </div>
