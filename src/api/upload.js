@@ -1,12 +1,14 @@
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // 보험증권 PDF 업로드 (필드명 'file' -> 'files'로 백엔드 변경, 2026-07-19 확인)
-// NOTE: 배치 업로드(files 필드로 여러 개 한 번에)로 전환했더니 어떤 파일을 올려도
-// analysisStatus: 'ERROR'로 계속 실패해서, 원인 확인될 때까지 단건 업로드로 임시 롤백함
-// (2026-07-19) - UploadPage.jsx에서 파일마다 이 함수를 반복 호출함
-export const uploadPolicy = async (file, chatSessionId) => {
+// files: File[] - 최대 3개까지, 한 요청에 다 같이 보냄
+// 응답 형태가 파일 개수에 따라 다르게 오는 것으로 보임 (2026-07-19 실테스트로 확인):
+// - 파일 1개: { message, analysisIds: [숫자], status } (단일 객체)
+// - 파일 여러 개: [{ fileName, success, status, analysisId, message }, ...] (배열) <- 아직 실제 확인 전, 백엔드 설명 기준
+// 그래서 UploadPage.jsx에서 응답이 배열인지 객체인지 보고 둘 다 처리하도록 짬
+export const uploadPolicy = async (files, chatSessionId) => {
   const formData = new FormData();
-  formData.append('files', file);
+  files.forEach((file) => formData.append('files', file));
 
   const url = chatSessionId
     ? `${BASE_URL}/api/upload/policy?chatSessionId=${chatSessionId}`
@@ -24,7 +26,7 @@ export const uploadPolicy = async (file, chatSessionId) => {
     err.code = errorBody.code;
     throw err;
   }
-  return response.json(); // { status, id, message }
+  return response.json();
 };
 
 // 보험약관 PDF 업로드
