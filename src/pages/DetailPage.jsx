@@ -49,7 +49,7 @@ export default function DetailPage() {
   }
 
   const coverageType = COVERAGE_TYPE_BY_ID[id];
-  const coverage = data.coverages.find((c) => c.coverageType === coverageType);
+  const coverage = data.coverages.find((c) => c && c.coverageType === coverageType);
   const text = TEXT_BY_ID[id];
 
   if (!coverage || !text) {

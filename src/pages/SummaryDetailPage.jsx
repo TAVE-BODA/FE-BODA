@@ -64,7 +64,7 @@ export default function SummaryDetailPage() {
       analysisId: d.analysisId,
       companyName: d.companyName,
       period: `${d.insuranceStartDate} ~ ${d.insuranceEndDate}`,
-      coverage: d.coverages.find((c) => c.coverageType === coverageType),
+      coverage: d.coverages.find((c) => c && c.coverageType === coverageType),
     }))
     .filter(({ coverage }) => coverage?.isDetected);
 
