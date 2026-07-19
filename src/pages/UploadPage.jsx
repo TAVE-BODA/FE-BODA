@@ -21,6 +21,7 @@ const STEP = {
 // b타입(프론트에서 먼저 걸러내는 것) 검증 기준 - 백엔드 요청 스펙 기준
 const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB
 const ACCEPTED_FILE_TYPE = 'application/pdf';
+const MAX_CERT_FILES = 3;
 
 export default function UploadPage() {
   const navigate = useNavigate();
@@ -34,6 +35,7 @@ export default function UploadPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading]   = useState(false);
   const [errorPopup, setErrorPopup] = useState(null); // { code, message } - 기존 완료 팝업을 재사용해서 에러도 보여줌
+  const [certProgress, setCertProgress] = useState({ current: 0, total: 0 });
   const fileInputRef = useRef(null);
 
   const isCert      = step.startsWith('cert');
@@ -63,6 +65,10 @@ export default function UploadPage() {
     }
 
     if (step.startsWith('cert')) {
+      if (certFiles.length + files.length > MAX_CERT_FILES) {
+        showErrorPopup('POLICY_TOO_MANY_FILES', `보험증권은 최대 ${MAX_CERT_FILES}개까지 업로드할 수 있어요.`);
+        return;
+      }
       setCertFiles(prev => [...prev, ...files]);
     } else {
       if (termsFiles.length + files.length > 1) {
@@ -71,7 +77,7 @@ export default function UploadPage() {
       }
       setTermsFiles(prev => [...prev, ...files]);
     }
-  }, [step, termsFiles]);
+  }, [step, termsFiles, certFiles]);
 
   const removeFile = (index) => {
     if (isCert) {
@@ -94,11 +100,18 @@ export default function UploadPage() {
 
     try {
       if (isCert) {
-        const { id } = await uploadPolicy(activeFiles[0], chatSessionId);
-        // 증권 분석: 5초 간격 x 120번 = 600초(10분)
-        await pollUntilDone(checkPolicyStatus, id, 5000, 120);
-        // 대시보드(DashboardPage/DetailPage)가 localStorage의 analysisId로 조회하므로 분석 성공 시 저장
-        localStorage.setItem('analysisId', id);
+        setCertProgress({ current: 0, total: activeFiles.length });
+        let lastId = null;
+        for (let i = 0; i < activeFiles.length; i++) {
+          const { id } = await uploadPolicy(activeFiles[i], chatSessionId);
+          // 증권 분석: 5초 간격 x 120번 = 600초(10분)
+          await pollUntilDone(checkPolicyStatus, id, 5000, 120);
+          lastId = id;
+          setCertProgress({ current: i + 1, total: activeFiles.length });
+        }
+        // 대시보드(DashboardPage/DetailPage)가 localStorage의 analysisId로 조회하므로,
+        // 마지막으로 분석된 증권 id를 저장 (여러 개 올려도 최소 1개는 그 화면에서 조회 가능하도록)
+        if (lastId) localStorage.setItem('analysisId', lastId);
       } else {
         const { id } = await uploadTerms(activeFiles[0], chatSessionId);
         // 약관 분석: 분량이 많으면 10분도 부족한 경우가 있어서 여유 있게 15분으로 연장
@@ -154,7 +167,7 @@ export default function UploadPage() {
             내 보험, <span className="upload-title__highlight">보다</span>에게 물어봐요
           </h1>
           <p className="upload-subtitle">
-            <strong>{isCert ? '보험증권' : '보험약관'}</strong>을 업로드해주세요
+            <strong>{isCert ? '보험증권' : '보험약관'}</strong>을 {isCert ? `최대 ${MAX_CERT_FILES}개까지 ` : ''}업로드해주세요
           </p>
 
           <div
@@ -171,6 +184,7 @@ export default function UploadPage() {
               ref={fileInputRef}
               type="file"
               accept=".pdf"
+              multiple
               onChange={handleFileChange}
               style={{ display: 'none' }}
             />
@@ -180,19 +194,21 @@ export default function UploadPage() {
                 <img src={uploadIconSrc} alt="업로드" className="upload-box__icon" />
                 <div className="upload-box__empty-text">
                   <p className="upload-box__drop-text">파일을 여기에 드롭하세요</p>
-                  <p className="upload-box__hint">또는 클릭하여 파일 선택 &middot; PDF만 가능</p>
+                  <p className="upload-box__hint">또는 클릭하여 파일 선택 &middot; PDF만 가능{isCert ? ` · 최대 ${MAX_CERT_FILES}개` : ''}</p>
                 </div>
               </div>
             ) : (
               <div className="upload-box__content">
                 <div className="upload-box__files">
-                  <button
-                    className="upload-box__add-btn"
-                    onClick={() => fileInputRef.current?.click()}
-                    aria-label="파일 추가"
-                  >
-                    +
-                  </button>
+                  {(isCert ? activeFiles.length < MAX_CERT_FILES : activeFiles.length < 1) && (
+                    <button
+                      className="upload-box__add-btn"
+                      onClick={() => fileInputRef.current?.click()}
+                      aria-label="파일 추가"
+                    >
+                      +
+                    </button>
+                  )}
                   {activeFiles.map((file, i) => (
                     <FileThumb key={i} file={file} onRemove={() => removeFile(i)} />
                   ))}
@@ -224,6 +240,7 @@ export default function UploadPage() {
               <span className="upload-analyzing__highlight">보다</span>가 열심히 읽고 있어요
             </h2>
             <p className="upload-analyzing__notice">
+              {isCert && certProgress.total > 1 && `${certProgress.current}/${certProgress.total}번째 증권 분석 중이에요. `}
               분량이 많으면 분석에 최대 {isCert ? '10분' : '15분'} 정도 걸릴 수 있어요.
               <br />
               창을 닫지 말고 잠시만 기다려주세요!
