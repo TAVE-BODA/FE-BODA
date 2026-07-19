@@ -36,6 +36,25 @@ function formatDate(isoDate) {
   return isoDate ? isoDate.replaceAll('-', '.') : '';
 }
 
+// 백엔드가 같은 증권의 중복 업로드를 막지 않아서, 같은 companyName이 여러 개 오면
+// 진행 상태가 가장 앞선 것(약관 업로드됨 > 조건 입력됨 > 최신 analysisId 순)만 남김.
+// 주의: 같은 회사의 서로 다른 상품을 여러 개 든 경우도 companyName만으로는 구분이
+// 안 돼서 하나로 합쳐짐 (백엔드에 상품 구분 필드가 없는 한 근본적으로 피할 수 없음).
+function pickMoreCompleteInsurance(a, b) {
+  if (a.termsUploaded !== b.termsUploaded) return a.termsUploaded ? a : b;
+  if (a.conditionCompleted !== b.conditionCompleted) return a.conditionCompleted ? a : b;
+  return a.analysisId > b.analysisId ? a : b;
+}
+
+function dedupeByCompany(insurances) {
+  const byCompany = new Map();
+  for (const ins of insurances) {
+    const existing = byCompany.get(ins.companyName);
+    byCompany.set(ins.companyName, existing ? pickMoreCompleteInsurance(existing, ins) : ins);
+  }
+  return Array.from(byCompany.values());
+}
+
 function CheckBadge({ children }) {
   return (
     <span className="mypage-badge mypage-badge--check">
@@ -141,7 +160,7 @@ export default function MyPage() {
           joinDate: mypage.firstLoginDate,
           profileImage: me?.user?.profileImageUrl ?? null,
         });
-        setInsurances(mypage.insurances ?? []);
+        setInsurances(dedupeByCompany(mypage.insurances ?? []));
       } catch {
         if (!cancelled) setError('마이페이지 정보를 불러오지 못했어요.');
       } finally {
