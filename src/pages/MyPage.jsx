@@ -326,15 +326,19 @@ export default function MyPage() {
 
         <div className="mypage-insurance-list">
           {insurers.map((insurer) => {
-            const analysisIds = insurer.analysisIds ?? [];
-            // 여러 번 재분석/재업로드됐을 수 있어서, 가장 최근 것으로 대시보드를 열어줌
-            const targetAnalysisId = analysisIds[analysisIds.length - 1];
             const lastChat = insurer.chats?.[insurer.chats.length - 1];
+            // insurer.analysisIds는 전체 이력을 통틀어 합친 배열이라 순서가 뒤죽박죽일 수 있음
+            // (스펙: chat_session_policy를 id ASC로 읽어 채팅마다 analysisIds를 얻음).
+            // 카드가 대표하는 "마지막 채팅"에 실제로 연결된 analysisIds/dashboardAvailable을 써야
+            // 그 채팅에서 실제로 본 것과 같은 대시보드가 열림. 어떤 채팅에도 안 묶인 증권만 insurer 전체값으로 대체.
+            const chatAnalysisIds = lastChat?.analysisIds ?? insurer.analysisIds ?? [];
+            const targetAnalysisId = chatAnalysisIds[chatAnalysisIds.length - 1];
+            const dashboardAvailable = lastChat ? lastChat.dashboardAvailable : insurer.dashboardAvailable;
 
             return (
               <InsurerCard
                 key={insurer.companyKey}
-                insurer={insurer}
+                insurer={{ ...insurer, dashboardAvailable }}
                 onViewDashcard={() => targetAnalysisId != null && navigate(`/result/analysis/${targetAnalysisId}`)}
                 onUploadTerms={() => navigate('/upload', { state: { chatSessionId: lastChat?.chatSessionId } })}
                 onOpenChat={(chat) => navigate('/chat', { state: { chatSessionId: chat.chatSessionId } })}
