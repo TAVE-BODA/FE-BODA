@@ -19,7 +19,7 @@ export const deleteChatSession = async (chatSessionId) => {
   });
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
-    const err = new Error(errorBody.error || '채팅방 삭제 실패');
+    const err = new Error(errorBody.error || errorBody.message || '채팅방 삭제 실패');
     err.code = errorBody.code;
     throw err;
   }

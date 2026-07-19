@@ -22,7 +22,8 @@ export const uploadPolicy = async (files, chatSessionId) => {
 
   if (!response.ok) {
     const errorBody = await response.json();
-    const err = new Error(errorBody.error || '보험증권 업로드 실패');
+    // 검증 에러는 {code, error}로 오지만, 500 등 처리 안 된 예외는 {code, message, timestamp}로 옴
+    const err = new Error(errorBody.error || errorBody.message || '보험증권 업로드 실패');
     err.code = errorBody.code;
     throw err;
   }
@@ -46,7 +47,7 @@ export const uploadTerms = async (file, chatSessionId) => {
 
   if (!response.ok) {
     const errorBody = await response.json();
-    const err = new Error(errorBody.error || '보험약관 업로드 실패');
+    const err = new Error(errorBody.error || errorBody.message || '보험약관 업로드 실패');
     err.code = errorBody.code;
     throw err;
   }
