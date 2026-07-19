@@ -1,11 +1,12 @@
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-// 보험증권 PDF 업로드 (필드명 'file' -> 'files', 여러 개 한 번에 전송 가능 - 2026-07-19 백엔드 확인)
-// files: File[] - 최대 3개까지
-// 응답: [{ fileName, success, status, analysisId, message }, ...] - 파일별로 성공/실패가 따로 옴
-export const uploadPolicy = async (files, chatSessionId) => {
+// 보험증권 PDF 업로드 (필드명 'file' -> 'files'로 백엔드 변경, 2026-07-19 확인)
+// NOTE: 배치 업로드(files 필드로 여러 개 한 번에)로 전환했더니 어떤 파일을 올려도
+// analysisStatus: 'ERROR'로 계속 실패해서, 원인 확인될 때까지 단건 업로드로 임시 롤백함
+// (2026-07-19) - UploadPage.jsx에서 파일마다 이 함수를 반복 호출함
+export const uploadPolicy = async (file, chatSessionId) => {
   const formData = new FormData();
-  files.forEach((file) => formData.append('files', file));
+  formData.append('files', file);
 
   const url = chatSessionId
     ? `${BASE_URL}/api/upload/policy?chatSessionId=${chatSessionId}`
@@ -23,7 +24,7 @@ export const uploadPolicy = async (files, chatSessionId) => {
     err.code = errorBody.code;
     throw err;
   }
-  return response.json();
+  return response.json(); // { status, id, message }
 };
 
 // 보험약관 PDF 업로드

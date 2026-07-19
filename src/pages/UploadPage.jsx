@@ -36,7 +36,6 @@ export default function UploadPage() {
   const [isLoading, setIsLoading]   = useState(false);
   const [errorPopup, setErrorPopup] = useState(null); // { code, message } - 기존 완료 팝업을 재사용해서 에러도 보여줌
   const [certProgress, setCertProgress] = useState({ current: 0, total: 0 });
-  const [certFailedFiles, setCertFailedFiles] = useState([]); // 배치 업로드 중 실패한 fileName 목록
   const fileInputRef = useRef(null);
 
   const isCert      = step.startsWith('cert');
@@ -101,31 +100,18 @@ export default function UploadPage() {
 
     try {
       if (isCert) {
-        setCertFailedFiles([]);
-        const results = await uploadPolicy(activeFiles, chatSessionId);
-        const succeeded = results.filter((r) => r.success && r.analysisId);
-        const failed = results.filter((r) => !r.success || !r.analysisId);
-
-        if (succeeded.length === 0) {
-          const names = failed.map((f) => f.fileName).join(', ');
-          throw new Error(`업로드한 증권을 분석할 수 없었어요${names ? ` (${names})` : ''}. 다시 시도해주세요.`);
-        }
-
-        setCertProgress({ current: 0, total: succeeded.length });
+        setCertProgress({ current: 0, total: activeFiles.length });
         let lastId = null;
-        for (let i = 0; i < succeeded.length; i++) {
+        for (let i = 0; i < activeFiles.length; i++) {
+          const { id } = await uploadPolicy(activeFiles[i], chatSessionId);
           // 증권 분석: 5초 간격 x 120번 = 600초(10분)
-          await pollUntilDone(checkPolicyStatus, succeeded[i].analysisId, 5000, 120);
-          lastId = succeeded[i].analysisId;
-          setCertProgress({ current: i + 1, total: succeeded.length });
+          await pollUntilDone(checkPolicyStatus, id, 5000, 120);
+          lastId = id;
+          setCertProgress({ current: i + 1, total: activeFiles.length });
         }
         // 대시보드(DashboardPage/DetailPage)가 localStorage의 analysisId로 조회하므로,
         // 마지막으로 분석된 증권 id를 저장 (여러 개 올려도 최소 1개는 그 화면에서 조회 가능하도록)
         if (lastId) localStorage.setItem('analysisId', lastId);
-
-        if (failed.length > 0) {
-          setCertFailedFiles(failed.map((f) => f.fileName));
-        }
       } else {
         const { id } = await uploadTerms(activeFiles[0], chatSessionId);
         // 약관 분석: 분량이 많으면 10분도 부족한 경우가 있어서 여유 있게 15분으로 연장
@@ -293,11 +279,6 @@ export default function UploadPage() {
             <p className="upload-popup__desc">
               {step === STEP.TERMS_DONE ? '이제 보험금을 확인할 수 있어요' : '이번엔 보험약관을 업로드해주세요'}
             </p>
-            {step === STEP.CERT_DONE && certFailedFiles.length > 0 && (
-              <p className="upload-popup__desc" style={{ color: '#D64545' }}>
-                {certFailedFiles.join(', ')} 파일은 분석에 실패했어요. 나머지는 정상 반영됐어요.
-              </p>
-            )}
             <button
               className="upload-popup__btn"
               onClick={handlePopupNext}
