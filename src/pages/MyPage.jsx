@@ -3,9 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
 import Character from '../components/Character';
 import { getMyPage, getMe, logout } from '../api/mypage';
+import { deleteChatSession } from '../api/chat';
 import './MyPage.css';
 
-// 백엔드 companyName은 "삼성생명보험주식회사"처럼 정식 법인명으로 오는데, 디자인은
+// 보험사 분류가 안 되는 채팅(증권 없음/삭제됨)은 companyKey가 이 고정 문자열로 옴 (백엔드 스펙, 2026-07-20)
+const UNCATEGORIZED_KEY = '보험사 정보 없음';
+
+// 백엔드 companyName은 "삼성생명보험주식회사"처럼 정식 법인명으로 올 때가 있는데, 디자인은
 // "삼성생명" 같은 짧은 이름 기준이라 그대로 매칭이 안 됨 (InsuranceBadge.jsx와 동일한 이슈).
 const COMPANY_COLORS = {
   '삼성생명': { bg: '#EBF4FF', text: '#057dee' },
@@ -36,25 +40,6 @@ function formatDate(isoDate) {
   return isoDate ? isoDate.replaceAll('-', '.') : '';
 }
 
-// 백엔드가 같은 증권의 중복 업로드를 막지 않아서, 같은 companyName이 여러 개 오면
-// 진행 상태가 가장 앞선 것(약관 업로드됨 > 조건 입력됨 > 최신 analysisId 순)만 남김.
-// 주의: 같은 회사의 서로 다른 상품을 여러 개 든 경우도 companyName만으로는 구분이
-// 안 돼서 하나로 합쳐짐 (백엔드에 상품 구분 필드가 없는 한 근본적으로 피할 수 없음).
-function pickMoreCompleteInsurance(a, b) {
-  if (a.termsUploaded !== b.termsUploaded) return a.termsUploaded ? a : b;
-  if (a.conditionCompleted !== b.conditionCompleted) return a.conditionCompleted ? a : b;
-  return a.analysisId > b.analysisId ? a : b;
-}
-
-function dedupeByCompany(insurances) {
-  const byCompany = new Map();
-  for (const ins of insurances) {
-    const existing = byCompany.get(ins.companyName);
-    byCompany.set(ins.companyName, existing ? pickMoreCompleteInsurance(existing, ins) : ins);
-  }
-  return Array.from(byCompany.values());
-}
-
 function CheckBadge({ children }) {
   return (
     <span className="mypage-badge mypage-badge--check">
@@ -75,62 +60,153 @@ function FilledBadge({ children }) {
   return <span className="mypage-badge mypage-badge--filled">{children}</span>;
 }
 
-function InsuranceCard({ insurance, onViewDashcard, onUploadTerms, onOpenChat }) {
-  const displayName = normalizeCompanyName(insurance.companyName);
-  const colors = getCompanyColor(displayName);
-  const companyShort = getCompanyShortName(displayName);
+function ErrorBadge({ children }) {
+  return <span className="mypage-badge mypage-badge--error">{children}</span>;
+}
+
+function DropdownCaret() {
+  return (
+    <svg className="mypage-dropdown-caret" width="10" height="6" viewBox="0 0 10 6" fill="none">
+      <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function ChatDropdownButton({ label, variant, chats, onSelectChat, onNewChat }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div
+      className="mypage-dropdown"
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false);
+      }}
+    >
+      <button
+        type="button"
+        className={`mypage-action-btn mypage-action-btn--${variant} mypage-dropdown-trigger`}
+        onClick={() => setOpen((v) => !v)}
+      >
+        {label}
+        <DropdownCaret />
+      </button>
+      {open && (
+        <div className="mypage-dropdown-menu">
+          {chats.map((chat) => (
+            <button
+              key={chat.chatSessionId}
+              type="button"
+              className="mypage-dropdown-item"
+              onClick={() => {
+                setOpen(false);
+                onSelectChat(chat);
+              }}
+            >
+              {chat.title}
+            </button>
+          ))}
+          <button
+            type="button"
+            className="mypage-dropdown-item mypage-dropdown-item--new"
+            onClick={() => {
+              setOpen(false);
+              onNewChat();
+            }}
+          >
+            + 새로운 채팅
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function InsurerCard({ insurer, onViewDashcard, onUploadTerms, onOpenChat, onNewChat, onDelete, isDeleting }) {
+  const isUncategorized = insurer.companyKey === UNCATEGORIZED_KEY;
+  const displayName = isUncategorized ? '기타' : normalizeCompanyName(insurer.companyName);
+  const colors = isUncategorized ? { bg: '#F0F2F3', text: '#575A5F' } : getCompanyColor(displayName);
+  const companyShort = isUncategorized ? '기타' : getCompanyShortName(displayName);
+  const chats = insurer.chats ?? [];
+  const chatCount = insurer.chatCount ?? chats.length;
 
   return (
     <div className="mypage-insurance-card">
+      {chats.length > 0 && (
+        <button
+          type="button"
+          className="mypage-card-delete"
+          onClick={onDelete}
+          disabled={isDeleting}
+        >
+          {isDeleting ? '삭제 중...' : '삭제'}
+        </button>
+      )}
+
       <div className="mypage-card-header">
         <div className="mypage-company-badge" style={{ background: colors.bg, color: colors.text }}>
           {companyShort}
         </div>
         <div className="mypage-card-info">
-          <p className="mypage-card-name">{displayName}</p>
-          <p className="mypage-card-meta">{formatDate(insurance.analysisCompletedAt)} 분석 완료</p>
+          <p className="mypage-card-name">{insurer.title || displayName}</p>
+          <p className="mypage-card-meta">{displayName} &middot; {formatDate(insurer.registeredAt)} 등록</p>
         </div>
       </div>
 
       <div className="mypage-badge-row">
-        <CheckBadge>증권 완료</CheckBadge>
-        {insurance.termsUploaded ? (
+        {insurer.policyStatus === 'ERROR' ? (
+          <ErrorBadge>증권 분석 실패</ErrorBadge>
+        ) : insurer.policyCompleted ? (
+          <CheckBadge>증권 완료</CheckBadge>
+        ) : (
+          <EmptyBadge>증권 분석 중</EmptyBadge>
+        )}
+        {insurer.termsUploaded ? (
           <CheckBadge>약관 완료</CheckBadge>
         ) : (
           <EmptyBadge>약관 없음</EmptyBadge>
         )}
-        {insurance.conditionCompleted && !insurance.termsUploaded && (
+        {insurer.conditionCompleted && !insurer.termsUploaded && (
           <FilledBadge>개인정보 입력됨</FilledBadge>
         )}
+        {chatCount >= 2 && <CheckBadge>채팅 {chatCount}건</CheckBadge>}
       </div>
 
       <div className="mypage-card-actions">
-        {insurance.termsUploaded ? (
+        {insurer.canUploadTermsToContinue ? (
           <div className="mypage-action-row">
-            <button className="mypage-action-btn mypage-action-btn--primary" onClick={onViewDashcard}>
-              저장된 대시카드 보러가기
-            </button>
-            <button className="mypage-action-btn mypage-action-btn--secondary" onClick={onOpenChat}>
-              채팅하러가기
-            </button>
-          </div>
-        ) : insurance.conditionCompleted ? (
-          <div className="mypage-action-row">
-            <button className="mypage-action-btn mypage-action-btn--secondary" onClick={onViewDashcard}>
-              대시카드 보러가기
-            </button>
+            {insurer.dashboardAvailable && (
+              <button className="mypage-action-btn mypage-action-btn--secondary" onClick={onViewDashcard}>
+                대시카드 보러가기
+              </button>
+            )}
             <button className="mypage-action-btn mypage-action-btn--primary" onClick={onUploadTerms}>
-              이어서 약관 업로드하고 채팅하러가기
+              {insurer.conditionCompleted ? '이어서 약관 업로드하고 채팅하러가기' : '약관 업로드하고 채팅하러가기'}
             </button>
           </div>
         ) : (
           <div className="mypage-action-row">
-            <button className="mypage-action-btn mypage-action-btn--primary" onClick={onViewDashcard}>
-              저장된 대시카드 보러가기
-            </button>
-            <button className="mypage-action-btn mypage-action-btn--secondary" onClick={onUploadTerms}>
-              약관 업로드하고 채팅하러가기
-            </button>
+            {insurer.dashboardAvailable && (
+              <button className="mypage-action-btn mypage-action-btn--primary" onClick={onViewDashcard}>
+                저장된 대시카드 보러가기
+              </button>
+            )}
+            {chats.length >= 2 ? (
+              <ChatDropdownButton
+                label="채팅창 선택"
+                variant="secondary"
+                chats={chats}
+                onSelectChat={onOpenChat}
+                onNewChat={onNewChat}
+              />
+            ) : chats.length === 1 ? (
+              <button className="mypage-action-btn mypage-action-btn--secondary" onClick={() => onOpenChat(chats[0])}>
+                채팅하러가기
+              </button>
+            ) : (
+              <button className="mypage-action-btn mypage-action-btn--secondary" onClick={onNewChat}>
+                + 새로운 채팅
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -141,9 +217,10 @@ function InsuranceCard({ insurance, onViewDashcard, onUploadTerms, onOpenChat })
 export default function MyPage() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
-  const [insurances, setInsurances] = useState([]);
+  const [insurers, setInsurers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [deletingKey, setDeletingKey] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -160,7 +237,13 @@ export default function MyPage() {
           joinDate: mypage.firstLoginDate,
           profileImage: me?.user?.profileImageUrl ?? null,
         });
-        setInsurances(dedupeByCompany(mypage.insurances ?? []));
+        // "보험사 정보 없음"(기타) 묶음은 항상 맨 뒤로
+        const sorted = [...(mypage.insurers ?? [])].sort((a, b) => {
+          const aOther = a.companyKey === UNCATEGORIZED_KEY;
+          const bOther = b.companyKey === UNCATEGORIZED_KEY;
+          return aOther === bOther ? 0 : aOther ? 1 : -1;
+        });
+        setInsurers(sorted);
       } catch {
         if (!cancelled) setError('마이페이지 정보를 불러오지 못했어요.');
       } finally {
@@ -176,6 +259,21 @@ export default function MyPage() {
     await logout().catch(() => {});
     localStorage.removeItem('user');
     navigate('/');
+  };
+
+  const handleDeleteInsurer = async (insurer) => {
+    const chats = insurer.chats ?? [];
+    if (!window.confirm(`${insurer.title || insurer.companyName}의 채팅 ${chats.length}건을 모두 삭제할까요?`)) return;
+
+    setDeletingKey(insurer.companyKey);
+    try {
+      await Promise.all(chats.map((chat) => deleteChatSession(chat.chatSessionId)));
+      setInsurers((prev) => prev.filter((ins) => ins.companyKey !== insurer.companyKey));
+    } catch {
+      alert('삭제하지 못했어요. 잠시 후 다시 시도해주세요.');
+    } finally {
+      setDeletingKey(null);
+    }
   };
 
   if (loading) {
@@ -227,15 +325,25 @@ export default function MyPage() {
         <h2 className="mypage-section-title">내보험 저장소</h2>
 
         <div className="mypage-insurance-list">
-          {insurances.map((ins) => (
-            <InsuranceCard
-              key={ins.analysisId}
-              insurance={ins}
-              onViewDashcard={() => navigate(`/result/analysis/${ins.analysisId}`)}
-              onUploadTerms={() => navigate('/upload', { state: { chatSessionId: ins.existingChatSessionId } })}
-              onOpenChat={() => navigate('/chat', { state: { chatSessionId: ins.existingChatSessionId } })}
-            />
-          ))}
+          {insurers.map((insurer) => {
+            const analysisIds = insurer.analysisIds ?? [];
+            // 여러 번 재분석/재업로드됐을 수 있어서, 가장 최근 것으로 대시보드를 열어줌
+            const targetAnalysisId = analysisIds[analysisIds.length - 1];
+            const lastChat = insurer.chats?.[insurer.chats.length - 1];
+
+            return (
+              <InsurerCard
+                key={insurer.companyKey}
+                insurer={insurer}
+                onViewDashcard={() => targetAnalysisId != null && navigate(`/result/analysis/${targetAnalysisId}`)}
+                onUploadTerms={() => navigate('/upload', { state: { chatSessionId: lastChat?.chatSessionId } })}
+                onOpenChat={(chat) => navigate('/chat', { state: { chatSessionId: chat.chatSessionId } })}
+                onNewChat={() => navigate('/chat', { state: { newSession: true } })}
+                onDelete={() => handleDeleteInsurer(insurer)}
+                isDeleting={deletingKey === insurer.companyKey}
+              />
+            );
+          })}
         </div>
 
         <button className="mypage-add-card" onClick={() => navigate('/chat')}>
