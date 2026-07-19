@@ -4,21 +4,6 @@ import bookmarkIcon from '../assets/images/bookmark-outline.png';
 import docSearchIcon from '../assets/images/doc-search.png';
 import chevronUpIcon from '../assets/images/chevron-up.png';
 
-// citedText는 실제 약관 원문이라 줄바꿈(\r\n)이 조항 구조를 담고 있어요.
-// 다 자연스럽게 보여주기 위해 자르지 않고, 과도한 빈 줄만 하나로 정리해요.
-function formatCitedText(text) {
-  if (!text) return '';
-  return text
-    .replace(/\r\n/g, '\n')
-    .replace(/\n{2,}/g, '\n')
-    .trim();
-}
-
-// 기본으로는 이 길이만큼만 보여주고, "더보기"를 눌러야 전체 원문이 펼쳐짐.
-// (법적 텍스트라 아예 자르고 끝내면 조건/예외 문구가 잘려 오해를 살 수 있어서
-// 완전히 숨기지 않고 항상 펼쳐볼 수 있게 함)
-const CLAUSE_PREVIEW_LENGTH = 150;
-
 export default function EvidenceCard({
   tag,
   title,
@@ -32,11 +17,6 @@ export default function EvidenceCard({
   sourcesError,
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [expandedSources, setExpandedSources] = useState({}); // { [chunkId]: true } - 더보기로 펼친 것만 기록
-
-  const toggleSourceExpanded = (chunkId) => {
-    setExpandedSources((prev) => ({ ...prev, [chunkId]: !prev[chunkId] }));
-  };
 
   const hasClause = Array.isArray(sourceChunkIds) && sourceChunkIds.length > 0;
   const matchedSources = hasClause && allSources
@@ -98,37 +78,9 @@ export default function EvidenceCard({
           <p className="evidence-clause-ref">약관 근거를 불러오는 중이에요...</p>
         ) : matchedSources.length > 0 ? (
           <ul className="evidence-clause-list">
-            {matchedSources.map((source) => {
-              const fullText = formatCitedText(source.citedText);
-              const isLong = fullText.length > CLAUSE_PREVIEW_LENGTH;
-              const isExpanded = expandedSources[source.chunkId];
-              const displayText = isLong && !isExpanded
-                ? `${fullText.slice(0, CLAUSE_PREVIEW_LENGTH)}...`
-                : fullText;
-
-              return (
-                <li key={source.chunkId}>
-                  <strong>{source.title}</strong>
-                  <div className="evidence-clause-text">
-                    {displayText.split('\n').map((line, idx, arr) => (
-                      <span key={idx}>
-                        {line}
-                        {idx < arr.length - 1 && <br />}
-                      </span>
-                    ))}
-                  </div>
-                  {isLong && (
-                    <button
-                      type="button"
-                      className="evidence-clause-more-btn"
-                      onClick={() => toggleSourceExpanded(source.chunkId)}
-                    >
-                      {isExpanded ? '접기' : '더보기'}
-                    </button>
-                  )}
-                </li>
-              );
-            })}
+            {matchedSources.map((source) => (
+              <li key={source.chunkId}>{source.title}</li>
+            ))}
           </ul>
         ) : allSources ? (
           <p className="evidence-clause-ref">이 항목에 대한 약관 근거를 찾지 못했어요.</p>

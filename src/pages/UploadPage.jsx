@@ -18,6 +18,11 @@ const STEP = {
   TERMS_DONE:      'terms-done',
 };
 
+// b타입(프론트에서 먼저 걸러내는 것) 검증 기준 - 백엔드 요청 스펙 기준
+const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB
+const ACCEPTED_FILE_TYPE = 'application/pdf';
+const MAX_CERT_FILES = 3;
+
 export default function UploadPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -29,6 +34,9 @@ export default function UploadPage() {
   const [termsFiles, setTermsFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading]   = useState(false);
+  const [errorPopup, setErrorPopup] = useState(null); // { code, message } - 기존 완료 팝업을 재사용해서 에러도 보여줌
+  const [certProgress, setCertProgress] = useState({ current: 0, total: 0 });
+  const [certFailedFiles, setCertFailedFiles] = useState([]); // 배치 업로드 중 실패한 fileName 목록
   const fileInputRef = useRef(null);
 
   const isCert      = step.startsWith('cert');
@@ -38,15 +46,39 @@ export default function UploadPage() {
   const activeFiles = isCert ? certFiles : termsFiles;
   const hasFiles    = activeFiles.length > 0;
 
-  // step을 직접 참조해서 증권/약관 파일 구분
+  const showErrorPopup = (code, message) => setErrorPopup({ code, message });
+
+  // step을 직접 참조해서 증권/약관 파일 구분 + b타입(형식/크기/약관 개수) 프론트 검증
   const addFiles = useCallback((incoming) => {
     const files = Array.from(incoming);
+    if (files.length === 0) return;
+
+    const invalidType = files.find((f) => f.type !== ACCEPTED_FILE_TYPE);
+    if (invalidType) {
+      showErrorPopup('INVALID_FILE_TYPE', '지원하지 않는 파일 형식이에요. PDF 파일만 업로드할 수 있어요.');
+      return;
+    }
+
+    const tooLarge = files.find((f) => f.size > MAX_FILE_SIZE);
+    if (tooLarge) {
+      showErrorPopup('FILE_TOO_LARGE', '파일 크기가 너무 커요. 15MB 이하의 PDF만 업로드할 수 있어요.');
+      return;
+    }
+
     if (step.startsWith('cert')) {
+      if (certFiles.length + files.length > MAX_CERT_FILES) {
+        showErrorPopup('POLICY_TOO_MANY_FILES', `보험증권은 최대 ${MAX_CERT_FILES}개까지 업로드할 수 있어요.`);
+        return;
+      }
       setCertFiles(prev => [...prev, ...files]);
     } else {
+      if (termsFiles.length + files.length > 1) {
+        showErrorPopup('TERMS_TOO_MANY_FILES', '약관 파일은 1개만 업로드할 수 있어요.');
+        return;
+      }
       setTermsFiles(prev => [...prev, ...files]);
     }
-  }, [step]);
+  }, [step, termsFiles, certFiles]);
 
   const removeFile = (index) => {
     if (isCert) {
@@ -69,9 +101,44 @@ export default function UploadPage() {
 
     try {
       if (isCert) {
-        const { id } = await uploadPolicy(activeFiles[0], chatSessionId);
-        // 증권 분석: 5초 간격 x 120번 = 600초(10분)
-        await pollUntilDone(checkPolicyStatus, id, 5000, 120);
+        setCertFailedFiles([]);
+        const raw = await uploadPolicy(activeFiles, chatSessionId);
+
+        // 응답이 파일 개수에 따라 형태가 다를 수 있어서(배열 vs 단일 객체) 둘 다 처리
+        let succeededIds = [];
+        let failedNames = [];
+
+        if (Array.isArray(raw)) {
+          // [{ fileName, success, status, analysisId, message }, ...]
+          raw.forEach((item) => {
+            if (item.success && item.analysisId) {
+              succeededIds.push(item.analysisId);
+            } else {
+              failedNames.push(item.fileName || '알 수 없는 파일');
+            }
+          });
+        } else if (raw && Array.isArray(raw.analysisIds)) {
+          // { message, analysisIds: [...], status }
+          succeededIds = raw.analysisIds;
+        } else {
+          throw new Error('증권 분석 응답 구조를 이해할 수 없어요. 백엔드 응답 형식을 확인해주세요.');
+        }
+
+        if (succeededIds.length === 0) {
+          const names = failedNames.join(', ');
+          throw new Error(`업로드한 증권을 분석할 수 없었어요${names ? ` (${names})` : ''}. 다시 시도해주세요.`);
+        }
+
+        setCertProgress({ current: 0, total: succeededIds.length });
+        for (let i = 0; i < succeededIds.length; i++) {
+          // 증권 분석: 5초 간격 x 120번 = 600초(10분)
+          await pollUntilDone(checkPolicyStatus, succeededIds[i], 5000, 120);
+          setCertProgress({ current: i + 1, total: succeededIds.length });
+        }
+
+        if (failedNames.length > 0) {
+          setCertFailedFiles(failedNames);
+        }
       } else {
         const { id } = await uploadTerms(activeFiles[0], chatSessionId);
         // 약관 분석: 분량이 많으면 10분도 부족한 경우가 있어서 여유 있게 15분으로 연장
@@ -81,7 +148,7 @@ export default function UploadPage() {
       setStep(nextDone);
     } catch (error) {
       console.error('업로드 오류:', error);
-      alert(error.message || '업로드 중 오류가 발생했어요. 다시 시도해주세요.');
+      showErrorPopup(error.code, error.message || '업로드 중 오류가 발생했어요. 다시 시도해주세요.');
       setStep(isCert ? STEP.CERT_UPLOAD : STEP.TERMS_UPLOAD);
     } finally {
       setIsLoading(false);
@@ -127,7 +194,7 @@ export default function UploadPage() {
             내 보험, <span className="upload-title__highlight">보다</span>에게 물어봐요
           </h1>
           <p className="upload-subtitle">
-            <strong>{isCert ? '보험증권' : '보험약관'}</strong>을 업로드해주세요
+            <strong>{isCert ? '보험증권' : '보험약관'}</strong>을 {isCert ? `최대 ${MAX_CERT_FILES}개까지 ` : ''}업로드해주세요
           </p>
 
           <div
@@ -144,6 +211,7 @@ export default function UploadPage() {
               ref={fileInputRef}
               type="file"
               accept=".pdf"
+              multiple
               onChange={handleFileChange}
               style={{ display: 'none' }}
             />
@@ -153,19 +221,21 @@ export default function UploadPage() {
                 <img src={uploadIconSrc} alt="업로드" className="upload-box__icon" />
                 <div className="upload-box__empty-text">
                   <p className="upload-box__drop-text">파일을 여기에 드롭하세요</p>
-                  <p className="upload-box__hint">또는 클릭하여 파일 선택 &middot; PDF만 가능</p>
+                  <p className="upload-box__hint">또는 클릭하여 파일 선택 &middot; PDF만 가능{isCert ? ` · 최대 ${MAX_CERT_FILES}개` : ''}</p>
                 </div>
               </div>
             ) : (
               <div className="upload-box__content">
                 <div className="upload-box__files">
-                  <button
-                    className="upload-box__add-btn"
-                    onClick={() => fileInputRef.current?.click()}
-                    aria-label="파일 추가"
-                  >
-                    +
-                  </button>
+                  {(isCert ? activeFiles.length < MAX_CERT_FILES : activeFiles.length < 1) && (
+                    <button
+                      className="upload-box__add-btn"
+                      onClick={() => fileInputRef.current?.click()}
+                      aria-label="파일 추가"
+                    >
+                      +
+                    </button>
+                  )}
                   {activeFiles.map((file, i) => (
                     <FileThumb key={i} file={file} onRemove={() => removeFile(i)} />
                   ))}
@@ -197,6 +267,7 @@ export default function UploadPage() {
               <span className="upload-analyzing__highlight">보다</span>가 열심히 읽고 있어요
             </h2>
             <p className="upload-analyzing__notice">
+              {isCert && certProgress.total > 1 && `${certProgress.current}/${certProgress.total}번째 증권 분석 중이에요. `}
               분량이 많으면 분석에 최대 {isCert ? '10분' : '15분'} 정도 걸릴 수 있어요.
               <br />
               창을 닫지 말고 잠시만 기다려주세요!
@@ -235,12 +306,33 @@ export default function UploadPage() {
             <p className="upload-popup__desc">
               {step === STEP.TERMS_DONE ? '이제 보험금을 확인할 수 있어요' : '이번엔 보험약관을 업로드해주세요'}
             </p>
+            {step === STEP.CERT_DONE && certFailedFiles.length > 0 && (
+              <p className="upload-popup__desc" style={{ color: '#D64545' }}>
+                {certFailedFiles.join(', ')} 파일은 분석에 실패했어요. 나머지는 정상 반영됐어요.
+              </p>
+            )}
             <button
               className="upload-popup__btn"
               onClick={handlePopupNext}
               disabled={isLoading}
             >
               {isLoading ? '분석 중...' : step === STEP.TERMS_DONE ? '결과 보러가기' : '다음으로'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {errorPopup && (
+        <div className="upload-popup-overlay">
+          <div className="upload-popup">
+            <Character size="sm" />
+            <h2 className="upload-popup__title">업로드에 문제가 있어요</h2>
+            <p className="upload-popup__desc">{errorPopup.message}</p>
+            <button
+              className="upload-popup__btn"
+              onClick={() => setErrorPopup(null)}
+            >
+              확인
             </button>
           </div>
         </div>

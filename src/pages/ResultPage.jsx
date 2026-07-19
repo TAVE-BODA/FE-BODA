@@ -6,7 +6,7 @@ import EvidenceCard from '../components/EvidenceCard';
 import { mapApiResponseToResultView } from '../utils/resultMapper';
 import { RESULT_PREVIEW_SAMPLES } from '../data/resultPreviewSamples';
 import { getMessageSources } from '../api/evidence';
-import { sendInsuranceCondition } from '../api/chat';
+import { sendInsuranceCondition, sendFreeTextMessage } from '../api/chat';
 import characterResult from '../assets/images/characters/character_result2.png';
 import checkBadge from '../assets/images/check-badge.png';
 import checkBadgePurple from '../assets/images/check-badge-purple.png';
@@ -19,32 +19,25 @@ const BADGE_BY_THEME = {
 };
 
 export default function ResultPage({ data, onSelectFollowup, onCustomInput }) {
-  const { sampleKey } = useParams(); // /result/preview/:sampleKey로 들어왔을 때만 존재
+  const { sampleKey } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
 
-  // 우선순위: 1) data prop 직접 전달 2) UploadPage가 navigate state로 넘긴 실제 응답
-  // 3) /result/preview/:sampleKey로 들어왔으면 저장해둔 샘플 응답
-  // (더미 데이터는 더 이상 안 씀 -> 셋 다 없으면 안내 화면으로 대체)
-  // apiResultData를 state로 들고 있어야 후속 질문(다른 칩) 클릭 시 새 응답으로 교체할 수 있음
   const [apiResultData, setApiResultData] = useState(
     location.state?.resultData || (sampleKey ? RESULT_PREVIEW_SAMPLES[sampleKey] : null)
   );
   const [isFollowupLoading, setIsFollowupLoading] = useState(false);
   const [isCustomInputOpen, setIsCustomInputOpen] = useState(false);
   const [customInputText, setCustomInputText] = useState('');
+  const [freeTextTurns, setFreeTextTurns] = useState([]);
+  const [isCustomSending, setIsCustomSending] = useState(false);
 
-  // 후속 질문을 다시 물어보려면 최초 조건 입력 당시의 세션/조건 정보가 필요함.
-  // UploadPage가 navigate state에 같이 실어보내줌 (resultData만 있으면 재요청 불가)
   const chatSessionId = location.state?.chatSessionId;
   const conditionData = location.state?.conditionData;
 
   const resolvedData = data || (apiResultData ? mapApiResponseToResultView(apiResultData) : null);
   const sourceMessageId = resolvedData?.sourceMessageId;
 
-  // 약관 근거(citation)는 카드마다 따로 안 불러오고, 메시지 하나당 한 번만 fetch해서
-  // 카드들이 sourceChunkIds로 각자 필요한 것만 걸러쓰게 함 (Rules of Hooks 때문에
-  // 아래 !resolvedData 얼리 리턴보다 반드시 위에 있어야 함)
   const [sources, setSources] = useState(null);
   const [sourcesLoading, setSourcesLoading] = useState(false);
   const [sourcesError, setSourcesError] = useState(null);
@@ -70,20 +63,19 @@ export default function ResultPage({ data, onSelectFollowup, onCustomInput }) {
     return () => { cancelled = true; };
   }, [sourceMessageId]);
 
-  // 후속 질문(다른 칩) 클릭 시: 같은 세션/조건으로 questionType만 바꿔서 다시 물어봄
   const handleSelectFollowup = async (optionNumber) => {
-    // 커스텀 override가 주어졌으면(예: 채팅 위젯 안에 임베드된 경우) 그쪽에 위임
     if (onSelectFollowup) {
       onSelectFollowup(optionNumber);
       return;
     }
 
-    // 4번(내 보험의 보장 항목)은 우리 chat messages 흐름이 아니라, 증권 업로드 ->
-    // 합산 대시보드(UploadOverviewPage -> SummaryDashboardPage)로 연결됨. 여기서
-    // sendInsuranceCondition을 호출하면 안 됨 - resultMapper.js가 CHIP_OVERVIEW 구조를
-    // 모르기도 하고, ChatPage.jsx의 최초 진입점과 동일하게 기존 chatSessionId를 재사용.
     if (optionNumber === 4) {
-      navigate('/upload/overview', { state: { chatSessionId } });
+      if (!chatSessionId) {
+        alert('세션 정보가 없어서 보장 항목을 볼 수 없어요. 증권·약관 업로드부터 다시 진행해주세요.');
+        navigate('/upload');
+        return;
+      }
+      navigate(`/result/summary/${chatSessionId}`);
       return;
     }
 
@@ -97,7 +89,6 @@ export default function ResultPage({ data, onSelectFollowup, onCustomInput }) {
     try {
       const result = await sendInsuranceCondition(chatSessionId, conditionData, optionNumber);
       setApiResultData(result);
-      // 주소도 새 옵션 번호로 맞춰주고, 새로고침해도 유지되도록 state 다시 실어보냄
       navigate(`/result/option/${optionNumber}`, {
         state: { resultData: result, chatSessionId, conditionData },
         replace: true,
@@ -111,7 +102,6 @@ export default function ResultPage({ data, onSelectFollowup, onCustomInput }) {
   };
 
   const handleCustomInputClick = () => {
-    // 커스텀 override가 주어졌으면 그쪽에 위임 (기존 onCustomInput prop 방식 유지)
     if (onCustomInput) {
       onCustomInput();
       return;
@@ -119,14 +109,45 @@ export default function ResultPage({ data, onSelectFollowup, onCustomInput }) {
     setIsCustomInputOpen(true);
   };
 
-  // TODO: 백엔드 결과 화면(FREE_TEXT 응답) 개발 완료되면 여기서 chat.js의 자유 입력 질문
-  // API를 호출하도록 연결하면 됨. 지금은 입력창 UI만 만들어둔 상태라 실제 전송은 안 함.
-  const handleCustomSubmit = () => {
+  const handleCustomSubmit = async () => {
     const text = customInputText.trim();
-    if (!text) return;
-    console.log('[직접 입력] 전송 예정 텍스트 (백엔드 연동 전):', text);
-    setCustomInputText('');
-    setIsCustomInputOpen(false);
+    if (!text || isCustomSending) return;
+
+    if (!chatSessionId) {
+      if (sampleKey) {
+        setIsCustomSending(true);
+        setTimeout(() => {
+          setFreeTextTurns((prev) => [...prev, {
+            userText: text,
+            aiText: `(프리뷰 모드라 실제 API 호출은 안 했어요)\n"${text}"에 대한 답변은 이 자리에 이렇게 나올 거예요.\n실제 배포/로그인 환경에서는 여기에 진짜 백엔드 답변이 표시돼요.`,
+          }]);
+          setCustomInputText('');
+          setIsCustomSending(false);
+        }, 500);
+        return;
+      }
+
+      alert('세션 정보가 없어서 질문할 수 없어요. 증권·약관 업로드부터 다시 진행해주세요.');
+      navigate('/upload');
+      return;
+    }
+
+    setIsCustomSending(true);
+    try {
+      const result = await sendFreeTextMessage(chatSessionId, text);
+      const aiText = result?.aiMessage?.messageContent || '답변을 받지 못했어요.';
+      setFreeTextTurns((prev) => [...prev, { userText: text, aiText }]);
+      setCustomInputText('');
+    } catch (error) {
+      console.error('자유 입력 질문 전송 오류:', error);
+      alert('답변을 불러오지 못했어요. 다시 시도해주세요.');
+    } finally {
+      setIsCustomSending(false);
+    }
+  };
+
+  const handleEndConversation = () => {
+    navigate('/home');
   };
 
   if (!resolvedData) {
@@ -255,27 +276,64 @@ export default function ResultPage({ data, onSelectFollowup, onCustomInput }) {
             </button>
           ))}
           {isCustomInputOpen ? (
-            <div className="result-custom-input-box">
-              <input
-                type="text"
-                className="result-custom-input-field"
-                placeholder="궁금한 점을 자유롭게 입력해보세요"
-                value={customInputText}
-                onChange={(e) => setCustomInputText(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleCustomSubmit(); }}
-                autoFocus
-              />
-              <button
-                className="result-custom-input-send-btn"
-                onClick={handleCustomSubmit}
-                disabled={!customInputText.trim()}
-                type="button"
-                aria-label="전송"
-              >
-                <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                  <path d="M10 15V5M10 5L5 10M10 5L15 10" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
+            <div className="result-freechat-area">
+              {freeTextTurns.map((turn, idx) => (
+                <div key={idx} className="result-freechat-turn">
+                  <div className="result-freechat-user-bubble">{turn.userText}</div>
+                  <div className="result-freechat-answer-row">
+                    <div className="result-avatar-area">
+                      <img src={characterResult} alt="" className="result-character" />
+                    </div>
+                    <div className="result-freechat-answer-bubble">
+                      {turn.aiText.split('\n').map((line, i, arr) => (
+                        <span key={i}>
+                          {line}
+                          {i < arr.length - 1 && <br />}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              <div className="result-freechat-composer">
+                <div className="result-custom-input-box">
+                  <input
+                    type="text"
+                    className="result-custom-input-field"
+                    placeholder="궁금한 점을 자유롭게 입력해보세요"
+                    value={customInputText}
+                    onChange={(e) => setCustomInputText(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleCustomSubmit(); }}
+                    disabled={isCustomSending}
+                    autoFocus
+                  />
+                  <button
+                    className="result-custom-input-send-btn"
+                    onClick={handleCustomSubmit}
+                    disabled={isCustomSending || !customInputText.trim()}
+                    type="button"
+                    aria-label="전송"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                      <path d="M10 15V5M10 5L5 10M10 5L15 10" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
+                </div>
+
+                {freeTextTurns.length > 0 && (
+                  <button
+                    className="result-freechat-end-btn"
+                    onClick={handleEndConversation}
+                    type="button"
+                  >
+                    <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+                      <path d="M1 1L11 11M11 1L1 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                    </svg>
+                    대화 끝내기
+                  </button>
+                )}
+              </div>
             </div>
           ) : (
             <button

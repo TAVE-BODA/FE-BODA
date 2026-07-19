@@ -1,9 +1,14 @@
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-// 보험증권 PDF 업로드
-export const uploadPolicy = async (file, chatSessionId) => {
+// 보험증권 PDF 업로드 (필드명 'file' -> 'files'로 백엔드 변경, 2026-07-19 확인)
+// files: File[] - 최대 3개까지, 한 요청에 다 같이 보냄
+// 응답 형태가 파일 개수에 따라 다르게 오는 것으로 보임 (2026-07-19 실테스트로 확인):
+// - 파일 1개: { message, analysisIds: [숫자], status } (단일 객체)
+// - 파일 여러 개: [{ fileName, success, status, analysisId, message }, ...] (배열) <- 아직 실제 확인 전, 백엔드 설명 기준
+// 그래서 UploadPage.jsx에서 응답이 배열인지 객체인지 보고 둘 다 처리하도록 짬
+export const uploadPolicy = async (files, chatSessionId) => {
   const formData = new FormData();
-  formData.append('file', file);
+  files.forEach((file) => formData.append('files', file));
 
   const url = chatSessionId
     ? `${BASE_URL}/api/upload/policy?chatSessionId=${chatSessionId}`
@@ -16,10 +21,12 @@ export const uploadPolicy = async (file, chatSessionId) => {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || '보험증권 업로드 실패');
+    const errorBody = await response.json();
+    const err = new Error(errorBody.error || '보험증권 업로드 실패');
+    err.code = errorBody.code;
+    throw err;
   }
-  return response.json(); // { status, id, message }
+  return response.json();
 };
 
 // 보험약관 PDF 업로드
@@ -38,8 +45,10 @@ export const uploadTerms = async (file, chatSessionId) => {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || '보험약관 업로드 실패');
+    const errorBody = await response.json();
+    const err = new Error(errorBody.error || '보험약관 업로드 실패');
+    err.code = errorBody.code;
+    throw err;
   }
   return response.json(); // { status, id, message }
 };
@@ -70,7 +79,11 @@ export const pollUntilDone = async (checkFn, id, interval = 3000, maxTry = 30) =
     const result = await checkFn(id);
     const status = result.analysisStatus || result.parsingStatus;
     if (status === 'DONE') return result;
-    if (status === 'FAILED') throw new Error('분석에 실패했어요. 다시 시도해주세요.');
+    // 백엔드가 실패 상태로 'FAILED'와 'ERROR'를 섞어서 쓰고 있어서 둘 다 처리함
+    // (2026-07-19 확인: 증권 분석 실패 시 analysisStatus: 'ERROR'로 내려옴)
+    if (status === 'FAILED' || status === 'ERROR') {
+      throw new Error('분석에 실패했어요. 다시 시도해주세요.');
+    }
     await new Promise(r => setTimeout(r, interval));
   }
   throw new Error('분석 시간이 초과됐어요. 다시 시도해주세요.');

@@ -335,7 +335,13 @@ export default function InsuranceModal({ isOpen, onClose, onSubmitSuccess }) {
               </button>
               <button
                 className={`option-btn ${formData.q4_type === 'yearmonth' ? 'selected' : ''}`}
-                onClick={() => handleField('q4_type', 'yearmonth')}
+                onClick={() => {
+                  setFormData(prev => ({
+                    ...prev,
+                    q4_type: 'yearmonth',
+                    q4_year: prev.q4_year || String(new Date().getFullYear()),
+                  }));
+                }}
               >
                 연도·월만 알아요
               </button>
@@ -379,9 +385,9 @@ export default function InsuranceModal({ isOpen, onClose, onSubmitSuccess }) {
             {formData.q4_type === 'yearmonth' && (
               <div className="custom-calendar-container">
                 <div className="calendar-header">
-                  <button type="button" className="cal-nav-btn" onClick={() => handleField('q4_year', String(Number(formData.q4_year || new Date().getFullYear()) - 1))}>◀</button>
-                  <span className="calendar-title-ym">{formData.q4_year || new Date().getFullYear()}년</span>
-                  <button type="button" className="cal-nav-btn" onClick={() => handleField('q4_year', String(Number(formData.q4_year || new Date().getFullYear()) + 1))}>▶</button>
+                  <button type="button" className="cal-nav-btn" onClick={() => handleField('q4_year', String(Number(formData.q4_year) - 1))}>◀</button>
+                  <span className="calendar-title-ym">{formData.q4_year}년</span>
+                  <button type="button" className="cal-nav-btn" onClick={() => handleField('q4_year', String(Number(formData.q4_year) + 1))}>▶</button>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginTop: '12px' }}>
                   {[1,2,3,4,5,6,7,8,9,10,11,12].map(m => (

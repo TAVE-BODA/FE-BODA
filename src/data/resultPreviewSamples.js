@@ -222,4 +222,56 @@ export const RESULT_PREVIEW_SAMPLES = {
       },
     },
   },
+
+  amountMixedMatch: {
+    chatSessionId: 125,
+    userMessage: {
+      messageId: 749,
+      senderType: 'USER',
+      questionType: 'CHIP_AMOUNT',
+      messageContent:
+        '무릎인대수술\n\n[사용자 입력 조건]\n- 발생 상황: INJURY\n- 받은 치료: HOSPITALIZATION, CAST\n- 입원 정보: 병원 종류=TERTIARY_HOSPITAL, 병실=GENERAL_ROOM, 입원 기간=2박\n- 깁스 정보: 부위=LIMBS, 깁스 방식=FULL_CAST\n- 치료 시작일: 2026-07-02',
+      usedFallback: false,
+      disclaimerText: null,
+      hasSources: false,
+      createdAt: '2026-07-18T14:15:58.88373883',
+      documentGuide: null,
+      claimGuide: null,
+      amountGuide: null,
+    },
+    aiMessage: {
+      messageId: 750,
+      senderType: 'AI',
+      questionType: 'CHIP_AMOUNT',
+      messageContent:
+        '[입원]\n입력하신 입원 조건과 직접 매칭되는 입원비 보장 항목을 찾지 못했어요.\n\n[깁스·고정 치료]\n예상 보험금은 약 3,000,000원이에요.\n\n[계산 내역]\n- 재해추상골절 (치아파절 제외) · 깁스(부목제외)치료비특약: 현저한 추상 3,000,000원\n\n[주의사항]\n- 부목 제외\n- 동일한 원인으로 깁스 2회 이상 또는 동시에 다른 부위 깁스 시 1회만 지급',
+      usedFallback: true,
+      disclaimerText: '실제 보험금 지급 여부는 보험사 심사 결과 및 약관에 따라 달라질 수 있습니다.',
+      hasSources: true,
+      createdAt: '2026-07-18T14:15:59.153775978',
+      documentGuide: null,
+      claimGuide: null,
+      amountGuide: {
+        calculationAvailable: false,
+        estimatedItems: [
+          {
+            coverageName: '재해추상골절 (치아파절 제외) · 깁스(부목제외)치료비특약',
+            amountText: '3,000,000원',
+            reason: '[깁스·고정 치료] 정식 깁스 치료 시 현저한 추상 지급되는 보장금액이에요.',
+            hasSources: true,
+            sourceChunkIds: [81400],
+          },
+        ],
+        cautions: [
+          '일부 치료 항목은 필요한 정보가 부족해 전체 예상 보험금을 계산하지 못했어요.',
+          '입력하신 병원 및 병실 조건과 직접 매칭되는 입원비 보장 항목을 찾지 못했어요.',
+          '부목 또는 반깁스는 보장 대상에서 제외될 수 있어요.',
+          '동일한 원인으로 여러 번 깁스 치료를 받은 경우 1회만 지급될 수 있어요.',
+          '실제 지급 여부는 보험사 심사 결과 및 약관 조건에 따라 달라질 수 있어요.',
+        ],
+        hasSources: true,
+        sourceChunkIds: [81400],
+      },
+    },
+  },
 };

@@ -129,6 +129,12 @@ export const sendInsuranceCondition = async (chatSessionId, formData, selectedOp
   return postChatMessage(chatSessionId, body);
 };
 
-// TODO: "직접 입력할게요"(자유 입력 질문) 결과 화면은 백엔드가 아직 개발 중이라
-// API 연동은 보류. 지금은 ResultPage.jsx에 입력창 UI만 만들어둔 상태.
-// 백엔드 준비되면 여기에 sendFreeTextQuestion(chatSessionId, formData, customMessage) 추가하면 됨.
+// "직접 입력할게요" - 자유 입력 질문 (챗봇처럼 계속 이어가는 대화).
+// 백엔드 확인: questionType: 'FREE_TEXT' + message만 보내면 됨 (조건 필드 불필요).
+export const sendFreeTextMessage = async (chatSessionId, message) => {
+  const body = {
+    questionType: 'FREE_TEXT',
+    message,
+  };
+  return postChatMessage(chatSessionId, body);
+};

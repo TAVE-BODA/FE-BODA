@@ -17,7 +17,6 @@
   right: 0;
 }
 
-/* ── 결과 데이터 없을 때(새로고침/직접 진입) 안내 화면 ─────────── */
 .result-empty-wrap {
   display: flex;
   flex-direction: column;
@@ -261,27 +260,108 @@
   box-shadow: 0 6px 15px rgba(47, 128, 237, 0.2);
 }
 
+.result-freechat-composer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  width: 100%;
+}
+
 .result-custom-input-box {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
   width: 100%;
-  max-width: 560px;
+}
+
+.result-freechat-area {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+}
+
+.result-freechat-turn {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.result-freechat-user-bubble {
   align-self: flex-end;
+  background-color: var(--gray-02);
+  color: var(--gray-black);
+  border-radius: 50px;
+  padding: 24px 45px;
+  font-size: var(--text-body1);
+  font-weight: var(--weight-medium);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.04);
+  width: fit-content;
+  max-width: 600px;
+  text-align: right;
+}
+
+.result-freechat-answer-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 28px;
+  align-self: flex-start;
+  width: calc(100% + 168px);
+  margin-left: -168px;
+}
+
+.result-freechat-answer-bubble {
+  background-color: var(--gray-white);
+  box-shadow: 0 15px 35px rgba(211, 214, 252, 0.25);
+  border-radius: 25px;
+  padding: 30px 38px;
+  font-size: var(--text-body1);
+  line-height: 1.7;
+  color: var(--gray-black);
+  width: 100%;
+  max-width: 600px;
+  box-sizing: border-box;
+}
+
+.result-freechat-end-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--gray-white);
+  border: 1.5px solid var(--gray-03);
+  color: var(--gray-06);
+  border-radius: 50px;
+  padding: 10px 20px 10px 18px;
+  font-size: var(--text-body4);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.result-freechat-end-btn:hover {
+  background-color: var(--gray-01);
+  border-color: var(--gray-04);
+  color: var(--gray-07);
 }
 
 .result-custom-input-field {
-  flex: 1;
-  background-color: var(--gray-02);
-  border: none;
+  width: 100%;
+  background-color: var(--gray-white);
+  border: 1.5px solid var(--gray-03);
   border-radius: 50px;
-  padding: 20px 32px;
-  font-size: var(--text-body1);
+  padding: 17px 68px 17px 26px;
+  font-size: var(--text-body2);
   font-weight: var(--weight-medium);
   color: var(--gray-black);
   outline: none;
   box-sizing: border-box;
-  text-align: left;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.result-custom-input-field:focus {
+  border-color: var(--Main-05);
+  box-shadow: 0 0 0 4px rgba(47, 128, 237, 0.08);
 }
 
 .result-custom-input-field::placeholder {
@@ -294,22 +374,26 @@
 }
 
 .result-custom-input-send-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
   flex-shrink: 0;
-  width: 52px;
-  height: 52px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   border: none;
-  background-color: var(--Main-05);
+  background-color: var(--Main-06);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.1s ease;
+  transition: background-color 0.2s ease, transform 0.15s ease;
 }
 
 .result-custom-input-send-btn:hover:not(:disabled) {
-  background-color: var(--Main-06);
-  transform: scale(1.05);
+  background-color: var(--Main-07);
+  transform: translateY(-50%) scale(1.06);
 }
 
 .result-custom-input-send-btn:disabled {
@@ -324,6 +408,7 @@
   .result-bubble { max-width: 80%; }
   .result-evidence-list, .result-followup-area { padding-left: 138px; }
   .result-evidence-list { max-width: none; }
+  .result-freechat-answer-row { width: calc(100% + 138px); margin-left: -138px; }
 }
 
 @media screen and (max-width: 768px) {
@@ -332,15 +417,13 @@
   .result-bubble { max-width: 100%; padding: 22px 28px; }
   .result-evidence-list, .result-followup-area { padding-left: 0; }
   .result-evidence-list { max-width: none; }
+  .result-freechat-answer-row { width: 100%; margin-left: 0; flex-direction: column; }
 }
 
-/* 보라색 테마 (옵션 2: 예상 보험금) */
 .theme-purple .result-bubble-title {
   color: #756EC7;
 }
 
-/* highlightType이 'amount'가 아니라 'text'로 나올 때(합계 없이 항목 reason만 있는 경우)
-   쓰이는 클래스인데 이게 빠져있어서 기본 파란색(--Main-08)이 그대로 나오던 버그 수정 */
 .theme-purple .result-highlight-text {
   color: #5B4FD9;
 }
@@ -350,7 +433,7 @@
 }
 
 .theme-purple .result-highlight-box {
-  background-color: #928BFF1A; /* 928BFF 8% 투명도 배경 */
+  background-color: #928BFF1A; 
   border: 1px solid #928BFF;
 }
 
@@ -371,17 +454,20 @@
   color: #756EC7;
 }
 
+.theme-purple .evidence-tag {
+  background-color: #F3F1FF;
+  border-color: #928BFF;
+  color: #6D5CE0;
+}
+
 .theme-purple .evidence-highlight-amount {
   color: #756EC7;
 }
 
-/* 초록 테마 (옵션 3: 필요 서류) */
 .theme-green .result-bubble-title {
   color: #249C00;
 }
 
-/* theme-purple과 같은 이유로 미리 방어: 지금은 서류(green) 쪽이 항상 highlightType 'amount'만
-   쓰지만, 나중에 'text' 분기를 타는 경우가 생겨도 색이 깨지지 않도록 미리 추가 */
 .theme-green .result-highlight-text {
   color: #249C00;
 }
@@ -408,7 +494,6 @@
   font-weight: var(--weight-medium);
 }
 
-/* 필수 뱃지 - 초록 계열로 오버라이드 */
 .theme-green .evidence-tag {
   background-color: #F0FDE8;
   border-color: #AFEA7C;

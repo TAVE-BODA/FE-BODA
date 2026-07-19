@@ -1,20 +1,15 @@
-// questionType -> ResultPage 테마 / 뱃지 매핑 (chat.js의 QUESTION_TYPE_MAP과 동일한 축)
 const THEME_BY_QUESTION_TYPE = {
   CHIP_CLAIM: 'main',
   CHIP_AMOUNT: 'purple',
   CHIP_DOCUMENTS: 'green',
 };
 
-// claimGuide.claimStatus -> 말풍선 타이틀
-// 지금까지 실제로 확인된 값은 'NEEDS_REVIEW' 뿐이라 다른 값은 추정치예요.
-// 백엔드에서 실제 enum 값 내려주면 여기 맞춰서 수정하면 됩니다.
 const CLAIM_STATUS_TITLE = {
   POSSIBLE: '청구 가능해요!',
   NOT_POSSIBLE: '청구가 어려워요',
   NEEDS_REVIEW: '확인이 조금 더 필요해요',
 };
 
-// selectedOption(1~4) 기준 다음 질문 버튼들 — 기존 더미 데이터의 followupOptions를 재사용
 const FOLLOWUP_OPTIONS_BY_QUESTION_TYPE = {
   CHIP_CLAIM: [
     { number: 2, label: '2. 얼마나 더 받을 수 있어요?' },
@@ -33,10 +28,6 @@ const FOLLOWUP_OPTIONS_BY_QUESTION_TYPE = {
   ],
 };
 
-// userMessage.messageContent는 "청구 가능한지 먼저 알고 싶어요\n\n[사용자 입력 조건]\n..." 형태라
-// 말풍선에는 첫 줄(사용자가 실제로 고른 질문 문구)만 보여줘요.
-// 말풍선에 보여줄 사용자 질문 문구. questionType별로 고정해서, userMessage.messageContent의
-// 구성이 바뀌어도(예: 5번 질문인 진단명이 맨 앞에 붙는 것으로 바뀜) 영향 안 받게 함.
 const USER_QUESTION_BY_TYPE = {
   CHIP_CLAIM: '청구 가능한지 먼저 알고 싶어요',
   CHIP_AMOUNT: '예상 보험금을 먼저 알고 싶어요',
@@ -44,39 +35,24 @@ const USER_QUESTION_BY_TYPE = {
   CHIP_OVERVIEW: '내 보험의 보장 항목부터 보고 싶어요',
 };
 
-// 5번 질문(진단서/치료명 직접 입력)으로 사용자가 입력한 값. 백엔드가 이걸
-// userMessage.messageContent의 맨 첫 줄에 넣어주고 있어서 그대로 뽑아씀.
 function extractDiagnosisName(userMessage) {
   if (!userMessage?.messageContent) return '';
   const firstLine = userMessage.messageContent.split('\n\n')[0].trim();
-  // 고정 질문 문구랑 우연히 겹치면(구버전 응답 등) 진단명이 아니므로 표시 안 함
   const isFixedPhrase = Object.values(USER_QUESTION_BY_TYPE).includes(firstLine);
   return isFixedPhrase ? '' : firstLine;
 }
 
-// 말풍선 문구를 자연스러운 한 문장으로 합침: "허리디스크일 때 청구 가능한지 먼저 알고 싶어요"
-// "~일 때"는 받침 유무 상관없이 그대로 붙일 수 있어서 별도 조사 처리가 필요 없음.
 function buildUserQuestionText(userMessage, questionType) {
   const phrase = USER_QUESTION_BY_TYPE[questionType];
   if (!phrase) {
-    // 모르는 questionType이면 예전 방식(messageContent 첫 줄)으로 폴백
     return userMessage?.messageContent?.split('\n\n')[0]?.trim() || '';
   }
   const diagnosisName = extractDiagnosisName(userMessage);
   return diagnosisName ? `${diagnosisName}일 때 ${phrase}` : phrase;
 }
 
-// reasons를 문장 단위로 각각 카드화하지 않고, [입원]/[수술] 같은 대괄호 라벨 기준으로
-// 치료 유형별 카드 하나로 묶어요. 태그는 문장 내용을 추측하는 게 아니라 대괄호 값
-// 그대로 써서(= 실제 데이터) 오분류 위험이 없게 했어요.
-// - 같은 그룹 문장들은 카드 하나에 리스트로 모음
-// - "찾지 못했어요/확인되지 않았어요" 같은 부정 표현이 있으면 뒤로, 확인된 그룹을 앞으로 정렬
-// - 대괄호가 없는 문장은 "확인된 내용" 카드 하나로 별도 모음
 const NEGATIVE_RESULT_PATTERN = /(찾지 못했|확인되지 않|되지 않았)/;
 
-// 말풍선 제목용 축약 표기. 하이라이트 박스의 큰 숫자는 정확한 금액(예: 700,000원)을 그대로 쓰지만,
-// 제목 문장엔 전체 자릿수를 그대로 넣으면 문장이 길어져서 줄바꿈이 이상해지므로
-// "약 70만원" 처럼 짧게 줄여서 씀 (피그마 톤 그대로)
 function toApproxManwonText(amountNumber) {
   if (amountNumber >= 10000) {
     return `${Math.round(amountNumber / 10000)}만원`;
@@ -87,13 +63,11 @@ function toApproxManwonText(amountNumber) {
 function buildClaimEvidences(claimGuide) {
   if (!claimGuide) return [];
 
-  // claimGuide.sourceChunkIds는 reason 하나하나가 아니라 claimGuide 전체에 걸린
-  // 근거라, 그룹 카드마다 정확히 매칭은 안 되지만 동일하게 붙여줌
   const sharedChunkIds = claimGuide.hasSources && claimGuide.sourceChunkIds?.length
     ? claimGuide.sourceChunkIds
     : undefined;
 
-  const groups = []; // [{ label, texts: [] }], 등장 순서 유지
+  const groups = [];
   const groupIndexByLabel = new Map();
   const ungroupedTexts = [];
 
@@ -123,8 +97,7 @@ function buildClaimEvidences(claimGuide) {
         title: isNegative ? `${group.label} 보장을 찾지 못했어요` : `${group.label} 보장이 확인돼요`,
         description: group.texts,
         sourceChunkIds: sharedChunkIds,
-        highlight: true, // 칩1(청구 가능 여부) 전용 - 여러 문장이 카드 하나에 모여서 강조가 필요함
-        _negative: isNegative, // 정렬용, 카드로 안 넘어감
+        _negative: isNegative,
       };
     })
     .sort((a, b) => Number(a._negative) - Number(b._negative))
@@ -137,11 +110,9 @@ function buildClaimEvidences(claimGuide) {
         title: '확인된 내용',
         description: ungroupedTexts,
         sourceChunkIds: sharedChunkIds,
-        highlight: true,
       }]
     : [];
 
-  // cautions는 여러 개여도 카드 하나에 리스트로 모아서 보여줌 (근거 토글은 없음 - 경고 문구지 조항 인용이 아님)
   const cautions = claimGuide.cautions || [];
   const cautionCard = cautions.length
     ? [{
@@ -150,32 +121,27 @@ function buildClaimEvidences(claimGuide) {
         title: '이 점은 꼭 확인하세요',
         description: cautions,
         tone: 'caution',
-        highlight: true,
       }]
     : [];
 
   return [...groupCards, ...ungroupedCard, ...cautionCard];
 }
 
-// amountGuide 실제 구조 (2026-07-14 실응답 기준):
-// {
-//   calculationAvailable: boolean,
-//   estimatedItems: [{ coverageName, amountText, reason, hasSources, sourceChunkIds }],
-//   cautions: [string],
-//   hasSources, sourceChunkIds (전체 합계용, 지금은 안 씀)
-//   totalAmountText?: string  <- 정확히 매칭되는 항목이 있을 때만 내려오는 것으로 추정, 미확인
-// }
 function buildAmountEvidences(amountGuide) {
   if (!amountGuide) return [];
 
-  // 칩1/칩3과 다르게 항목마다 자기 sourceChunkIds가 따로 있어서, 항목별로 정확한 근거만 붙일 수 있음
-  const itemCards = (amountGuide.estimatedItems || []).map((item, idx) => ({
-    id: `amount-item-${idx}`,
-    title: item.coverageName || `보장 항목 ${idx + 1}`,
-    amount: item.amountText,
-    description: item.reason || '',
-    sourceChunkIds: item.hasSources && item.sourceChunkIds?.length ? item.sourceChunkIds : undefined,
-  }));
+  const itemCards = (amountGuide.estimatedItems || []).map((item, idx) => {
+    const rawReason = item.reason || '';
+    const tagMatch = rawReason.match(/^\[([^\]]+)\]\s*/);
+    return {
+      id: `amount-item-${idx}`,
+      tag: tagMatch ? tagMatch[1] : undefined,
+      title: item.coverageName || `보장 항목 ${idx + 1}`,
+      amount: item.amountText,
+      description: rawReason.replace(/^\[[^\]]+\]\s*/, ''),
+      sourceChunkIds: item.hasSources && item.sourceChunkIds?.length ? item.sourceChunkIds : undefined,
+    };
+  });
 
   const cautions = amountGuide.cautions || [];
   const cautionCard = cautions.length
@@ -191,18 +157,11 @@ function buildAmountEvidences(amountGuide) {
   return [...itemCards, ...cautionCard];
 }
 
-// documentGuide 실제 구조 (2026-07-14 실응답 기준):
-// {
-//   documents: [{ name, description, required, hasSources, sourceChunkIds }],  // 문서별 필드는 지금 null로만 옴
-//   hasSources, sourceChunkIds  // documentGuide 전체에 공통으로 달려있는 근거
-// }
 function buildDocumentEvidences(documentGuide) {
   if (!documentGuide) return [];
 
   const { documents = [] } = documentGuide;
 
-  // 문서 하나하나에 근거가 따로 안 내려오고(지금 응답 기준 documents[].sourceChunkIds는 항상 null),
-  // documentGuide 전체 공통 근거를 모든 서류 카드에 동일하게 붙여줌
   const sharedChunkIds = documentGuide.hasSources && documentGuide.sourceChunkIds?.length
     ? documentGuide.sourceChunkIds
     : undefined;
@@ -216,12 +175,6 @@ function buildDocumentEvidences(documentGuide) {
   }));
 }
 
-/**
- * POST /api/chat/sessions/{id}/messages 응답을 ResultPage가 바로 렌더링할 수 있는
- * 형태(DUMMY_DATA_BY_OPTION과 같은 shape)로 변환합니다.
- *
- * @param {object} apiResponse - { chatSessionId, userMessage, aiMessage }
- */
 export function mapApiResponseToResultView(apiResponse) {
   const { userMessage, aiMessage } = apiResponse || {};
   if (!aiMessage) return null;
@@ -245,12 +198,6 @@ export function mapApiResponseToResultView(apiResponse) {
     const { estimatedItems = [], calculationAvailable } = aiMessage.amountGuide;
     evidences = buildAmountEvidences(aiMessage.amountGuide);
 
-    // amountGuide에 합계 필드(totalAmountText)가 따로 안 내려와서, 항목별 amountText를
-    // 직접 더해서 계산함. 단, amountText가 항상 깔끔한 "700,000원" 형태인 건 아니고
-    // "2년 초과 50,000원, 2년 이내 20,000원"처럼 조건별로 여러 숫자가 섞인 문장일 수도
-    // 있어서, 문자열 전체가 "숫자원" 하나로만 이루어진 경우에만 안전하게 숫자로 인정함.
-    // (예전엔 숫자만 다 뽑아 이어붙이는 방식이라 "250000220000원" 같은 말도 안 되는
-    // 값이 나오는 버그가 있었음)
     const parsedAmounts = estimatedItems.map((item) => {
       const trimmed = (item.amountText || '').trim();
       const match = trimmed.match(/^([\d,]+)\s*원$/);
@@ -270,20 +217,29 @@ export function mapApiResponseToResultView(apiResponse) {
       highlightLabel = estimatedItems.length > 1 ? '예상 수령액(항목 합산)' : '예상 수령액';
       highlightAmount = totalText;
     } else {
-      // 합산이 불가능한 케이스(calculationAvailable: false 포함) -> messageContent 앞부분을
-      // 짧게 요약해서 제목/하이라이트에 사용. "[확인된 후보]" 같은 상세 목록 마커 이후는
-      // 어차피 evidence 카드로 이미 보여주므로 중복 방지 차원에서 제외함.
-      const marker = aiMessage.messageContent?.indexOf('[확인된');
-      const summaryPart = marker && marker >= 0
-        ? aiMessage.messageContent.slice(0, marker)
-        : aiMessage.messageContent;
-      const summaryText = (summaryPart || '').replace(/\n{2,}/g, '\n').trim();
+      const bracketTags = aiMessage.messageContent?.match(/\[[^\]]+\]/g) || [];
+      const hasMultipleBracketSections = bracketTags.length >= 2;
 
-      resultTitle = aiMessage.messageContent?.split('\n')[0]?.trim() || '예상 보험금을 확인했어요.';
-      highlightType = 'text';      highlightText = summaryText.split('\n').slice(1).join('\n').trim()
-        || summaryText
-        || estimatedItems?.[0]?.reason
-        || '';
+      if (hasMultipleBracketSections) {
+        resultTitle = '예상 보험금을 확인했어요.';
+        highlightType = 'text';
+        highlightText = aiMessage.amountGuide.cautions?.[0]
+          || aiMessage.disclaimerText
+          || '';
+      } else {
+        const marker = aiMessage.messageContent?.indexOf('[확인된');
+        const summaryPart = marker && marker >= 0
+          ? aiMessage.messageContent.slice(0, marker)
+          : aiMessage.messageContent;
+        const summaryText = (summaryPart || '').replace(/\n{2,}/g, '\n').trim();
+
+        resultTitle = aiMessage.messageContent?.split('\n')[0]?.trim() || '예상 보험금을 확인했어요.';
+        highlightType = 'text';
+        highlightText = summaryText.split('\n').slice(1).join('\n').trim()
+          || summaryText
+          || estimatedItems?.[0]?.reason
+          || '';
+      }
     }
   } else if (questionType === 'CHIP_DOCUMENTS' && aiMessage.documentGuide) {
     const { documents = [], notice } = aiMessage.documentGuide;
@@ -292,15 +248,11 @@ export function mapApiResponseToResultView(apiResponse) {
     highlightAmount = documents.length
       ? `${documents.length}가지 서류가 필요해요.`
       : aiMessage.messageContent;
-    // messageContent는 줄바꿈 포함 긴 안내문이라 제목에 그대로 넣으면 깨져 보여서
-    // 짧은 고정 문구로 대체 (문서 개수가 없을 때만 원문으로 폴백)
     resultTitle = documents.length ? '꼭 챙겨야 할 서류예요.' : aiMessage.messageContent;
     evidences = buildDocumentEvidences(aiMessage.documentGuide);
   } else {
-    // usedFallback === true 이거나 해당 guide 필드가 null인 경우
-    // (지금 준 샘플처럼 claimGuide가 있어도 status가 예상 밖 값일 수 있어 안전하게 처리)
-    resultTitle = aiMessage.messageContent;
-    highlightText = aiMessage.disclaimerText || aiMessage.messageContent;
+    resultTitle = aiMessage.messageContent?.split('\n')[0]?.trim() || '답변을 확인했어요.';
+    highlightText = aiMessage.messageContent || aiMessage.disclaimerText || '';
   }
 
   return {
