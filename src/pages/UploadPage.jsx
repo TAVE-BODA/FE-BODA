@@ -100,14 +100,20 @@ export default function UploadPage() {
 
     try {
       if (isCert) {
-        setCertProgress({ current: 0, total: activeFiles.length });
+        const result = await uploadPolicy(activeFiles, chatSessionId);
+        // 응답 구조 확정 전 방어 코드 - ids/analysisIds/id 중 있는 걸 씀
+        const ids = result.ids || result.analysisIds || (result.id ? [result.id] : []);
+        if (ids.length === 0) {
+          throw new Error('증권 분석 요청에 대한 응답을 이해할 수 없어요. 백엔드 응답 구조를 확인해주세요.');
+        }
+
+        setCertProgress({ current: 0, total: ids.length });
         let lastId = null;
-        for (let i = 0; i < activeFiles.length; i++) {
-          const { id } = await uploadPolicy(activeFiles[i], chatSessionId);
+        for (let i = 0; i < ids.length; i++) {
           // 증권 분석: 5초 간격 x 120번 = 600초(10분)
-          await pollUntilDone(checkPolicyStatus, id, 5000, 120);
-          lastId = id;
-          setCertProgress({ current: i + 1, total: activeFiles.length });
+          await pollUntilDone(checkPolicyStatus, ids[i], 5000, 120);
+          lastId = ids[i];
+          setCertProgress({ current: i + 1, total: ids.length });
         }
         // 대시보드(DashboardPage/DetailPage)가 localStorage의 analysisId로 조회하므로,
         // 마지막으로 분석된 증권 id를 저장 (여러 개 올려도 최소 1개는 그 화면에서 조회 가능하도록)

@@ -1,9 +1,10 @@
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-// 보험증권 PDF 업로드
-export const uploadPolicy = async (file, chatSessionId) => {
+// 보험증권 PDF 업로드 (2026-07-19 백엔드 확인: 여러 개를 한 번에 같이 보내는 방식으로 변경됨)
+// files: File[] - 최대 3개까지
+export const uploadPolicy = async (files, chatSessionId) => {
   const formData = new FormData();
-  formData.append('file', file);
+  files.forEach((file) => formData.append('files', file));
 
   const url = chatSessionId
     ? `${BASE_URL}/api/upload/policy?chatSessionId=${chatSessionId}`
@@ -21,7 +22,10 @@ export const uploadPolicy = async (file, chatSessionId) => {
     err.code = errorBody.code;
     throw err;
   }
-  return response.json(); // { status, id, message }
+  // NOTE: 여러 파일을 한 번에 보내는 방식으로 바뀌면서 응답 구조가 예전(단일 id)과
+  // 달라졌을 가능성이 높음. 정확한 필드명 확인 전까지 UploadPage.jsx에서
+  // 있을 법한 필드(ids/analysisIds/id)를 방어적으로 다 시도하도록 처리함.
+  return response.json();
 };
 
 // 보험약관 PDF 업로드
