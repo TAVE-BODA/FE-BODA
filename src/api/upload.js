@@ -1,7 +1,8 @@
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-// 보험증권 PDF 업로드 (2026-07-19 백엔드 확인: 여러 개를 한 번에 같이 보내는 방식으로 변경됨)
+// 보험증권 PDF 업로드 (필드명 'file' -> 'files', 여러 개 한 번에 전송 가능 - 2026-07-19 백엔드 확인)
 // files: File[] - 최대 3개까지
+// 응답: [{ fileName, success, status, analysisId, message }, ...] - 파일별로 성공/실패가 따로 옴
 export const uploadPolicy = async (files, chatSessionId) => {
   const formData = new FormData();
   files.forEach((file) => formData.append('files', file));
@@ -22,9 +23,6 @@ export const uploadPolicy = async (files, chatSessionId) => {
     err.code = errorBody.code;
     throw err;
   }
-  // NOTE: 여러 파일을 한 번에 보내는 방식으로 바뀌면서 응답 구조가 예전(단일 id)과
-  // 달라졌을 가능성이 높음. 정확한 필드명 확인 전까지 UploadPage.jsx에서
-  // 있을 법한 필드(ids/analysisIds/id)를 방어적으로 다 시도하도록 처리함.
   return response.json();
 };
 
@@ -78,7 +76,11 @@ export const pollUntilDone = async (checkFn, id, interval = 3000, maxTry = 30) =
     const result = await checkFn(id);
     const status = result.analysisStatus || result.parsingStatus;
     if (status === 'DONE') return result;
-    if (status === 'FAILED') throw new Error('분석에 실패했어요. 다시 시도해주세요.');
+    // 백엔드가 실패 상태로 'FAILED'와 'ERROR'를 섞어서 쓰고 있어서 둘 다 처리함
+    // (2026-07-19 확인: 증권 분석 실패 시 analysisStatus: 'ERROR'로 내려옴)
+    if (status === 'FAILED' || status === 'ERROR') {
+      throw new Error('분석에 실패했어요. 다시 시도해주세요.');
+    }
     await new Promise(r => setTimeout(r, interval));
   }
   throw new Error('분석 시간이 초과됐어요. 다시 시도해주세요.');
