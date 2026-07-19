@@ -117,7 +117,8 @@ function buildStandardRows(items, { allowPairing = true } = {}) {
 
   if (pairConditionItems.length > 0) {
     const conditions = [...new Set(pairConditionItems.flatMap((item) => item.amounts.map((a) => a.condition)))];
-    const [condition1, condition2] = conditions;
+    // 백엔드가 주는 순서가 뒤죽박죽이라("N년 초과"가 먼저 오기도 함), "이내"가 항상 왼쪽 열에 오도록 정렬
+    const [condition1, condition2] = conditions.sort((a, b) => (b.includes('이내') ? 1 : 0) - (a.includes('이내') ? 1 : 0));
 
     rows.push({ type: 'col-header', col1: condition1, col2: condition2 });
 

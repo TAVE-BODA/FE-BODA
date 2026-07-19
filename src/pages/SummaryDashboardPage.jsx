@@ -63,7 +63,8 @@ export default function SummaryDashboardPage() {
   const companyNames = data.companyNames ?? [];
   const coverages = COVERAGE_ORDER.map((coverageType) => {
     const meta = COVERAGE_META[coverageType];
-    const summary = data.coverageSummaries?.find((s) => s.coverageType === coverageType);
+    // 감지 안 된 보장은 백엔드가 항목 자체를 null로 내려보낼 때가 있어서 s가 null일 수 있음
+    const summary = data.coverageSummaries?.find((s) => s && s.coverageType === coverageType);
     const { amountText, companies, inactive } = buildCoverageSummaryTile(summary);
     return { id: meta.id, icon: meta.icon, category: meta.label, amount: amountText, companies, inactive };
   });

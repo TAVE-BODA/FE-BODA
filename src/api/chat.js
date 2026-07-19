@@ -11,6 +11,20 @@ export const createChatSession = async () => {
   return response.json();
 };
 
+// DELETE /api/chat/sessions/{chatSessionId} - 백엔드 재배포로 추가된 채팅방 삭제 API (2026-07-20)
+export const deleteChatSession = async (chatSessionId) => {
+  const response = await fetch(`${BASE_URL}/api/chat/sessions/${chatSessionId}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}));
+    const err = new Error(errorBody.error || errorBody.message || '채팅방 삭제 실패');
+    err.code = errorBody.code;
+    throw err;
+  }
+};
+
 const QUESTION_TYPE_MAP = {
   1: 'CHIP_CLAIM',
   2: 'CHIP_AMOUNT',

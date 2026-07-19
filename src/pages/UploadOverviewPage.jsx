@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState, Suspense, lazy } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 import '../pages/UploadPage.css';
@@ -7,6 +7,10 @@ import NavBar from '../components/NavBar';
 import logosImg from '../assets/images/home_bottomicon.png';
 import uploadIconSrc from '../assets/icons/upload-icon.svg';
 import { uploadPolicy, checkPolicyStatus, pollUntilDone } from '../api/upload';
+
+// 로티 라이브러리 + 애니메이션 JSON은 분석 중 화면에서만 필요해서
+// 별도 청크로 분리해 초기 번들에 포함되지 않도록 지연 로딩합니다.
+const AnalyzingLottie = lazy(() => import('../components/AnalyzingLottie'));
 
 const MAX_FILES = 3;
 
@@ -45,34 +49,29 @@ export default function UploadOverviewPage() {
   const handleDrop       = (e) => { e.preventDefault(); setIsDragging(false); addFiles(e.dataTransfer.files); };
   const handleFileChange = (e) => { addFiles(e.target.files); e.target.value = ''; };
 
-  // 두 번째 코드의 유연한 응답 처리 및 일괄 전송 로직 반영
+  // 배치 업로드가 단건 업로드로 롤백돼서, 파일마다 순서대로 업로드+분석 폴링
   const handleAnalyze = async () => {
     setStep(STEP.ANALYZING);
     setIsLoading(true);
     setFailedFiles([]); // 실패 목록 초기화
 
     try {
-      // 1. 개별 순차 전송이 아닌, 파일 배열(files)을 한 번에 전송
-      const raw = await uploadPolicy(files, chatSessionId);
+      const succeededIds = [];
+      const failedNames = [];
 
-      let succeededIds = [];
-      let failedNames = [];
-
-      // 2. 응답 구조의 유연성 확보 (배열 형태 vs 단일 객체 내 배열 형태 모두 대응)
-      if (Array.isArray(raw)) {
-        // [{ fileName, success, status, analysisId, message }, ...]
-        raw.forEach((item) => {
-          if (item.success && item.analysisId) {
-            succeededIds.push(item.analysisId);
-          } else {
-            failedNames.push(item.fileName || '알 수 없는 파일');
-          }
-        });
-      } else if (raw && Array.isArray(raw.analysisIds)) {
-        // { message, analysisIds: [...], status }
-        succeededIds = raw.analysisIds;
-      } else {
-        throw new Error('증권 분석 응답 구조를 이해할 수 없어요. 백엔드 응답 형식을 확인해주세요.');
+      setProgress({ current: 0, total: files.length });
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        try {
+          const raw = await uploadPolicy(file, chatSessionId);
+          const analysisId = raw?.id ?? raw?.analysisId;
+          if (analysisId == null) throw new Error('증권 분석 응답 구조를 이해할 수 없어요.');
+          await pollUntilDone(checkPolicyStatus, analysisId, 5000, 120);
+          succeededIds.push(analysisId);
+        } catch {
+          failedNames.push(file.name);
+        }
+        setProgress({ current: i + 1, total: files.length });
       }
 
       // 모든 파일이 실패한 경우 예외 처리
@@ -81,14 +80,7 @@ export default function UploadOverviewPage() {
         throw new Error(`업로드한 증권을 분석할 수 없었어요${names ? ` (${names})` : ''}. 다시 시도해주세요.`);
       }
 
-      // 3. 성공한 ID들에 대해서만 폴링 진행
-      setProgress({ current: 0, total: succeededIds.length });
-      for (let i = 0; i < succeededIds.length; i++) {
-        await pollUntilDone(checkPolicyStatus, succeededIds[i], 5000, 120);
-        setProgress({ current: i + 1, total: succeededIds.length });
-      }
-
-      // 4. 실패 파일이 있다면 상태에 기록하여 팝업에서 보여줄 수 있도록 함
+      // 실패 파일이 있다면 상태에 기록하여 팝업에서 보여줄 수 있도록 함
       if (failedNames.length > 0) {
         setFailedFiles(failedNames);
       }
@@ -191,7 +183,9 @@ export default function UploadOverviewPage() {
       {step === STEP.ANALYZING && (
         <main className="upload-main upload-main--analyzing">
           <div className="upload-analyzing__top">
-            <Character size="lg" animate />
+            <Suspense fallback={<div className="upload-analyzing__lottie" />}>
+              <AnalyzingLottie className="upload-analyzing__lottie" />
+            </Suspense>
             <h2 className="upload-analyzing__title">
               <span className="upload-analyzing__highlight">보다</span>가 열심히 읽고 있어요
             </h2>

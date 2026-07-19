@@ -123,6 +123,7 @@
 
 /* ── 보험 카드 ───────────────────────────────────────────── */
 .mypage-insurance-card {
+  position: relative;
   background: var(--gray-white);
   border-radius: 20px;
   padding: 28px 32px;
@@ -132,11 +133,36 @@
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 }
 
+.mypage-card-delete {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--gray-04);
+  font-size: var(--text-body5);
+  font-weight: var(--weight-regular);
+  font-family: var(--font-base);
+  cursor: pointer;
+}
+
+.mypage-card-delete:hover {
+  color: #D6455B;
+  text-decoration: underline;
+}
+
+.mypage-card-delete:disabled {
+  cursor: default;
+  text-decoration: none;
+}
+
 /* 카드 헤더 */
 .mypage-card-header {
   display: flex;
   align-items: center;
   gap: 16px;
+  padding-right: 40px; /* 오른쪽 위 삭제 버튼과 긴 상품명 겹침 방지 */
 }
 
 .mypage-company-badge {
@@ -207,80 +233,9 @@
   font-weight: var(--weight-semibold);
 }
 
-/* 상태 바 */
-.mypage-status-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
-  border-radius: 12px;
-  background: #EBF6FF;
-  font-size: var(--text-body5);
-  font-weight: var(--weight-regular);
-}
-
-.mypage-status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  background: var(--Main-05);
-}
-
-.mypage-status-text {
-  color: var(--gray-07);
-  font-weight: var(--weight-medium);
-}
-
-/* 액션 버튼 */
-.mypage-card-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.mypage-action-row {
-  display: flex;
-  align-items: stretch;
-  gap: 10px;
-}
-
-.mypage-action-row > * {
-  flex: 1;
-  min-width: 0;
-}
-
-.mypage-action-btn {
-  width: 100%;
-  padding: 16px;
-  border-radius: 14px;
-  font-size: var(--text-body3);
-  font-weight: var(--weight-semibold);
-  font-family: var(--font-base);
-  cursor: pointer;
-  transition: opacity 0.15s, background 0.15s;
-  line-height: 1;
-}
-
-.mypage-action-btn--primary {
-  background: var(--Main-05);
-  color: var(--gray-white);
-  border: none;
-}
-
-.mypage-action-btn--primary:hover {
-  background: var(--Main-06);
-}
-
-.mypage-action-btn--secondary {
-  background: transparent;
-  color: var(--gray-06);
-  border: 1.5px solid var(--gray-03);
-}
-
-.mypage-action-btn--secondary:hover {
-  border-color: var(--gray-05);
-  color: var(--gray-07);
+.mypage-badge--error {
+  background: #FDEAEC;
+  color: #D6455B;
 }
 
 /* 채팅 드롭다운 */
@@ -335,6 +290,57 @@
 .mypage-dropdown-item--new {
   color: var(--Main-06);
   font-weight: var(--weight-medium);
+}
+
+/* 액션 버튼 */
+.mypage-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mypage-action-row {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.mypage-action-row > * {
+  flex: 1;
+  min-width: 0;
+}
+
+.mypage-action-btn {
+  width: 100%;
+  padding: 16px;
+  border-radius: 14px;
+  font-size: var(--text-body3);
+  font-weight: var(--weight-semibold);
+  font-family: var(--font-base);
+  cursor: pointer;
+  transition: opacity 0.15s, background 0.15s;
+  line-height: 1;
+}
+
+.mypage-action-btn--primary {
+  background: var(--Main-05);
+  color: var(--gray-white);
+  border: none;
+}
+
+.mypage-action-btn--primary:hover {
+  background: var(--Main-06);
+}
+
+.mypage-action-btn--secondary {
+  background: transparent;
+  color: var(--gray-06);
+  border: 1.5px solid var(--gray-03);
+}
+
+.mypage-action-btn--secondary:hover {
+  border-color: var(--gray-05);
+  color: var(--gray-07);
 }
 
 /* 서류 추가 CTA */

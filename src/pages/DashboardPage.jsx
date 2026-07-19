@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import NavBar from '../components/NavBar';
 import Character from '../components/Character';
 import InsuranceBadge from '../components/InsuranceBadge';
@@ -13,7 +13,7 @@ const NOTICE_BANNER = '진단금, 수술비, 입원일당, 골절·재해는 보
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const analysisId = localStorage.getItem('analysisId');
+  const { analysisId } = useParams();
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
 
@@ -60,7 +60,8 @@ export default function DashboardPage() {
   const user = JSON.parse(localStorage.getItem('user') ?? '{}');
   const coverages = COVERAGE_ORDER.map((coverageType) => {
     const meta = COVERAGE_META[coverageType];
-    const c = data.coverages.find((x) => x.coverageType === coverageType);
+    // 감지 안 된 보장은 백엔드가 항목 자체를 null로 내려보낼 때가 있어서 x가 null일 수 있음
+    const c = data.coverages.find((x) => x && x.coverageType === coverageType);
 
     if (!c) {
       return { id: meta.id, icon: meta.icon, category: meta.label, amount: '', companies: [], inactive: true };
@@ -129,7 +130,7 @@ export default function DashboardPage() {
               companies={c.companies}
               inactive={c.inactive}
               // 실손은 상세페이지 디자인이 아직 없어서 클릭해도 이동하지 않음
-              onClick={c.id === 'reimbursement' ? undefined : () => navigate(`/result/${c.id}`)}
+              onClick={c.id === 'reimbursement' ? undefined : () => navigate(`/result/analysis/${analysisId}/${c.id}`)}
             />
           ))}
         </div>

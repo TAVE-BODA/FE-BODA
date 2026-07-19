@@ -102,44 +102,30 @@ export default function UploadPage() {
     try {
       if (isCert) {
         setCertFailedFiles([]);
-        const raw = await uploadPolicy(activeFiles, chatSessionId);
+        const succeededIds = [];
+        const failedNames = [];
 
-        // 응답이 파일 개수에 따라 형태가 다를 수 있어서(배열 vs 단일 객체) 둘 다 처리
-        let succeededIds = [];
-        let failedNames = [];
-
-        if (Array.isArray(raw)) {
-          // [{ fileName, success, status, analysisId, message }, ...]
-          raw.forEach((item) => {
-            if (item.success && item.analysisId) {
-              succeededIds.push(item.analysisId);
-            } else {
-              failedNames.push(item.fileName || '알 수 없는 파일');
-            }
-          });
-        } else if (raw && Array.isArray(raw.analysisIds)) {
-          // { message, analysisIds: [...], status }
-          succeededIds = raw.analysisIds;
-        } else {
-          throw new Error('증권 분석 응답 구조를 이해할 수 없어요. 백엔드 응답 형식을 확인해주세요.');
+        // 배치 업로드가 단건 업로드로 롤백돼서, 파일마다 순서대로 업로드+분석 폴링
+        setCertProgress({ current: 0, total: activeFiles.length });
+        for (let i = 0; i < activeFiles.length; i++) {
+          const file = activeFiles[i];
+          try {
+            const raw = await uploadPolicy(file, chatSessionId);
+            const analysisId = raw?.id ?? raw?.analysisId;
+            if (analysisId == null) throw new Error('증권 분석 응답 구조를 이해할 수 없어요.');
+            // 증권 분석: 5초 간격 x 120번 = 600초(10분)
+            await pollUntilDone(checkPolicyStatus, analysisId, 5000, 120);
+            succeededIds.push(analysisId);
+          } catch {
+            failedNames.push(file.name);
+          }
+          setCertProgress({ current: i + 1, total: activeFiles.length });
         }
 
         if (succeededIds.length === 0) {
           const names = failedNames.join(', ');
           throw new Error(`업로드한 증권을 분석할 수 없었어요${names ? ` (${names})` : ''}. 다시 시도해주세요.`);
         }
-
-        setCertProgress({ current: 0, total: succeededIds.length });
-        let lastId = null;
-        for (let i = 0; i < succeededIds.length; i++) {
-          // 증권 분석: 5초 간격 x 120번 = 600초(10분)
-          await pollUntilDone(checkPolicyStatus, succeededIds[i], 5000, 120);
-          lastId = succeededIds[i];
-          setCertProgress({ current: i + 1, total: succeededIds.length });
-        }
-        // 대시보드(DashboardPage/DetailPage)가 localStorage의 analysisId로 조회하므로,
-        // 마지막으로 분석된 증권 id를 저장 (여러 개 올려도 최소 1개는 그 화면에서 조회 가능하도록)
-        if (lastId) localStorage.setItem('analysisId', lastId);
 
         if (failedNames.length > 0) {
           setCertFailedFiles(failedNames);
