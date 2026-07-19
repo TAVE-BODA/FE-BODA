@@ -70,7 +70,12 @@ export default function ResultPage({ data, onSelectFollowup, onCustomInput }) {
     }
 
     if (optionNumber === 4) {
-      navigate('/upload/overview', { state: { chatSessionId } });
+      if (!chatSessionId) {
+        alert('세션 정보가 없어서 보장 항목을 볼 수 없어요. 증권·약관 업로드부터 다시 진행해주세요.');
+        navigate('/upload');
+        return;
+      }
+      navigate(`/result/summary/${chatSessionId}`);
       return;
     }
 
