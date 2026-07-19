@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState, Suspense, lazy } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 import '../pages/UploadPage.css';
@@ -7,6 +7,10 @@ import NavBar from '../components/NavBar';
 import logosImg from '../assets/images/home_bottomicon.png';
 import uploadIconSrc from '../assets/icons/upload-icon.svg';
 import { uploadPolicy, checkPolicyStatus, pollUntilDone } from '../api/upload';
+
+// 로티 라이브러리 + 애니메이션 JSON은 분석 중 화면에서만 필요해서
+// 별도 청크로 분리해 초기 번들에 포함되지 않도록 지연 로딩합니다.
+const AnalyzingLottie = lazy(() => import('../components/AnalyzingLottie'));
 
 const MAX_FILES = 3;
 
@@ -155,7 +159,9 @@ export default function UploadOverviewPage() {
       {step === STEP.ANALYZING && (
         <main className="upload-main upload-main--analyzing">
           <div className="upload-analyzing__top">
-            <Character size="lg" animate />
+            <Suspense fallback={<div className="upload-analyzing__lottie" />}>
+              <AnalyzingLottie className="upload-analyzing__lottie" />
+            </Suspense>
             <h2 className="upload-analyzing__title">
               <span className="upload-analyzing__highlight">보다</span>가 열심히 읽고 있어요
             </h2>
