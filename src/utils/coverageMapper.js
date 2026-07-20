@@ -98,11 +98,14 @@ function formatConditionSuffix(condition) {
 }
 
 function buildSingleAmountRow(coverageName, amount) {
-  if (isNeedsTermsCondition(amount?.condition)) {
+  // condition이 "약관이 필요해요" 문구가 아니어도(예: "조건없음") coverageAmount 자체가
+  // null이면 결국 백엔드가 금액을 못 뽑은 것과 같으므로, 빈 금액으로 보여주는 대신
+  // 약관 필요 배지로 통일해서 표시
+  if (isNeedsTermsCondition(amount?.condition) || amount?.coverageAmount == null) {
     return { type: 'needs-terms', label: coverageName };
   }
-  const formatted = formatWon(amount?.coverageAmount);
-  const displayAmount = formatted ? `${formatted}${formatConditionSuffix(amount?.condition)}` : formatted;
+  const formatted = formatWon(amount.coverageAmount);
+  const displayAmount = `${formatted}${formatConditionSuffix(amount.condition)}`;
   return { type: 'simple', label: coverageName, amount: displayAmount };
 }
 
@@ -158,18 +161,16 @@ function buildActiveColumnMeta(condition1, condition2, elapsedYears) {
   };
 }
 
-// 헤더 행은 "N년 이내"/"N년 초과" 두 개를 나란히 보여주는 대신, 가입일 기준 지금
-// 해당되는 조건 하나만 아이콘+툴팁과 함께 보여줌. 강조 대상을 못 정하면(가입일 없음/
-// 조건 하나뿐/"N년" 형태가 아님) 기존처럼 있는 조건들을 그대로 보여줌.
+// 헤더 행은 "N년 이내"/"N년 초과" 둘 다 항상 보여줌. 가입일 기준 지금 해당되는 쪽 강조는
+// 툴팁 + 글씨색(active 클래스)으로만 표시하고, 라벨 자체를 비우지는 않음.
 function buildHeaderDisplay(condition1, condition2, elapsedYears) {
-  if (!condition1 || !condition2) {
-    return { col1: cleanConditionLabel(condition1), col2: cleanConditionLabel(condition2) };
-  }
   const meta = buildActiveColumnMeta(condition1, condition2, elapsedYears);
-  // 활성 조건이 있는 쪽 칸에만 라벨+툴팁을 넣고, 반대쪽은 비워서 아래 데이터 행과 칸 위치를 맞춤
-  if (meta.col1Active) return { col1: cleanConditionLabel(condition1), col1Tooltip: meta.col1Tooltip };
-  if (meta.col2Active) return { col2: cleanConditionLabel(condition2), col2Tooltip: meta.col2Tooltip };
-  return { col1: cleanConditionLabel(condition1), col2: cleanConditionLabel(condition2) };
+  return {
+    col1: cleanConditionLabel(condition1),
+    col2: cleanConditionLabel(condition2),
+    col1Tooltip: meta.col1Tooltip,
+    col2Tooltip: meta.col2Tooltip,
+  };
 }
 
 // LLM 프롬프트에서 "다른 카드에는 치아/골절재해 항목을 넣지 말라"고 지시해도 가끔 새서
