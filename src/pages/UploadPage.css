@@ -339,6 +339,12 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
 }
 
+.upload-popup__error-character {
+  width: 110px;
+  height: auto;
+  object-fit: contain;
+}
+
 .upload-popup__title {
   font-size: var(--text-body1);
   font-weight: var(--weight-bold);

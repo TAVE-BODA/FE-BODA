@@ -6,6 +6,7 @@ import Character from '../components/Character';
 import NavBar from '../components/NavBar';
 import logosImg from '../assets/images/home_bottomicon.png';
 import uploadIconSrc from '../assets/icons/upload-icon.svg';
+import characterCrying from '../assets/images/characters/character_crying_front.png';
 import { uploadPolicy, uploadTerms, checkPolicyStatus, checkTermsStatus, pollUntilDone } from '../api/upload';
 import { sendInsuranceCondition } from '../api/chat';
 
@@ -102,7 +103,7 @@ export default function UploadPage() {
       if (isCert) {
         setCertFailedFiles([]);
         const doneIds = [];
-        const failedNames = [];
+        const failures = []; // { name, message } - 파일별 실패 이유(백엔드 메시지)를 그대로 보존
 
         setCertProgress({ current: 0, total: activeFiles.length });
         for (let i = 0; i < activeFiles.length; i++) {
@@ -113,19 +114,19 @@ export default function UploadPage() {
             if (analysisId == null) throw new Error('증권 분석 응답 구조를 이해할 수 없어요.');
             await pollUntilDone(checkPolicyStatus, analysisId, 5000, 120);
             doneIds.push(analysisId);
-          } catch {
-            failedNames.push(file.name);
+          } catch (fileError) {
+            failures.push({ name: file.name, message: fileError.message });
           }
           setCertProgress({ current: i + 1, total: activeFiles.length });
         }
 
         if (doneIds.length === 0) {
-          const names = failedNames.join(', ');
-          throw new Error(`업로드한 증권을 분석할 수 없었어요${names ? ` (${names})` : ''}. 다시 시도해주세요.`);
+          const detail = failures.map((f) => `${f.name}: ${f.message}`).join('\n');
+          throw new Error(`업로드한 증권을 분석할 수 없었어요.\n${detail}`);
         }
 
-        if (failedNames.length > 0) {
-          setCertFailedFiles(failedNames);
+        if (failures.length > 0) {
+          setCertFailedFiles(failures.map((f) => `${f.name} (${f.message})`));
         }
       } else {
         const { id } = await uploadTerms(activeFiles[0], chatSessionId);
@@ -359,7 +360,7 @@ export default function UploadPage() {
       {errorPopup && (
         <div className="upload-popup-overlay">
           <div className="upload-popup">
-            <Character size="sm" />
+            <img src={characterCrying} alt="" className="upload-popup__error-character" />
             <h2 className="upload-popup__title">업로드에 문제가 있어요</h2>
             <p className="upload-popup__desc">{errorPopup.message}</p>
             <button
