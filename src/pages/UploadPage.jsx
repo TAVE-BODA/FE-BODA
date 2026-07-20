@@ -8,7 +8,7 @@ import logosImg from '../assets/images/home_bottomicon.png';
 import uploadIconSrc from '../assets/icons/upload-icon.svg';
 import characterCrying from '../assets/images/characters/character_crying_front.png';
 import { uploadPolicy, uploadTerms, checkPolicyStatus, checkTermsStatus, pollUntilDone } from '../api/upload';
-import { sendInsuranceCondition } from '../api/chat';
+import { sendInsuranceCondition, attachPoliciesToChat } from '../api/chat';
 
 const STEP = {
   CERT_UPLOAD:     'cert-upload',
@@ -27,9 +27,9 @@ export default function UploadPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { chatSessionId, conditionData, selectedOption } = location.state || {};
+  const { chatSessionId, conditionData, selectedOption, skipCert } = location.state || {};
 
-  const [step, setStep] = useState(STEP.CERT_UPLOAD);
+  const [step, setStep] = useState(skipCert ? STEP.TERMS_UPLOAD : STEP.CERT_UPLOAD);
   const [certFiles, setCertFiles]   = useState([]);
   const [termsFiles, setTermsFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -128,6 +128,9 @@ export default function UploadPage() {
         if (failures.length > 0) {
           setCertFailedFiles(failures.map((f) => `${f.name} (${f.message})`));
         }
+
+        // 분석된 증권을 채팅방에 연결해야 대시보드가 (재)생성됨 - 백엔드 스펙
+        await attachPoliciesToChat(chatSessionId, doneIds);
       } else {
         const { id } = await uploadTerms(activeFiles[0], chatSessionId);
         await pollUntilDone(checkTermsStatus, id, 5000, 180);
