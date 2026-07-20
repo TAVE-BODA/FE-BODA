@@ -17,7 +17,14 @@ export function buildSummaryTile(coverage) {
   // 실손은 실비 보상이라 정액(고정 금액) 개념이 없어서 coverageAmount가 항상 null로 옴.
   // 금액 대신 감지 여부만 "실손 보장" 텍스트로 표시 (상세페이지는 아직 미구현이라 카드에서 안내만).
   if (coverage.coverageType === '실손') {
-    return { amountText: coverage.isDetected ? '실손 보장' : '', inactive: !coverage.isDetected };
+    const items = coverage.items ?? [];
+    // "가입 관련 안내가 포함되어 있으며..."처럼 몇 세대 실손인지 특정 못하고 일반 안내
+    // 문구만 온 경우는 실제로 감지된 게 아니므로 미감지 처리
+    const isGenericNoticeOnly = items.length > 0 && items.every((item) =>
+      item.amounts.every((a) => typeof a.condition === 'string' && a.condition.includes('안내'))
+    );
+    const detected = coverage.isDetected && !isGenericNoticeOnly;
+    return { amountText: detected ? '실손 보장' : '', inactive: !detected };
   }
 
   const allAmounts = (coverage.items ?? [])
@@ -78,8 +85,11 @@ export function buildCoverageSummaryTile(summary) {
 }
 
 // 약관을 안 올려서 LLM이 조건/금액을 못 뽑았을 때, condition 자리에 이 안내 문구가 그대로 옴
-// (실제 응답으로 확인: 골절재해 analysisId=87의 "보장 범위" 항목).
-const NEEDS_TERMS_CONDITION = '약관이 필요해요';
+// (실제 응답으로 확인: 골절재해 analysisId=87의 "보장 범위" 항목). "약관이 필요해요"/"약관 필요"처럼
+// 문구가 매번 조금씩 다르게 와서, 정확히 일치하는 대신 "약관"+"필요"가 둘 다 있으면 인식함.
+function isNeedsTermsCondition(condition) {
+  return typeof condition === 'string' && condition.includes('약관') && condition.includes('필요');
+}
 
 // "1회당"/"회당"처럼 건별 지급 조건은 금액 옆에 "/회"로 붙여서 보여줌
 // (실제 화면 기준: "깁스(Cast) 치료 10만원/회"). 그 외 조건("조건없음" 등)은 접미사 없음.
@@ -88,7 +98,7 @@ function formatConditionSuffix(condition) {
 }
 
 function buildSingleAmountRow(coverageName, amount) {
-  if (amount?.condition === NEEDS_TERMS_CONDITION) {
+  if (isNeedsTermsCondition(amount?.condition)) {
     return { type: 'needs-terms', label: coverageName };
   }
   const formatted = formatWon(amount?.coverageAmount);
