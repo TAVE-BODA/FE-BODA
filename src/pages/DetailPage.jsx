@@ -63,7 +63,7 @@ export default function DetailPage() {
     );
   }
 
-  const rows = buildDetailRows(coverageType, coverage.items);
+  const rows = buildDetailRows(coverageType, coverage.items, data.insuranceStartDate);
   const period = `${data.insuranceStartDate} ~ ${data.insuranceEndDate}`;
 
   return (

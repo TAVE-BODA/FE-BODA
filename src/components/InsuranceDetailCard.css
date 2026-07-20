@@ -135,6 +135,9 @@
 .detail-row__col-val--active {
   color: var(--Main-05);
   font-weight: var(--weight-semibold);
+  background: var(--Main-01);
+  margin: -14px -6px;
+  padding: 14px 6px;
 }
 
 /* ── 툴팁 ─────────────────────────────────── */

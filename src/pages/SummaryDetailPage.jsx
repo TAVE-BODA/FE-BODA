@@ -64,6 +64,7 @@ export default function SummaryDetailPage() {
       analysisId: d.analysisId,
       companyName: d.companyName,
       period: `${d.insuranceStartDate} ~ ${d.insuranceEndDate}`,
+      insuranceStartDate: d.insuranceStartDate,
       coverage: d.coverages.find((c) => c && c.coverageType === coverageType),
     }))
     .filter(({ coverage }) => coverage?.isDetected);
@@ -101,12 +102,12 @@ export default function SummaryDetailPage() {
         <p className="detail-subtitle">{text.subtitle}</p>
 
         <div className="detail-cards">
-          {cards.map(({ analysisId, companyName, period, coverage }) => (
+          {cards.map(({ analysisId, companyName, period, insuranceStartDate, coverage }) => (
             <InsuranceDetailCard
               key={analysisId}
               company={companyName}
               period={period}
-              rows={buildDetailRows(coverageType, coverage.items)}
+              rows={buildDetailRows(coverageType, coverage.items, insuranceStartDate)}
             />
           ))}
         </div>

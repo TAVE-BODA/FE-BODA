@@ -95,17 +95,63 @@ function buildSingleAmountRow(coverageName, amount) {
   return { type: 'simple', label: coverageName, amount: displayAmount };
 }
 
+// 가입일 기준 오늘까지 지난 만 연수. 만 나이 계산과 동일하게 월/일까지 봐서, 아직
+// 생일(가입일)이 안 지났으면 1년 덜 지난 것으로 셈.
+function getElapsedYears(startDate) {
+  if (!startDate) return null;
+  const start = new Date(startDate);
+  if (Number.isNaN(start.getTime())) return null;
+
+  const now = new Date();
+  let years = now.getFullYear() - start.getFullYear();
+  const monthDiff = now.getMonth() - start.getMonth();
+  const dayDiff = now.getDate() - start.getDate();
+  if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) years -= 1;
+  return years;
+}
+
+// "1년 이내"/"2년 초과"처럼 "N년" 단위 조건에서 N만 뽑아냄. "조건없음"/"1회당"처럼
+// 가입 후 경과기간과 비교할 대상이 아닌 조건은 null.
+function parseYearCondition(condition) {
+  const match = condition?.match(/^(\d+)년/);
+  return match ? Number(match[1]) : null;
+}
+
+function tooltipFor(condition, isActive, years) {
+  if (!isActive) return undefined;
+  return condition.includes('초과')
+    ? `가입 후 ${years}년이 지나서 지금 받을 수 있는 금액이에요`
+    : `아직 가입 후 ${years}년이 안 지나서 지금 받을 수 있는 금액이에요`;
+}
+
+// "N년 이내"/"N년 초과" 한 쌍 중 가입일 기준 지금 실제로 받을 수 있는 쪽에 강조 표시
+// (활성 색상 + 툴팁)를 붙여줌. 가입일이 없거나 "N년" 형태가 아닌 조건이면 강조하지 않음.
+function buildActiveColumnMeta(condition1, condition2, elapsedYears) {
+  const years = parseYearCondition(condition1);
+  if (elapsedYears === null || years === null || years !== parseYearCondition(condition2)) return {};
+
+  const col1Active = condition1.includes('초과') ? elapsedYears >= years : elapsedYears < years;
+  const col2Active = !col1Active;
+
+  return {
+    col1Active,
+    col2Active,
+    col1Tooltip: tooltipFor(condition1, col1Active, years),
+    col2Tooltip: tooltipFor(condition2, col2Active, years),
+  };
+}
+
 // 상세페이지용: items -> InsuranceDetailCard가 원하는 rows 배열
-export function buildDetailRows(coverageType, items) {
+export function buildDetailRows(coverageType, items, insuranceStartDate) {
   const safeItems = items ?? [];
-  if (coverageType === '치아') return buildToothRows(safeItems);
+  if (coverageType === '치아') return buildToothRows(safeItems, insuranceStartDate);
   // 골절재해는 진단/수술과 달리 "면책기간 이내/초과" 개념이 없어서(사고는 미리 대비할 수
   // 없으니 면책기간을 둘 이유가 없음) 실제 화면에서도 표(2열)가 아니라 낱개 줄로만 나열됨.
   // 조건이 2개 이상이면 표로 묶지 말고 항목별로 풀어서 보여줘야 함.
-  return buildStandardRows(safeItems, { allowPairing: coverageType !== '골절재해' });
+  return buildStandardRows(safeItems, { allowPairing: coverageType !== '골절재해' }, insuranceStartDate);
 }
 
-function buildStandardRows(items, { allowPairing = true } = {}) {
+function buildStandardRows(items, { allowPairing = true } = {}, insuranceStartDate) {
   // 정상 스펙에서는 항목당 조건이 1개거나(골절재해), 진단/수술/입원처럼 "이내/초과" 2개뿐임.
   // 조건이 그 이상인 건 백엔드가 여러 항목을 하나로 잘못 합친 경우라 표(2열)로 못 담는데,
   // 그렇다고 금액을 버리면 안 되니 아래에서 "항목명 · 조건" 낱개 줄로 풀어서 처리.
@@ -122,6 +168,9 @@ function buildStandardRows(items, { allowPairing = true } = {}) {
 
     rows.push({ type: 'col-header', col1: condition1, col2: condition2 });
 
+    const elapsedYears = getElapsedYears(insuranceStartDate);
+    const activeMeta = buildActiveColumnMeta(condition1, condition2, elapsedYears);
+
     pairConditionItems.forEach((item) => {
       const amount1 = item.amounts.find((a) => a.condition === condition1);
       const amount2 = item.amounts.find((a) => a.condition === condition2);
@@ -130,6 +179,7 @@ function buildStandardRows(items, { allowPairing = true } = {}) {
         label: item.coverageName,
         col1: amount1 ? formatWon(amount1.coverageAmount) : null,
         col2: amount2 ? formatWon(amount2.coverageAmount) : null,
+        ...activeMeta,
       });
     });
   }
@@ -154,7 +204,9 @@ function buildStandardRows(items, { allowPairing = true } = {}) {
 // - 그룹 제목이 필요하면 coverageAmount가 둘 다 null인 item이 먼저 오고, 그 item의
 //   condition 값이 곧 그 그룹의 열 이름("2년 이내"/"2년 초과")이 됨
 // - 그룹 없이 단독으로 오는 항목(예: 크라운치료, 영구치발치)은 그 자체가 하나의 행
-function buildToothRows(items) {
+function buildToothRows(items, insuranceStartDate) {
+  const elapsedYears = getElapsedYears(insuranceStartDate);
+
   return items.flatMap((item) => {
     const isGroupHeader = item.amounts.length > 1
       && item.amounts.every((a) => a.coverageAmount === null || a.coverageAmount === undefined);
@@ -171,6 +223,7 @@ function buildToothRows(items) {
         label: item.coverageName,
         col1: formatWon(first.coverageAmount),
         col2: formatWon(second.coverageAmount),
+        ...buildActiveColumnMeta(first.condition, second.condition, elapsedYears),
       }];
     }
 
