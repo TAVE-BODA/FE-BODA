@@ -264,8 +264,8 @@ function sortAmountsWithInsideFirst(amounts) {
 // - 같은 면책기간(예: "2년 이내"/"2년 초과")을 쓰는 치료끼리 그룹으로 묶임
 // - 그룹 제목은 coverageAmount가 둘 다 null인 item으로 따로 오거나(구 스펙),
 //   coverageName에 "그룹명 - 세부항목명"으로 합쳐서 옴(실제 응답) — 그룹이 바뀔 때만 헤더 행 삽입
-// - 그룹 없이 단독으로 오는 항목(예: 크라운치료, 영구치발치)도 자기 이름으로 된 헤더를 하나씩 가짐
-//   (면책기간 있는 항목은 헤더에 표시, 발치처럼 없는 항목은 라벨만)
+// - 그룹 신호가 아예 없는 단독 항목(예: 크라운치료, 영구치발치)은 헤더 없이 행 하나만 표시
+//   (헤더를 억지로 만들면 바로 아래 행과 이름이 완전히 똑같아져서 중복돼 보임)
 function buildToothRows(items, insuranceStartDate) {
   const elapsedYears = getElapsedYears(insuranceStartDate);
   const rows = [];
@@ -283,20 +283,20 @@ function buildToothRows(items, insuranceStartDate) {
     }
 
     const { group, label } = splitGroupedCoverageName(item.coverageName);
-    // 명시적 그룹(그룹명 - 세부항목)이 없는 단독 항목도 자기 이름을 그룹으로 삼아서
-    // 헤더가 한 번은 뜨게 함 (크라운치료, 영구치발치 등)
-    const effectiveGroup = group ?? item.coverageName;
-
-    if (effectiveGroup !== currentGroup) {
-      currentGroup = effectiveGroup;
+    // 명시적 그룹(그룹명 - 세부항목) 신호가 있을 때만 헤더를 보여줌. 그룹 신호 없는
+    // 단독 항목(크라운치료, 영구치발치 등)은 헤더 라벨이 바로 아래 행과 완전히 똑같아져서
+    // 중복돼 보이므로 생략하고 행 하나만 보여줌.
+    if (group && group !== currentGroup) {
+      currentGroup = group;
       if (item.amounts.length === 2) {
         const [first, second] = sortAmountsWithInsideFirst(item.amounts);
-        rows.push({ type: 'section', label: group ?? item.coverageName, ...buildHeaderDisplay(first.condition, second.condition, elapsedYears) });
+        rows.push({ type: 'section', label: group, ...buildHeaderDisplay(first.condition, second.condition, elapsedYears) });
       } else {
-        // 발치처럼 면책기간 개념이 없는 단일 조건 항목, 혹은 조건 3개 이상 뭉친(스펙 위반)
-        // 항목은 깔끔한 조건 쌍을 못 뽑으니 컬럼 없이 라벨만
-        rows.push({ type: 'section', label: group ?? item.coverageName });
+        // 조건 3개 이상 뭉친(스펙 위반) 항목은 깔끔한 조건 쌍을 못 뽑으니 컬럼 없이 라벨만
+        rows.push({ type: 'section', label: group });
       }
+    } else if (!group) {
+      currentGroup = null;
     }
 
     if (item.amounts.length === 2) {
