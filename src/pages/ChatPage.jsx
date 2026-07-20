@@ -28,6 +28,12 @@ const UPLOAD_CONTENT = {
     ],
     cancelLabel: '아직 준비가 안됐어요',
   },
+  confirmReady: {
+    messages: [
+      '알려주신 내용을 확인했어요!',
+      '이미 등록해두신 보험증권·약관으로 바로 확인해드릴게요.',
+    ],
+  },
   coverage: {
     messages: [
       '알겠습니다!\n청구에 활용할 수 있는 보장 항목을\n보여드릴게요.',
@@ -266,13 +272,23 @@ export default function ChatPage() {
                 <Character size="sm" />
               </div>
               <div className="chatbot-responses-group">
-                {UPLOAD_CONTENT.confirm.messages.map((msg, idx) => (
+                {(incomingTermsUploaded ? UPLOAD_CONTENT.confirmReady.messages : UPLOAD_CONTENT.confirm.messages).map((msg, idx) => (
                   <div key={idx} className="chat-bubble chatbot-bubble">
                     <p className="chat-bubble-text font-medium">{msg}</p>
                   </div>
                 ))}
 
-                {!isNotReady && (
+                {incomingTermsUploaded ? (
+                  <div className="chat-no-indent">
+                    <button
+                      className="insurance-condition-btn chat-upload-btn"
+                      onClick={handleGoToUpload}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? '처리 중...' : '결과 확인하기'}
+                    </button>
+                  </div>
+                ) : !isNotReady && (
                   <div className="chat-no-indent">
                     <UploadButtonGroup
                       cancelLabel={UPLOAD_CONTENT.confirm.cancelLabel}
@@ -283,7 +299,7 @@ export default function ChatPage() {
                   </div>
                 )}
 
-                {isNotReady && (
+                {!incomingTermsUploaded && isNotReady && (
                   <>
                     <div className="chat-message-row user-row">
                       <div className="chat-bubble user-bubble">
