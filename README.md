@@ -6,7 +6,7 @@
 
 | 결과 화면 (청구 가능 여부) | 결과 화면 (예상 보험금) | 보장 항목 대시보드 | 홈 화면 |
 |:---:|:---:|:---:|:---:|
-| ![청구 가능 여부](./docs/screenshots/result-claim.png) | ![예상 보험금](./docs/screenshots/result-amount.png) | ![대시보드](./docs/screenshots/dashboard.png) |![홈화면](./docs/screenshots/home.png.png) |
+| ![청구 가능 여부](./docs/screenshots/result-claim.png) | ![예상 보험금](./docs/screenshots/result-amount.png) | ![대시보드](./docs/screenshots/dashboard.png) |![홈화면](./docs/screenshots/home.png) |
 
 ## 주요 기능
 
