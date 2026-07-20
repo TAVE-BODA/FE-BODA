@@ -21,6 +21,7 @@ export function buildSummaryTile(coverage) {
   }
 
   const allAmounts = (coverage.items ?? [])
+    .filter((item) => !isMisplacedCoverageItem(coverage.coverageType, item.coverageName))
     .flatMap((item) => item.amounts.map((a) => a.coverageAmount))
     .filter((a) => a !== null && a !== undefined);
 
@@ -110,11 +111,17 @@ function getElapsedYears(startDate) {
   return years;
 }
 
-// "1년 이내"/"2년 초과"처럼 "N년" 단위 조건에서 N만 뽑아냄. "조건없음"/"1회당"처럼
-// 가입 후 경과기간과 비교할 대상이 아닌 조건은 null.
+// "1년 이내"/"2년 초과"/"계약일부터 1년 이내"처럼 어딘가에 "N년"이 들어간 조건에서 N만 뽑아냄.
+// "조건없음"/"1회당"처럼 가입 후 경과기간과 비교할 대상이 아닌 조건은 null.
 function parseYearCondition(condition) {
-  const match = condition?.match(/^(\d+)년/);
+  const match = condition?.match(/(\d+)년/);
   return match ? Number(match[1]) : null;
+}
+
+// "계약일부터 1년 이내"/"계약일로부터 1년 이내"처럼 조건 앞에 붙는 군더더기 문구는
+// 화면에 안 보이게 떼어냄 (매칭 로직은 원본 문자열로 하고, 화면 표시용에만 사용)
+function cleanConditionLabel(condition) {
+  return condition?.replace(/^계약일(로)?부터\s*/, '') ?? condition;
 }
 
 function tooltipFor(condition, isActive, years) {
@@ -141,9 +148,19 @@ function buildActiveColumnMeta(condition1, condition2, elapsedYears) {
   };
 }
 
+// LLM 프롬프트에서 "다른 카드에는 치아/골절재해 항목을 넣지 말라"고 지시해도 가끔 새서
+// 들어옴(예: 수술비 카드에 "질병·재해수술"). 백엔드가 프롬프트로 막고 있지만 완전히
+// 안 막혀서, 치아/골절재해 카드가 아닌 곳에서는 coverageName에 이 키워드가 있으면 걸러냄.
+const MISPLACED_COVERAGE_KEYWORDS = ['재해', '치아'];
+
+function isMisplacedCoverageItem(coverageType, coverageName) {
+  if (coverageType === '치아' || coverageType === '골절재해') return false;
+  return MISPLACED_COVERAGE_KEYWORDS.some((keyword) => coverageName.includes(keyword));
+}
+
 // 상세페이지용: items -> InsuranceDetailCard가 원하는 rows 배열
 export function buildDetailRows(coverageType, items, insuranceStartDate) {
-  const safeItems = items ?? [];
+  const safeItems = (items ?? []).filter((item) => !isMisplacedCoverageItem(coverageType, item.coverageName));
   if (coverageType === '치아') return buildToothRows(safeItems, insuranceStartDate);
   // 골절재해는 진단/수술과 달리 "면책기간 이내/초과" 개념이 없어서(사고는 미리 대비할 수
   // 없으니 면책기간을 둘 이유가 없음) 실제 화면에서도 표(2열)가 아니라 낱개 줄로만 나열됨.
@@ -155,45 +172,50 @@ function buildStandardRows(items, { allowPairing = true } = {}, insuranceStartDa
   // 정상 스펙에서는 항목당 조건이 1개거나(골절재해), 진단/수술/입원처럼 "이내/초과" 2개뿐임.
   // 조건이 그 이상인 건 백엔드가 여러 항목을 하나로 잘못 합친 경우라 표(2열)로 못 담는데,
   // 그렇다고 금액을 버리면 안 되니 아래에서 "항목명 · 조건" 낱개 줄로 풀어서 처리.
-  const pairConditionItems = allowPairing ? items.filter((item) => item.amounts.length === 2) : [];
-  const singleConditionItems = items.filter((item) => item.amounts.length <= 1);
+  const elapsedYears = getElapsedYears(insuranceStartDate);
   const overflowThreshold = allowPairing ? 2 : 1;
-  const overflowItems = items.filter((item) => item.amounts.length > overflowThreshold);
   const rows = [];
+  let headerShown = false;
 
-  if (pairConditionItems.length > 0) {
-    const conditions = [...new Set(pairConditionItems.flatMap((item) => item.amounts.map((a) => a.condition)))];
-    // 백엔드가 주는 순서가 뒤죽박죽이라("N년 초과"가 먼저 오기도 함), "이내"가 항상 왼쪽 열에 오도록 정렬
-    const [condition1, condition2] = conditions.sort((a, b) => (b.includes('이내') ? 1 : 0) - (a.includes('이내') ? 1 : 0));
+  items.forEach((item) => {
+    // 조건은 있는데 coverageAmount가 둘 다 null인 항목 - 치아 카드와 같은 "그룹 헤더" 패턴
+    // (예: "질병·재해수술"). 데이터 없는 빈 줄로 보여주는 대신 회색 헤더 행으로 표시.
+    const isNullHeaderItem = allowPairing && item.amounts.length > 1
+      && item.amounts.every((a) => a.coverageAmount === null || a.coverageAmount === undefined);
 
-    rows.push({ type: 'col-header', col1: condition1, col2: condition2 });
+    if (isNullHeaderItem) {
+      const [first, second] = sortAmountsWithInsideFirst(item.amounts);
+      rows.push({ type: 'section', label: item.coverageName, col1: cleanConditionLabel(first?.condition), col2: cleanConditionLabel(second?.condition) });
+      headerShown = true;
+      return;
+    }
 
-    const elapsedYears = getElapsedYears(insuranceStartDate);
-    const activeMeta = buildActiveColumnMeta(condition1, condition2, elapsedYears);
-
-    pairConditionItems.forEach((item) => {
-      const amount1 = item.amounts.find((a) => a.condition === condition1);
-      const amount2 = item.amounts.find((a) => a.condition === condition2);
+    if (allowPairing && item.amounts.length === 2) {
+      const [first, second] = sortAmountsWithInsideFirst(item.amounts);
+      // 헤더 전용 item 없이 페어 데이터만 있는 정상 케이스(진단/입원 등)는 예전처럼
+      // 공통 컬럼 헤더를 한 번만 보여줌
+      if (!headerShown) {
+        rows.push({ type: 'col-header', col1: cleanConditionLabel(first.condition), col2: cleanConditionLabel(second.condition) });
+        headerShown = true;
+      }
       rows.push({
         type: 'col-data',
         label: item.coverageName,
-        col1: amount1 ? formatWon(amount1.coverageAmount) : null,
-        col2: amount2 ? formatWon(amount2.coverageAmount) : null,
-        ...activeMeta,
+        col1: formatWon(first.coverageAmount),
+        col2: formatWon(second.coverageAmount),
+        ...buildActiveColumnMeta(first.condition, second.condition, elapsedYears),
       });
-    });
-  }
+      return;
+    }
 
-  singleConditionItems.forEach((item) => {
+    if (item.amounts.length > overflowThreshold) {
+      // 스펙 위반(조건 3개 이상)에 대한 방어: 표로는 못 담으니 "항목명 · 조건" 한 줄씩 풀어서
+      // 금액이 화면에서 사라지지 않게 함
+      item.amounts.forEach((amount) => rows.push(buildSingleAmountRow(`${item.coverageName} · ${amount.condition}`, amount)));
+      return;
+    }
+
     rows.push(buildSingleAmountRow(item.coverageName, item.amounts[0]));
-  });
-
-  // 스펙 위반(조건 3개 이상)에 대한 방어: 표로는 못 담으니 "항목명 · 조건" 한 줄씩 풀어서
-  // 금액이 화면에서 사라지지 않게 함
-  overflowItems.forEach((item) => {
-    item.amounts.forEach((amount) => {
-      rows.push(buildSingleAmountRow(`${item.coverageName} · ${amount.condition}`, amount));
-    });
   });
 
   return rows;
@@ -230,7 +252,7 @@ function buildToothRows(items, insuranceStartDate) {
 
     if (isNullHeaderItem) {
       const [first, second] = sortAmountsWithInsideFirst(item.amounts);
-      rows.push({ type: 'section', label: item.coverageName, col1: first?.condition, col2: second?.condition });
+      rows.push({ type: 'section', label: item.coverageName, col1: cleanConditionLabel(first?.condition), col2: cleanConditionLabel(second?.condition) });
       currentGroup = null;
       return;
     }
@@ -240,7 +262,7 @@ function buildToothRows(items, insuranceStartDate) {
     if (group && group !== currentGroup) {
       currentGroup = group;
       const [first, second] = sortAmountsWithInsideFirst(item.amounts);
-      rows.push({ type: 'section', label: group, col1: first?.condition, col2: second?.condition });
+      rows.push({ type: 'section', label: group, col1: cleanConditionLabel(first?.condition), col2: cleanConditionLabel(second?.condition) });
     } else if (!group) {
       currentGroup = null;
     }

@@ -21,7 +21,9 @@ export default function SummaryDetailPage() {
   useEffect(() => {
     if (!chatSessionId) return;
     getDashboardSummary(chatSessionId)
-      .then((summary) => Promise.allSettled((summary.analysisIds ?? []).map((analysisId) => getDashboard(analysisId))))
+      // 백엔드가 같은 analysisId를 중복으로 내려줄 때가 있어서(테스트 중 확인됨, 증권이
+      // 1개인데 카드가 2개로 뜨던 문제) 중복 제거 후 조회
+      .then((summary) => Promise.allSettled([...new Set(summary.analysisIds ?? [])].map((analysisId) => getDashboard(analysisId))))
       // analysisId 중 하나라도 조회 실패하면(실제로 발생: 특정 analysisId가 500을 내는 경우가
       // 있었음) 전체를 다 못 보여주는 게 아니라, 성공한 것만이라도 보여줘야 함
       .then((results) => results.filter((r) => r.status === 'fulfilled').map((r) => r.value))
