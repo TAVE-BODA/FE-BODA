@@ -339,7 +339,9 @@ export default function MyPage() {
               <InsurerCard
                 key={insurer.companyKey}
                 insurer={{ ...insurer, dashboardAvailable }}
-                onViewDashcard={() => targetAnalysisId != null && navigate(`/result/analysis/${targetAnalysisId}`)}
+                onViewDashcard={() => targetAnalysisId != null && navigate(
+                  `/result/analysis/${targetAnalysisId}${lastChat?.chatSessionId != null ? `?chatSessionId=${lastChat.chatSessionId}` : ''}`
+                )}
                 onUploadTerms={() => navigate('/upload', { state: { chatSessionId: lastChat?.chatSessionId } })}
                 onOpenChat={(chat) => navigate('/chat', { state: { chatSessionId: chat.chatSessionId } })}
                 onNewChat={() => navigate('/chat', { state: { newSession: true } })}

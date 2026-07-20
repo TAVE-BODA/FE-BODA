@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './ChatPage.css';
 import Character from '../components/Character';
 import InsuranceModal from '../components/InsuranceModal';
@@ -59,6 +59,10 @@ function UploadButtonGroup({ cancelLabel, onCancel, onUpload }) {
 
 export default function ChatPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  // 마이페이지/대시보드에서 기존 채팅 세션으로 다시 들어온 경우 - 새 세션을 만들지 않고
+  // 이 세션에 이어서 업로드/조건입력이 붙도록 재사용한다 (같은 보험으로 마이페이지에 묶여 보이게).
+  const { chatSessionId: incomingChatSessionId } = location.state || {};
   const [selectedOption, setSelectedOption] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalFinished, setIsModalFinished] = useState(false);
@@ -74,6 +78,12 @@ export default function ChatPage() {
     // 칩4(보장 항목부터 보기)는 조건 입력 모달을 안 거쳐서, chatSessionId를 만들어주는
     // handleModalSubmitSuccess도 안 타게 됨 -> chatSessionId가 계속 null로 남아서
     // 업로드/대시보드 이동 시 /result/summary/null로 가버리던 버그. 여기서 직접 생성.
+    if (incomingChatSessionId) {
+      setChatSessionId(incomingChatSessionId);
+      setIsModalFinished(true);
+      return;
+    }
+
     setIsLoading(true);
     try {
       const session = await createChatSession();
@@ -91,8 +101,10 @@ export default function ChatPage() {
   const handleModalSubmitSuccess = async (formData) => {
     setIsLoading(true);
     try {
-      // 채팅 세션 생성
-      const session = await createChatSession();
+      // 기존 세션으로 들어온 경우 새로 만들지 않고 재사용
+      const session = incomingChatSessionId
+        ? { chatSessionId: incomingChatSessionId }
+        : await createChatSession();
       setChatSessionId(session.chatSessionId);
       setConditionData(formData);
       setIsModalOpen(false);
@@ -112,6 +124,8 @@ export default function ChatPage() {
         chatSessionId,
         conditionData,
         selectedOption,
+        // 기존 세션이면 증권은 이미 업로드돼 있으니 약관 업로드부터 시작
+        skipCert: Boolean(incomingChatSessionId),
       },
     });
   };
