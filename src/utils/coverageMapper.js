@@ -12,18 +12,26 @@ export function formatWon(amount) {
   return `${amount.toLocaleString('ko-KR')}원`;
 }
 
+// 실손은 정액 개념이 없어서(coverageAmount가 항상 null) 금액으로 감지 여부를 못 가림.
+// "가입 관련 안내가 포함되어 있으며..."처럼 몇 세대 실손인지 특정 못하고 일반 안내
+// 문구만 온 경우나, condition 자체가 "실손 감지 안됨"으로 오는 경우는 isDetected가
+// true여도 실제로 감지된 게 아니므로 이 함수로 걸러냄.
+export function isReimbursementActuallyDetected(coverage) {
+  if (!coverage?.isDetected) return false;
+  const items = coverage.items ?? [];
+  if (items.length === 0) return true;
+  const isGenericNoticeOnly = items.every((item) =>
+    item.amounts.every((a) => typeof a.condition === 'string'
+      && (a.condition.includes('안내') || a.condition.includes('감지 안됨')))
+  );
+  return !isGenericNoticeOnly;
+}
+
 // 대시보드 요약 카드용: 카드 안 모든 금액 중 최소~최대 범위 텍스트
 export function buildSummaryTile(coverage) {
-  // 실손은 실비 보상이라 정액(고정 금액) 개념이 없어서 coverageAmount가 항상 null로 옴.
   // 금액 대신 감지 여부만 "실손 보장" 텍스트로 표시 (상세페이지는 아직 미구현이라 카드에서 안내만).
   if (coverage.coverageType === '실손') {
-    const items = coverage.items ?? [];
-    // "가입 관련 안내가 포함되어 있으며..."처럼 몇 세대 실손인지 특정 못하고 일반 안내
-    // 문구만 온 경우는 실제로 감지된 게 아니므로 미감지 처리
-    const isGenericNoticeOnly = items.length > 0 && items.every((item) =>
-      item.amounts.every((a) => typeof a.condition === 'string' && a.condition.includes('안내'))
-    );
-    const detected = coverage.isDetected && !isGenericNoticeOnly;
+    const detected = isReimbursementActuallyDetected(coverage);
     return { amountText: detected ? '실손 보장' : '', inactive: !detected };
   }
 
