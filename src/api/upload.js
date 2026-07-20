@@ -1,11 +1,12 @@
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-// 보험증권 PDF 업로드 (필드명 'files', 여러 개를 한 요청으로 같이 보냄)
-// 다른 팀원분이 'file' 단건으로 잘못 되돌렸던 것을 다시 'files' 배치 방식으로 복원함 (2026-07-20)
-// files: File[] - 최대 3개까지
-export const uploadPolicy = async (files, chatSessionId) => {
+// 보험증권 PDF 업로드 (필드명 'files' 배열 -> 'file' 단건으로 백엔드 롤백, 스웨거로 재확인 2026-07-20)
+// 파일 여러 개를 한 요청으로 보내는 배치 업로드가 다시 단건 업로드로 롤백됨.
+// 한 채팅방에 증권을 최대 3개까지 연결할 수 있는 건 그대로라, 여러 개 올릴 땐
+// 호출하는 쪽(UploadPage.jsx/UploadOverviewPage.jsx)에서 파일마다 이 함수를 반복 호출해야 함.
+export const uploadPolicy = async (file, chatSessionId) => {
   const formData = new FormData();
-  files.forEach((file) => formData.append('files', file));
+  formData.append('file', file);
 
   const url = chatSessionId
     ? `${BASE_URL}/api/upload/policy?chatSessionId=${chatSessionId}`
@@ -19,11 +20,12 @@ export const uploadPolicy = async (files, chatSessionId) => {
 
   if (!response.ok) {
     const errorBody = await response.json();
+    // 검증 에러는 {code, error}로 오지만, 500 등 처리 안 된 예외는 {code, message, timestamp}로 옴
     const err = new Error(errorBody.error || errorBody.message || '보험증권 업로드 실패');
     err.code = errorBody.code;
     throw err;
   }
-  return response.json(); // { message, analysisIds: number[], status }
+  return response.json(); // { status, id, message } (단건 업로드 기준 추정 - 실사용 응답으로 재확인 필요)
 };
 
 // 보험약관 PDF 업로드

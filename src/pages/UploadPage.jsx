@@ -26,9 +26,9 @@ export default function UploadPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { chatSessionId, conditionData, selectedOption, skipCert } = location.state || {};
+  const { chatSessionId, conditionData, selectedOption } = location.state || {};
 
-  const [step, setStep] = useState(skipCert ? STEP.TERMS_UPLOAD : STEP.CERT_UPLOAD);
+  const [step, setStep] = useState(STEP.CERT_UPLOAD);
   const [certFiles, setCertFiles]   = useState([]);
   const [termsFiles, setTermsFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -101,24 +101,22 @@ export default function UploadPage() {
     try {
       if (isCert) {
         setCertFailedFiles([]);
-        const raw = await uploadPolicy(activeFiles, chatSessionId);
-        const analysisIds = raw?.analysisIds || (raw?.id != null ? [raw.id] : []);
-
-        if (analysisIds.length === 0) {
-          throw new Error('증권 분석 응답에서 analysisIds를 받지 못했어요. 다시 시도해주세요.');
-        }
-
-        setCertProgress({ current: 0, total: analysisIds.length });
         const doneIds = [];
         const failedNames = [];
-        for (let i = 0; i < analysisIds.length; i++) {
+
+        setCertProgress({ current: 0, total: activeFiles.length });
+        for (let i = 0; i < activeFiles.length; i++) {
+          const file = activeFiles[i];
           try {
-            await pollUntilDone(checkPolicyStatus, analysisIds[i], 5000, 120);
-            doneIds.push(analysisIds[i]);
+            const raw = await uploadPolicy(file, chatSessionId);
+            const analysisId = raw?.id ?? raw?.analysisId;
+            if (analysisId == null) throw new Error('증권 분석 응답 구조를 이해할 수 없어요.');
+            await pollUntilDone(checkPolicyStatus, analysisId, 5000, 120);
+            doneIds.push(analysisId);
           } catch {
-            failedNames.push(`증권 ${i + 1}`);
+            failedNames.push(file.name);
           }
-          setCertProgress({ current: i + 1, total: analysisIds.length });
+          setCertProgress({ current: i + 1, total: activeFiles.length });
         }
 
         if (doneIds.length === 0) {
