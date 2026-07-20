@@ -295,3 +295,77 @@
   min-width: 240px;
   text-align: center;
 }
+
+/* 칩4 - 증권 업로드 전 피보험자 일치 확인 팝업 (UploadPage.css .upload-popup* 디자인 재사용) */
+.chat-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.chat-popup {
+  background: var(--gray-white);
+  border-radius: 32px;
+  padding: 52px 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  min-width: 420px;
+  max-width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+}
+
+.chat-popup__title {
+  font-size: var(--text-body1);
+  font-weight: var(--weight-bold);
+  color: var(--gray-black);
+  text-align: center;
+}
+
+.chat-popup__desc {
+  font-size: var(--text-body3);
+  color: var(--gray-05);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.chat-popup__btn-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.chat-popup__btn {
+  padding: 14px 52px;
+  border-radius: 60px;
+  border: none;
+  background: var(--Main-06);
+  color: var(--gray-white);
+  font-size: var(--text-body3);
+  font-weight: var(--weight-semibold);
+  font-family: var(--font-base);
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.chat-popup__btn:hover {
+  background: var(--Main-07);
+  transform: scale(1.02);
+}
+
+.chat-popup__btn--secondary {
+  background: #4B4B4B;
+}
+
+.chat-popup__btn--secondary:hover {
+  background: #333333;
+}
