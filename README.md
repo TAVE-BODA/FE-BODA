@@ -2,6 +2,12 @@
 
 보험증권과 보험약관을 업로드하면, AI가 분석해서 **청구 가능 여부 · 예상 보험금 · 필요 서류 · 보장 항목**을 알려주는 보험 분석 서비스입니다.
 
+## 스크린샷
+
+| 결과 화면 (청구 가능 여부) | 결과 화면 (예상 보험금) | 보장 항목 대시보드 | 홈 화면 |
+|:---:|:---:|:---:|:---:|
+| ![청구 가능 여부](./docs/screenshots/result-claim.png) | ![예상 보험금](./docs/screenshots/result-amount.png) | ![대시보드](./docs/screenshots/dashboard.png) |![홈화면](./docs/screenshots/home.png.png) |
+
 ## 주요 기능
 
 - **4가지 질문 흐름**
