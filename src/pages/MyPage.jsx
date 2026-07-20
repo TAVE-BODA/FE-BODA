@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
 import Character from '../components/Character';
 import { getMyPage, getMe, logout } from '../api/mypage';
-import { deleteChatSession } from '../api/chat';
+import { deleteChatSession, getMessages, OPTION_BY_QUESTION_TYPE } from '../api/chat';
 import { deletePolicy, deleteTerms } from '../api/upload';
 import './MyPage.css';
 
@@ -258,6 +258,29 @@ export default function MyPage() {
     navigate('/');
   };
 
+  // 채팅창 선택에서 이미 조건 입력이 끝난(conditionCompleted) 채팅을 고르면, 처음부터
+  // 다시 묻는 대신 그 채팅의 마지막 질문·답변을 히스토리에서 찾아 결과 화면으로 바로 보냄
+  const handleOpenChat = async (chat) => {
+    if (chat.conditionCompleted) {
+      try {
+        const messages = await getMessages(chat.chatSessionId);
+        const lastAiIndex = messages.map((m) => m.senderType).lastIndexOf('AI');
+        const aiMessage = messages[lastAiIndex];
+        const optionNumber = aiMessage && OPTION_BY_QUESTION_TYPE[aiMessage.questionType];
+        if (optionNumber) {
+          const userMessage = [...messages.slice(0, lastAiIndex)].reverse().find((m) => m.senderType === 'USER');
+          navigate(`/result/option/${optionNumber}`, {
+            state: { resultData: { userMessage, aiMessage }, chatSessionId: chat.chatSessionId },
+          });
+          return;
+        }
+      } catch {
+        // 히스토리 조회 실패 시 기존처럼 채팅 화면으로 폴백
+      }
+    }
+    navigate('/chat', { state: { chatSessionId: chat.chatSessionId, termsUploaded: chat.termsUploaded } });
+  };
+
   const handleDeleteInsurer = async (insurer) => {
     const chats = insurer.chats ?? [];
     if (!window.confirm(`${insurer.title || insurer.companyName}의 채팅 ${chats.length}건과 연결된 증권·약관을 모두 삭제할까요?`)) return;
@@ -347,7 +370,7 @@ export default function MyPage() {
                   `/result/analysis/${targetAnalysisId}${lastChat?.chatSessionId != null ? `?chatSessionId=${lastChat.chatSessionId}` : ''}`
                 )}
                 onUploadTerms={() => navigate('/chat', { state: { chatSessionId: lastChat?.chatSessionId } })}
-                onOpenChat={(chat) => navigate('/chat', { state: { chatSessionId: chat.chatSessionId, termsUploaded: chat.termsUploaded } })}
+                onOpenChat={handleOpenChat}
                 onNewChat={() => navigate('/chat', { state: { unlinkedAnalysisIds: insurer.unlinkedAnalysisIds } })}
                 onDelete={() => handleDeleteInsurer(insurer)}
                 isDeleting={deletingKey === insurer.companyKey}

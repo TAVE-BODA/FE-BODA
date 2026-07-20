@@ -54,6 +54,23 @@ const QUESTION_TYPE_MAP = {
   4: 'CHIP_OVERVIEW',
 };
 
+// questionType -> 칩 번호 역매핑 (마이페이지에서 과거 채팅의 마지막 답변을 다시 보여줄 때
+// 어떤 결과 페이지(/result/option/:x)로 보내야 할지 판단하는 데 사용)
+export const OPTION_BY_QUESTION_TYPE = Object.fromEntries(
+  Object.entries(QUESTION_TYPE_MAP).map(([option, type]) => [type, Number(option)])
+);
+
+// 대화 히스토리 조회 (생성 시간순 USER/AI 메시지 배열) - 마이페이지에서 이미 완료된
+// 채팅을 다시 열 때, 처음부터 다시 묻지 않고 마지막 결과를 그대로 복원하기 위해 사용
+export const getMessages = async (chatSessionId) => {
+  const response = await fetch(`${BASE_URL}/api/chat/sessions/${chatSessionId}/messages`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+  if (!response.ok) throw new Error('대화 히스토리를 불러오지 못했어요.');
+  return response.json();
+};
+
 const INCIDENT_TYPE_MAP = {
   injury: 'INJURY',
   sick: 'DISEASE',
