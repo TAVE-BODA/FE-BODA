@@ -355,6 +355,9 @@
   font-size: var(--text-body3);
   color: var(--gray-05);
   text-align: center;
+  max-width: 300px;
+  word-break: keep-all;
+  line-height: 1.6;
 }
 
 .upload-popup__btn {
