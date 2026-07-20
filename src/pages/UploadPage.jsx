@@ -6,6 +6,7 @@ import Character from '../components/Character';
 import NavBar from '../components/NavBar';
 import logosImg from '../assets/images/home_bottomicon.png';
 import uploadIconSrc from '../assets/icons/upload-icon.svg';
+import characterCrying from '../assets/images/characters/character_crying_front.png';
 import { uploadPolicy, uploadTerms, checkPolicyStatus, checkTermsStatus, pollUntilDone } from '../api/upload';
 import { sendInsuranceCondition } from '../api/chat';
 
@@ -18,8 +19,7 @@ const STEP = {
   TERMS_DONE:      'terms-done',
 };
 
-// b타입(프론트에서 먼저 걸러내는 것) 검증 기준 - 백엔드 요청 스펙 기준
-const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB
+const MAX_FILE_SIZE = 15 * 1024 * 1024;
 const ACCEPTED_FILE_TYPE = 'application/pdf';
 const MAX_CERT_FILES = 3;
 
@@ -27,16 +27,17 @@ export default function UploadPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { chatSessionId, conditionData, selectedOption, skipCert } = location.state || {};
+  const { chatSessionId, conditionData, selectedOption } = location.state || {};
 
-  const [step, setStep] = useState(skipCert ? STEP.TERMS_UPLOAD : STEP.CERT_UPLOAD);
+  const [step, setStep] = useState(STEP.CERT_UPLOAD);
   const [certFiles, setCertFiles]   = useState([]);
   const [termsFiles, setTermsFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading]   = useState(false);
-  const [errorPopup, setErrorPopup] = useState(null); // { code, message } - 기존 완료 팝업을 재사용해서 에러도 보여줌
+  const [errorPopup, setErrorPopup] = useState(null);
   const [certProgress, setCertProgress] = useState({ current: 0, total: 0 });
-  const [certFailedFiles, setCertFailedFiles] = useState([]); // 배치 업로드 중 실패한 fileName 목록
+  const [certFailedFiles, setCertFailedFiles] = useState([]);
+  const [showMatchConfirm, setShowMatchConfirm] = useState(false);
   const fileInputRef = useRef(null);
 
   const isCert      = step.startsWith('cert');
@@ -48,7 +49,6 @@ export default function UploadPage() {
 
   const showErrorPopup = (code, message) => setErrorPopup({ code, message });
 
-  // step을 직접 참조해서 증권/약관 파일 구분 + b타입(형식/크기/약관 개수) 프론트 검증
   const addFiles = useCallback((incoming) => {
     const files = Array.from(incoming);
     if (files.length === 0) return;
@@ -102,10 +102,9 @@ export default function UploadPage() {
     try {
       if (isCert) {
         setCertFailedFiles([]);
-        const succeededIds = [];
-        const failedNames = [];
+        const doneIds = [];
+        const failures = []; // { name, message } - 파일별 실패 이유(백엔드 메시지)를 그대로 보존
 
-        // 배치 업로드가 단건 업로드로 롤백돼서, 파일마다 순서대로 업로드+분석 폴링
         setCertProgress({ current: 0, total: activeFiles.length });
         for (let i = 0; i < activeFiles.length; i++) {
           const file = activeFiles[i];
@@ -113,27 +112,24 @@ export default function UploadPage() {
             const raw = await uploadPolicy(file, chatSessionId);
             const analysisId = raw?.id ?? raw?.analysisId;
             if (analysisId == null) throw new Error('증권 분석 응답 구조를 이해할 수 없어요.');
-            // 증권 분석: 5초 간격 x 120번 = 600초(10분)
             await pollUntilDone(checkPolicyStatus, analysisId, 5000, 120);
-            succeededIds.push(analysisId);
-          } catch {
-            failedNames.push(file.name);
+            doneIds.push(analysisId);
+          } catch (fileError) {
+            failures.push({ name: file.name, message: fileError.message });
           }
           setCertProgress({ current: i + 1, total: activeFiles.length });
         }
 
-        if (succeededIds.length === 0) {
-          const names = failedNames.join(', ');
-          throw new Error(`업로드한 증권을 분석할 수 없었어요${names ? ` (${names})` : ''}. 다시 시도해주세요.`);
+        if (doneIds.length === 0) {
+          const detail = failures.map((f) => `${f.name}: ${f.message}`).join('\n');
+          throw new Error(`업로드한 증권을 분석할 수 없었어요.\n${detail}`);
         }
 
-        if (failedNames.length > 0) {
-          setCertFailedFiles(failedNames);
+        if (failures.length > 0) {
+          setCertFailedFiles(failures.map((f) => `${f.name} (${f.message})`));
         }
       } else {
         const { id } = await uploadTerms(activeFiles[0], chatSessionId);
-        // 약관 분석: 분량이 많으면 10분도 부족한 경우가 있어서 여유 있게 15분으로 연장
-        // 5초 간격 x 180번 = 900초(15분)
         await pollUntilDone(checkTermsStatus, id, 5000, 180);
       }
       setStep(nextDone);
@@ -144,6 +140,24 @@ export default function UploadPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSubmitClick = () => {
+    // 증권 단계는 팝업 없이 바로 분석 시작, 약관 단계에서만 확인 팝업을 띄움
+    if (isCert) {
+      handleAnalyze();
+      return;
+    }
+    setShowMatchConfirm(true);
+  };
+
+  const handleConfirmProceed = () => {
+    setShowMatchConfirm(false);
+    handleAnalyze();
+  };
+
+  const handleConfirmRecheck = () => {
+    setShowMatchConfirm(false);
   };
 
   const handlePopupNext = async () => {
@@ -235,7 +249,7 @@ export default function UploadPage() {
                   <p className="upload-box__notice">파일을 골랐어요! 분석 후 바로 삭제돼요</p>
                   <button
                     className="upload-box__submit"
-                    onClick={handleAnalyze}
+                    onClick={handleSubmitClick}
                     disabled={isLoading}
                     aria-label="분석 시작"
                   >
@@ -313,10 +327,40 @@ export default function UploadPage() {
         </div>
       )}
 
-      {errorPopup && (
+      {showMatchConfirm && (
         <div className="upload-popup-overlay">
           <div className="upload-popup">
             <Character size="sm" />
+            <h2 className="upload-popup__title">보험사와 피보험자가 같나요?</h2>
+            <p className="upload-popup__desc">
+              증권과 약관은<br />
+              같은 보험사, 같은 사람 것이어야 분석돼요<br />
+              다시 한번 확인해봐요
+            </p>
+            <div className="upload-popup__btn-group">
+              <button
+                className="upload-popup__btn"
+                onClick={handleConfirmProceed}
+                disabled={isLoading}
+              >
+                확인했어요, 계속할게요
+              </button>
+              <button
+                className="upload-popup__btn upload-popup__btn--secondary"
+                onClick={handleConfirmRecheck}
+                disabled={isLoading}
+              >
+                다시 확인할게요
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {errorPopup && (
+        <div className="upload-popup-overlay">
+          <div className="upload-popup">
+            <img src={characterCrying} alt="" className="upload-popup__error-character" />
             <h2 className="upload-popup__title">업로드에 문제가 있어요</h2>
             <p className="upload-popup__desc">{errorPopup.message}</p>
             <button

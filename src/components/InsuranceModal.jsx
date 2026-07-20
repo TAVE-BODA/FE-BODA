@@ -92,6 +92,19 @@ export default function InsuranceModal({ isOpen, onClose, onSubmitSuccess }) {
   const isFormValid =
     formData.q1 !== '' &&
     formData.q2.length > 0 &&
+    (!showQ3A || (
+      formData.q3a_hospital !== '' &&
+      formData.q3a_room !== '' &&
+      formData.q3a_nights !== ''
+    )) &&
+    (!showQ3B || (
+      formData.q3b_body !== '' &&
+      formData.q3b_cast !== ''
+    )) &&
+    (!showQ3C || (
+      formData.q3c_dental !== '' &&
+      formData.q3c_count !== ''
+    )) &&
     formData.q4_type !== '' &&
     (formData.q4_type === 'date'
       ? formData.q4_date !== ''
@@ -194,7 +207,7 @@ export default function InsuranceModal({ isOpen, onClose, onSubmitSuccess }) {
             <div className="question-card">
               <div className="card-title-row">
                 <span className="question-number">{getQ3Num('A')}</span>
-                <span className="question-text">입원 관련 정보</span>
+                <span className="question-text">입원 관련 정보 <span className="required-badge">*필수</span></span>
               </div>
 
               <p className="sub-question-title" style={{ marginTop: 0 }}>어떤 병원에 입원하셨나요?</p>
@@ -243,7 +256,7 @@ export default function InsuranceModal({ isOpen, onClose, onSubmitSuccess }) {
             <div className="question-card">
               <div className="card-title-row">
                 <span className="question-number">{getQ3Num('B')}</span>
-                <span className="question-text">깁스 관련 정보</span>
+                <span className="question-text">깁스 관련 정보 <span className="required-badge">*필수</span></span>
               </div>
 
               <p className="sub-question-title" style={{ marginTop: 0 }}>어느 부위를 다쳤나요?</p>
@@ -279,7 +292,7 @@ export default function InsuranceModal({ isOpen, onClose, onSubmitSuccess }) {
             <div className="question-card">
               <div className="card-title-row">
                 <span className="question-number">{getQ3Num('C')}</span>
-                <span className="question-text">치아 관련 정보</span>
+                <span className="question-text">치아 관련 정보 <span className="required-badge">*필수</span></span>
               </div>
 
               <p className="sub-question-title" style={{ marginTop: 0 }}>어떤 치아 치료를 받으셨나요?</p>
