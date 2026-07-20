@@ -17,7 +17,14 @@ export function buildSummaryTile(coverage) {
   // 실손은 실비 보상이라 정액(고정 금액) 개념이 없어서 coverageAmount가 항상 null로 옴.
   // 금액 대신 감지 여부만 "실손 보장" 텍스트로 표시 (상세페이지는 아직 미구현이라 카드에서 안내만).
   if (coverage.coverageType === '실손') {
-    return { amountText: coverage.isDetected ? '실손 보장' : '', inactive: !coverage.isDetected };
+    const items = coverage.items ?? [];
+    // "가입 관련 안내가 포함되어 있으며..."처럼 몇 세대 실손인지 특정 못하고 일반 안내
+    // 문구만 온 경우는 실제로 감지된 게 아니므로 미감지 처리
+    const isGenericNoticeOnly = items.length > 0 && items.every((item) =>
+      item.amounts.every((a) => typeof a.condition === 'string' && a.condition.includes('안내'))
+    );
+    const detected = coverage.isDetected && !isGenericNoticeOnly;
+    return { amountText: detected ? '실손 보장' : '', inactive: !detected };
   }
 
   const allAmounts = (coverage.items ?? [])
@@ -78,8 +85,11 @@ export function buildCoverageSummaryTile(summary) {
 }
 
 // 약관을 안 올려서 LLM이 조건/금액을 못 뽑았을 때, condition 자리에 이 안내 문구가 그대로 옴
-// (실제 응답으로 확인: 골절재해 analysisId=87의 "보장 범위" 항목).
-const NEEDS_TERMS_CONDITION = '약관이 필요해요';
+// (실제 응답으로 확인: 골절재해 analysisId=87의 "보장 범위" 항목). "약관이 필요해요"/"약관 필요"처럼
+// 문구가 매번 조금씩 다르게 와서, 정확히 일치하는 대신 "약관"+"필요"가 둘 다 있으면 인식함.
+function isNeedsTermsCondition(condition) {
+  return typeof condition === 'string' && condition.includes('약관') && condition.includes('필요');
+}
 
 // "1회당"/"회당"처럼 건별 지급 조건은 금액 옆에 "/회"로 붙여서 보여줌
 // (실제 화면 기준: "깁스(Cast) 치료 10만원/회"). 그 외 조건("조건없음" 등)은 접미사 없음.
@@ -88,11 +98,14 @@ function formatConditionSuffix(condition) {
 }
 
 function buildSingleAmountRow(coverageName, amount) {
-  if (amount?.condition === NEEDS_TERMS_CONDITION) {
+  // condition이 "약관이 필요해요" 문구가 아니어도(예: "조건없음") coverageAmount 자체가
+  // null이면 결국 백엔드가 금액을 못 뽑은 것과 같으므로, 빈 금액으로 보여주는 대신
+  // 약관 필요 배지로 통일해서 표시
+  if (isNeedsTermsCondition(amount?.condition) || amount?.coverageAmount == null) {
     return { type: 'needs-terms', label: coverageName };
   }
-  const formatted = formatWon(amount?.coverageAmount);
-  const displayAmount = formatted ? `${formatted}${formatConditionSuffix(amount?.condition)}` : formatted;
+  const formatted = formatWon(amount.coverageAmount);
+  const displayAmount = `${formatted}${formatConditionSuffix(amount.condition)}`;
   return { type: 'simple', label: coverageName, amount: displayAmount };
 }
 
@@ -148,18 +161,16 @@ function buildActiveColumnMeta(condition1, condition2, elapsedYears) {
   };
 }
 
-// 헤더 행은 "N년 이내"/"N년 초과" 두 개를 나란히 보여주는 대신, 가입일 기준 지금
-// 해당되는 조건 하나만 아이콘+툴팁과 함께 보여줌. 강조 대상을 못 정하면(가입일 없음/
-// 조건 하나뿐/"N년" 형태가 아님) 기존처럼 있는 조건들을 그대로 보여줌.
+// 헤더 행은 "N년 이내"/"N년 초과" 둘 다 항상 보여줌. 가입일 기준 지금 해당되는 쪽 강조는
+// 툴팁 + 글씨색(active 클래스)으로만 표시하고, 라벨 자체를 비우지는 않음.
 function buildHeaderDisplay(condition1, condition2, elapsedYears) {
-  if (!condition1 || !condition2) {
-    return { col1: cleanConditionLabel(condition1), col2: cleanConditionLabel(condition2) };
-  }
   const meta = buildActiveColumnMeta(condition1, condition2, elapsedYears);
-  // 활성 조건이 있는 쪽 칸에만 라벨+툴팁을 넣고, 반대쪽은 비워서 아래 데이터 행과 칸 위치를 맞춤
-  if (meta.col1Active) return { col1: cleanConditionLabel(condition1), col1Tooltip: meta.col1Tooltip };
-  if (meta.col2Active) return { col2: cleanConditionLabel(condition2), col2Tooltip: meta.col2Tooltip };
-  return { col1: cleanConditionLabel(condition1), col2: cleanConditionLabel(condition2) };
+  return {
+    col1: cleanConditionLabel(condition1),
+    col2: cleanConditionLabel(condition2),
+    col1Tooltip: meta.col1Tooltip,
+    col2Tooltip: meta.col2Tooltip,
+  };
 }
 
 // LLM 프롬프트에서 "다른 카드에는 치아/골절재해 항목을 넣지 말라"고 지시해도 가끔 새서
@@ -254,12 +265,15 @@ function sortAmountsWithInsideFirst(amounts) {
 // - 같은 면책기간(예: "2년 이내"/"2년 초과")을 쓰는 치료끼리 그룹으로 묶임
 // - 그룹 제목은 coverageAmount가 둘 다 null인 item으로 따로 오거나(구 스펙),
 //   coverageName에 "그룹명 - 세부항목명"으로 합쳐서 옴(실제 응답) — 그룹이 바뀔 때만 헤더 행 삽입
-// - 그룹 없이 단독으로 오는 항목(예: 크라운치료, 영구치발치)도 자기 이름으로 된 헤더를 하나씩 가짐
-//   (면책기간 있는 항목은 헤더에 표시, 발치처럼 없는 항목은 라벨만)
+// - 그룹명이 없는 단독 항목(크라운치료, 영구치발치 등)이라도 직전 섹션과 면책기간(조건)이
+//   다르면 새 헤더를 보여줌 — 안 그러면 크라운치료(1년)가 바로 앞 영구치보철치료(2년) 헤더
+//   밑에 붙어서 마치 2년 조건인 것처럼 잘못 보임
 function buildToothRows(items, insuranceStartDate) {
   const elapsedYears = getElapsedYears(insuranceStartDate);
   const rows = [];
-  let currentGroup = null;
+  // 그룹명이 있으면 그룹명으로, 없으면 그 항목 자신의 조건 쌍으로 "지금 보이고 있는 섹션"을 추적.
+  // 조건 쌍이 같으면 굳이 헤더를 또 안 넣어서 중복을 피하고, 조건이 바뀌면 항목명으로 새 헤더를 냄.
+  let currentSectionKey = null;
 
   items.forEach((item) => {
     const isNullHeaderItem = item.amounts.length > 1
@@ -268,29 +282,21 @@ function buildToothRows(items, insuranceStartDate) {
     if (isNullHeaderItem) {
       const [first, second] = sortAmountsWithInsideFirst(item.amounts);
       rows.push({ type: 'section', label: item.coverageName, ...buildHeaderDisplay(first?.condition, second?.condition, elapsedYears) });
-      currentGroup = item.coverageName;
+      currentSectionKey = item.coverageName;
       return;
     }
 
     const { group, label } = splitGroupedCoverageName(item.coverageName);
-    // 명시적 그룹(그룹명 - 세부항목)이 없는 단독 항목도 자기 이름을 그룹으로 삼아서
-    // 헤더가 한 번은 뜨게 함 (크라운치료, 영구치발치 등)
-    const effectiveGroup = group ?? item.coverageName;
-
-    if (effectiveGroup !== currentGroup) {
-      currentGroup = effectiveGroup;
-      if (item.amounts.length === 2) {
-        const [first, second] = sortAmountsWithInsideFirst(item.amounts);
-        rows.push({ type: 'section', label: group ?? item.coverageName, ...buildHeaderDisplay(first.condition, second.condition, elapsedYears) });
-      } else {
-        // 발치처럼 면책기간 개념이 없는 단일 조건 항목, 혹은 조건 3개 이상 뭉친(스펙 위반)
-        // 항목은 깔끔한 조건 쌍을 못 뽑으니 컬럼 없이 라벨만
-        rows.push({ type: 'section', label: group ?? item.coverageName });
-      }
-    }
 
     if (item.amounts.length === 2) {
       const [first, second] = sortAmountsWithInsideFirst(item.amounts);
+      const sectionKey = group ?? `${first.condition}|${second.condition}`;
+
+      if (sectionKey !== currentSectionKey) {
+        currentSectionKey = sectionKey;
+        rows.push({ type: 'section', label: group ?? item.coverageName, ...buildHeaderDisplay(first.condition, second.condition, elapsedYears) });
+      }
+
       rows.push({
         type: 'col-data',
         label,
@@ -300,6 +306,10 @@ function buildToothRows(items, insuranceStartDate) {
       });
       return;
     }
+
+    // 발치처럼 면책기간 개념이 없는 단일 조건 항목은 섹션 추적에서 제외 (다음 항목이
+    // 이어서 같은 헤더를 쓸지 판단할 근거가 없으므로 리셋)
+    currentSectionKey = null;
 
     if (item.amounts.length > 2) {
       // 스펙 위반 방어(골절재해와 동일한 문제): 여러 치료가 item 하나에 뭉쳐서 온 경우,

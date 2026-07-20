@@ -2,10 +2,12 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // GET /api/mypage - 응답 구조 변경 반영 (백엔드 재배포, 2026-07-20):
 // { userName, firstLoginDate, insurers: [{ companyKey, companyName, title, registeredAt,
-//   analysisIds, policyStatus, policyCompleted, termsUploaded, conditionCompleted,
-//   dashboardAvailable, canUploadTermsToContinue, chatCount,
+//   analysisIds, unlinkedAnalysisIds, policyStatus, policyCompleted, termsUploaded,
+//   conditionCompleted, dashboardAvailable, canUploadTermsToContinue, chatCount,
 //   chats: [{ chatSessionId, title, createdDate, analysisIds, termsDocumentId,
 //             termsUploaded, conditionCompleted, dashboardAvailable }] (생성순 오름차순) }] }
+// unlinkedAnalysisIds: 어느 채팅에도 안 묶인(오르판) 증권들 - POST /api/chat/sessions에
+// analysisIds로 실어서 새 채팅을 만들면 재업로드 없이 바로 연결됨 (ChatPage.jsx 참고)
 // companyKey === "보험사 정보 없음"이면 보험사 분류가 안 되는 채팅(증권 미업로드/증권 전부 삭제) 묶음
 export const getMyPage = async () => {
   const response = await fetch(`${BASE_URL}/api/mypage`, {

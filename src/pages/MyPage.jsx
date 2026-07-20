@@ -4,6 +4,7 @@ import NavBar from '../components/NavBar';
 import Character from '../components/Character';
 import { getMyPage, getMe, logout } from '../api/mypage';
 import { deleteChatSession } from '../api/chat';
+import { deletePolicy, deleteTerms } from '../api/upload';
 import './MyPage.css';
 
 // 보험사 분류가 안 되는 채팅(증권 없음/삭제됨)은 companyKey가 이 고정 문자열로 옴 (백엔드 스펙, 2026-07-20)
@@ -190,18 +191,14 @@ function InsurerCard({ insurer, onViewDashcard, onUploadTerms, onOpenChat, onNew
                 저장된 대시카드 보러가기
               </button>
             )}
-            {chats.length >= 2 ? (
+            {chats.length >= 1 ? (
               <ChatDropdownButton
-                label="채팅창 선택"
+                label={chats.length >= 2 ? '채팅창 선택' : '채팅하러가기'}
                 variant="secondary"
                 chats={chats}
                 onSelectChat={onOpenChat}
                 onNewChat={onNewChat}
               />
-            ) : chats.length === 1 ? (
-              <button className="mypage-action-btn mypage-action-btn--secondary" onClick={() => onOpenChat(chats[0])}>
-                채팅하러가기
-              </button>
             ) : (
               <button className="mypage-action-btn mypage-action-btn--secondary" onClick={onNewChat}>
                 + 새로운 채팅
@@ -263,11 +260,18 @@ export default function MyPage() {
 
   const handleDeleteInsurer = async (insurer) => {
     const chats = insurer.chats ?? [];
-    if (!window.confirm(`${insurer.title || insurer.companyName}의 채팅 ${chats.length}건을 모두 삭제할까요?`)) return;
+    if (!window.confirm(`${insurer.title || insurer.companyName}의 채팅 ${chats.length}건과 연결된 증권·약관을 모두 삭제할까요?`)) return;
 
     setDeletingKey(insurer.companyKey);
     try {
+      // 채팅방 삭제는 증권/약관 자체를 안 지움(다른 채팅방에서 재사용될 수 있게 설계됨) -
+      // 마이페이지에서 완전히 지우려면 증권/약관도 따로 삭제해야 함
+      const analysisIds = [...new Set(insurer.analysisIds ?? [])];
+      const termsDocumentIds = [...new Set(chats.map((chat) => chat.termsDocumentId).filter((id) => id != null))];
+
       await Promise.all(chats.map((chat) => deleteChatSession(chat.chatSessionId)));
+      await Promise.all(analysisIds.map((id) => deletePolicy(id)));
+      await Promise.all(termsDocumentIds.map((id) => deleteTerms(id)));
       setInsurers((prev) => prev.filter((ins) => ins.companyKey !== insurer.companyKey));
     } catch {
       alert('삭제하지 못했어요. 잠시 후 다시 시도해주세요.');
@@ -343,8 +347,8 @@ export default function MyPage() {
                   `/result/analysis/${targetAnalysisId}${lastChat?.chatSessionId != null ? `?chatSessionId=${lastChat.chatSessionId}` : ''}`
                 )}
                 onUploadTerms={() => navigate('/chat', { state: { chatSessionId: lastChat?.chatSessionId } })}
-                onOpenChat={(chat) => navigate('/chat', { state: { chatSessionId: chat.chatSessionId } })}
-                onNewChat={() => navigate('/chat', { state: { newSession: true } })}
+                onOpenChat={(chat) => navigate('/chat', { state: { chatSessionId: chat.chatSessionId, termsUploaded: chat.termsUploaded } })}
+                onNewChat={() => navigate('/chat', { state: { unlinkedAnalysisIds: insurer.unlinkedAnalysisIds } })}
                 onDelete={() => handleDeleteInsurer(insurer)}
                 isDeleting={deletingKey === insurer.companyKey}
               />
