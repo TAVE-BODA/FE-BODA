@@ -259,18 +259,20 @@ export default function MyPage() {
   };
 
   // 채팅창 선택에서 이미 조건 입력이 끝난(conditionCompleted) 채팅을 고르면, 처음부터
-  // 다시 묻는 대신 그 채팅의 마지막 질문·답변을 히스토리에서 찾아 결과 화면으로 바로 보냄
+  // 다시 묻는 대신 전체 대화 히스토리를 그대로 들고 결과 화면으로 보내서 대화를 이어가게 함
   const handleOpenChat = async (chat) => {
     if (chat.conditionCompleted) {
       try {
         const messages = await getMessages(chat.chatSessionId);
-        const lastAiIndex = messages.map((m) => m.senderType).lastIndexOf('AI');
-        const aiMessage = messages[lastAiIndex];
-        const optionNumber = aiMessage && OPTION_BY_QUESTION_TYPE[aiMessage.questionType];
+        // 이동할 /result/option/:x의 x는 "마지막 메시지"가 아니라 "칩(1/2/3)에 매핑되는
+        // 마지막 메시지" 기준으로 찾아야 함 - 자유입력으로 대화가 이어졌으면 마지막 메시지의
+        // questionType이 FREE_TEXT라 그대로 쓰면 매칭이 안 돼서 폴백으로 떨어짐
+        const lastChipMessage = [...messages].reverse()
+          .find((m) => m.senderType === 'AI' && OPTION_BY_QUESTION_TYPE[m.questionType]);
+        const optionNumber = lastChipMessage && OPTION_BY_QUESTION_TYPE[lastChipMessage.questionType];
         if (optionNumber) {
-          const userMessage = [...messages.slice(0, lastAiIndex)].reverse().find((m) => m.senderType === 'USER');
           navigate(`/result/option/${optionNumber}`, {
-            state: { resultData: { userMessage, aiMessage }, chatSessionId: chat.chatSessionId },
+            state: { resultHistory: messages, chatSessionId: chat.chatSessionId },
           });
           return;
         }

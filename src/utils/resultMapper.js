@@ -42,7 +42,7 @@ function extractDiagnosisName(userMessage) {
   return isFixedPhrase ? '' : firstLine;
 }
 
-function buildUserQuestionText(userMessage, questionType) {
+export function buildUserQuestionText(userMessage, questionType) {
   const phrase = USER_QUESTION_BY_TYPE[questionType];
   if (!phrase) {
     return userMessage?.messageContent?.split('\n\n')[0]?.trim() || '';
@@ -173,6 +173,24 @@ function buildDocumentEvidences(documentGuide) {
     description: doc.description || '',
     sourceChunkIds: doc.hasSources && doc.sourceChunkIds?.length ? doc.sourceChunkIds : sharedChunkIds,
   }));
+}
+
+// 시간순 USER/AI 메시지 배열(GET .../messages 응답)을 연속된 USER->AI 쌍으로 묶어
+// mapApiResponseToResultView가 그대로 처리할 수 있는 턴 목록으로 변환. 짝이 안 맞는
+// 메시지(응답 대기 중인 마지막 USER 메시지 등)는 조용히 건너뜀.
+export function pairMessagesIntoTurns(messages) {
+  const turns = [];
+  let i = 0;
+  while (i < messages.length) {
+    const msg = messages[i];
+    if (msg.senderType === 'USER' && messages[i + 1]?.senderType === 'AI') {
+      turns.push({ userMessage: msg, aiMessage: messages[i + 1] });
+      i += 2;
+    } else {
+      i += 1;
+    }
+  }
+  return turns;
 }
 
 export function mapApiResponseToResultView(apiResponse) {
