@@ -199,40 +199,73 @@ function buildStandardRows(items, { allowPairing = true } = {}, insuranceStartDa
   return rows;
 }
 
+// 실제 응답 기준(analysisId=237): 그룹 헤더가 별도 item으로 안 오고, coverageName 자체에
+// "그룹명 - 세부항목명"처럼 그룹명이 합쳐져서 옴 (예: "영구치보철치료보험금 - 가철성의치(틀니) — 보철물당").
+// " - "로 그룹명만 떼어내고, 그룹 없이 단독으로 오는 항목(크라운치료, 영구치발치 등)은 원래 이름 그대로 씀.
+function splitGroupedCoverageName(coverageName) {
+  const idx = coverageName.indexOf(' - ');
+  if (idx === -1) return { group: null, label: coverageName };
+  return { group: coverageName.slice(0, idx), label: coverageName.slice(idx + 3) };
+}
+
+// "2년 초과"/"2년 이내"처럼 뒤죽박죽 순서로 오는 조건 쌍을, buildStandardRows와 동일하게
+// "이내"가 항상 왼쪽(첫 번째)에 오도록 정렬
+function sortAmountsWithInsideFirst(amounts) {
+  return [...amounts].sort((a, b) => (b.condition.includes('이내') ? 1 : 0) - (a.condition.includes('이내') ? 1 : 0));
+}
+
 // 치아 카드 전용 규칙(백엔드 LLM 프롬프트 기준):
 // - 같은 면책기간(예: "2년 이내"/"2년 초과")을 쓰는 치료끼리 그룹으로 묶임
-// - 그룹 제목이 필요하면 coverageAmount가 둘 다 null인 item이 먼저 오고, 그 item의
-//   condition 값이 곧 그 그룹의 열 이름("2년 이내"/"2년 초과")이 됨
+// - 그룹 제목은 coverageAmount가 둘 다 null인 item으로 따로 오거나(구 스펙),
+//   coverageName에 "그룹명 - 세부항목명"으로 합쳐서 옴(실제 응답) — 그룹이 바뀔 때만 헤더 행 삽입
 // - 그룹 없이 단독으로 오는 항목(예: 크라운치료, 영구치발치)은 그 자체가 하나의 행
 function buildToothRows(items, insuranceStartDate) {
   const elapsedYears = getElapsedYears(insuranceStartDate);
+  const rows = [];
+  let currentGroup = null;
 
-  return items.flatMap((item) => {
-    const isGroupHeader = item.amounts.length > 1
+  items.forEach((item) => {
+    const isNullHeaderItem = item.amounts.length > 1
       && item.amounts.every((a) => a.coverageAmount === null || a.coverageAmount === undefined);
 
-    if (isGroupHeader) {
-      const [first, second] = item.amounts;
-      return [{ type: 'section', label: item.coverageName, col1: first?.condition, col2: second?.condition }];
+    if (isNullHeaderItem) {
+      const [first, second] = sortAmountsWithInsideFirst(item.amounts);
+      rows.push({ type: 'section', label: item.coverageName, col1: first?.condition, col2: second?.condition });
+      currentGroup = null;
+      return;
+    }
+
+    const { group, label } = splitGroupedCoverageName(item.coverageName);
+
+    if (group && group !== currentGroup) {
+      currentGroup = group;
+      const [first, second] = sortAmountsWithInsideFirst(item.amounts);
+      rows.push({ type: 'section', label: group, col1: first?.condition, col2: second?.condition });
+    } else if (!group) {
+      currentGroup = null;
     }
 
     if (item.amounts.length === 2) {
-      const [first, second] = item.amounts;
-      return [{
+      const [first, second] = sortAmountsWithInsideFirst(item.amounts);
+      rows.push({
         type: 'col-data',
-        label: item.coverageName,
+        label,
         col1: formatWon(first.coverageAmount),
         col2: formatWon(second.coverageAmount),
         ...buildActiveColumnMeta(first.condition, second.condition, elapsedYears),
-      }];
+      });
+      return;
     }
 
     if (item.amounts.length > 2) {
       // 스펙 위반 방어(골절재해와 동일한 문제): 여러 치료가 item 하나에 뭉쳐서 온 경우,
       // 조건별로 한 줄씩 풀어서 금액이 화면에서 사라지지 않게 함
-      return item.amounts.map((amount) => buildSingleAmountRow(`${item.coverageName} · ${amount.condition}`, amount));
+      item.amounts.forEach((amount) => rows.push(buildSingleAmountRow(`${label} · ${amount.condition}`, amount)));
+      return;
     }
 
-    return [buildSingleAmountRow(item.coverageName, item.amounts[0])];
+    rows.push(buildSingleAmountRow(label, item.amounts[0]));
   });
+
+  return rows;
 }
