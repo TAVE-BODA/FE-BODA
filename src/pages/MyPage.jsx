@@ -339,8 +339,10 @@ export default function MyPage() {
               <InsurerCard
                 key={insurer.companyKey}
                 insurer={{ ...insurer, dashboardAvailable }}
-                onViewDashcard={() => targetAnalysisId != null && navigate(`/result/analysis/${targetAnalysisId}`)}
-                onUploadTerms={() => navigate('/upload', { state: { chatSessionId: lastChat?.chatSessionId } })}
+                onViewDashcard={() => targetAnalysisId != null && navigate(
+                  `/result/analysis/${targetAnalysisId}${lastChat?.chatSessionId != null ? `?chatSessionId=${lastChat.chatSessionId}` : ''}`
+                )}
+                onUploadTerms={() => navigate('/chat', { state: { chatSessionId: lastChat?.chatSessionId } })}
                 onOpenChat={(chat) => navigate('/chat', { state: { chatSessionId: chat.chatSessionId } })}
                 onNewChat={() => navigate('/chat', { state: { newSession: true } })}
                 onDelete={() => handleDeleteInsurer(insurer)}

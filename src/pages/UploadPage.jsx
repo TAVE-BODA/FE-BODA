@@ -26,9 +26,9 @@ export default function UploadPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { chatSessionId, conditionData, selectedOption } = location.state || {};
+  const { chatSessionId, conditionData, selectedOption, skipCert } = location.state || {};
 
-  const [step, setStep] = useState(STEP.CERT_UPLOAD);
+  const [step, setStep] = useState(skipCert ? STEP.TERMS_UPLOAD : STEP.CERT_UPLOAD);
   const [certFiles, setCertFiles]   = useState([]);
   const [termsFiles, setTermsFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);

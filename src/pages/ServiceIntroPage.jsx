@@ -104,7 +104,7 @@ const CARDS = [
     id: 'what',
     text: '보다가 뭐하는 서비스야?',
     icon: (
-      <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+      <svg width="46" height="46" viewBox="0 0 36 36" fill="none">
         <rect x="10" y="14" width="16" height="13" rx="2" stroke="#229cff" strokeWidth="2" fill="#c5eeff"/>
         <path d="M14 14V11a4 4 0 0 1 8 0v3" stroke="#229cff" strokeWidth="2" strokeLinecap="round"/>
         <rect x="15" y="19" width="6" height="3" rx="1" fill="#229cff"/>
@@ -115,7 +115,7 @@ const CARDS = [
     id: 'privacy',
     text: '내 개인정보 괜찮아?',
     icon: (
-      <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+      <svg width="46" height="46" viewBox="0 0 36 36" fill="none">
         <rect x="11" y="16" width="14" height="11" rx="2" fill="#c5eeff" stroke="#229cff" strokeWidth="2"/>
         <path d="M14 16v-3a4 4 0 0 1 8 0v3" stroke="#229cff" strokeWidth="2" strokeLinecap="round"/>
         <circle cx="18" cy="21" r="2" fill="#229cff"/>
@@ -127,7 +127,7 @@ const CARDS = [
     id: 'how',
     text: '어떻게 쓰는 거야?',
     icon: (
-      <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+      <svg width="46" height="46" viewBox="0 0 36 36" fill="none">
         <path d="M8 12a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4v8a4 4 0 0 1-4 4h-4l-4 4v-4H12a4 4 0 0 1-4-4V12Z" fill="#c5eeff" stroke="#229cff" strokeWidth="2"/>
         <circle cx="13" cy="16" r="1.5" fill="#229cff"/>
         <circle cx="18" cy="16" r="1.5" fill="#229cff"/>
@@ -139,7 +139,7 @@ const CARDS = [
     id: 'insurer',
     text: '어떤 보험사가 되는 거야?',
     icon: (
-      <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+      <svg width="46" height="46" viewBox="0 0 36 36" fill="none">
         <path d="M18 8L9 12v6c0 5 4 9.7 9 11 5-1.3 9-6 9-11v-6L18 8Z" fill="#c5eeff" stroke="#229cff" strokeWidth="2" strokeLinejoin="round"/>
         <path d="M14 18l2.5 2.5L22 15" stroke="#229cff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>

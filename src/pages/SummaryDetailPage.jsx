@@ -64,6 +64,7 @@ export default function SummaryDetailPage() {
       analysisId: d.analysisId,
       companyName: d.companyName,
       period: `${d.insuranceStartDate} ~ ${d.insuranceEndDate}`,
+      insuranceStartDate: d.insuranceStartDate,
       coverage: d.coverages.find((c) => c && c.coverageType === coverageType),
     }))
     .filter(({ coverage }) => coverage?.isDetected);
@@ -101,12 +102,12 @@ export default function SummaryDetailPage() {
         <p className="detail-subtitle">{text.subtitle}</p>
 
         <div className="detail-cards">
-          {cards.map(({ analysisId, companyName, period, coverage }) => (
+          {cards.map(({ analysisId, companyName, period, insuranceStartDate, coverage }) => (
             <InsuranceDetailCard
               key={analysisId}
               company={companyName}
               period={period}
-              rows={buildDetailRows(coverageType, coverage.items)}
+              rows={buildDetailRows(coverageType, coverage.items, insuranceStartDate)}
             />
           ))}
         </div>
@@ -114,8 +115,8 @@ export default function SummaryDetailPage() {
         <div className="detail-cta">
           <Character size="sm" animate />
           <p className="detail-cta__text">{text.ctaText}</p>
-          <button className="detail-cta__btn" onClick={() => navigate('/upload/overview')}>
-            증권 업로드하러 가기
+          <button className="detail-cta__btn" onClick={() => navigate('/chat', { state: { chatSessionId } })}>
+            약관 업로드하러 가기
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
               <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
