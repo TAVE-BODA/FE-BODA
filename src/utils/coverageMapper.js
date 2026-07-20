@@ -264,12 +264,15 @@ function sortAmountsWithInsideFirst(amounts) {
 // - 같은 면책기간(예: "2년 이내"/"2년 초과")을 쓰는 치료끼리 그룹으로 묶임
 // - 그룹 제목은 coverageAmount가 둘 다 null인 item으로 따로 오거나(구 스펙),
 //   coverageName에 "그룹명 - 세부항목명"으로 합쳐서 옴(실제 응답) — 그룹이 바뀔 때만 헤더 행 삽입
-// - 그룹 신호가 아예 없는 단독 항목(예: 크라운치료, 영구치발치)은 헤더 없이 행 하나만 표시
-//   (헤더를 억지로 만들면 바로 아래 행과 이름이 완전히 똑같아져서 중복돼 보임)
+// - 그룹명이 없는 단독 항목(크라운치료, 영구치발치 등)이라도 직전 섹션과 면책기간(조건)이
+//   다르면 새 헤더를 보여줌 — 안 그러면 크라운치료(1년)가 바로 앞 영구치보철치료(2년) 헤더
+//   밑에 붙어서 마치 2년 조건인 것처럼 잘못 보임
 function buildToothRows(items, insuranceStartDate) {
   const elapsedYears = getElapsedYears(insuranceStartDate);
   const rows = [];
-  let currentGroup = null;
+  // 그룹명이 있으면 그룹명으로, 없으면 그 항목 자신의 조건 쌍으로 "지금 보이고 있는 섹션"을 추적.
+  // 조건 쌍이 같으면 굳이 헤더를 또 안 넣어서 중복을 피하고, 조건이 바뀌면 항목명으로 새 헤더를 냄.
+  let currentSectionKey = null;
 
   items.forEach((item) => {
     const isNullHeaderItem = item.amounts.length > 1
@@ -278,29 +281,21 @@ function buildToothRows(items, insuranceStartDate) {
     if (isNullHeaderItem) {
       const [first, second] = sortAmountsWithInsideFirst(item.amounts);
       rows.push({ type: 'section', label: item.coverageName, ...buildHeaderDisplay(first?.condition, second?.condition, elapsedYears) });
-      currentGroup = item.coverageName;
+      currentSectionKey = item.coverageName;
       return;
     }
 
     const { group, label } = splitGroupedCoverageName(item.coverageName);
-    // 명시적 그룹(그룹명 - 세부항목) 신호가 있을 때만 헤더를 보여줌. 그룹 신호 없는
-    // 단독 항목(크라운치료, 영구치발치 등)은 헤더 라벨이 바로 아래 행과 완전히 똑같아져서
-    // 중복돼 보이므로 생략하고 행 하나만 보여줌.
-    if (group && group !== currentGroup) {
-      currentGroup = group;
-      if (item.amounts.length === 2) {
-        const [first, second] = sortAmountsWithInsideFirst(item.amounts);
-        rows.push({ type: 'section', label: group, ...buildHeaderDisplay(first.condition, second.condition, elapsedYears) });
-      } else {
-        // 조건 3개 이상 뭉친(스펙 위반) 항목은 깔끔한 조건 쌍을 못 뽑으니 컬럼 없이 라벨만
-        rows.push({ type: 'section', label: group });
-      }
-    } else if (!group) {
-      currentGroup = null;
-    }
 
     if (item.amounts.length === 2) {
       const [first, second] = sortAmountsWithInsideFirst(item.amounts);
+      const sectionKey = group ?? `${first.condition}|${second.condition}`;
+
+      if (sectionKey !== currentSectionKey) {
+        currentSectionKey = sectionKey;
+        rows.push({ type: 'section', label: group ?? item.coverageName, ...buildHeaderDisplay(first.condition, second.condition, elapsedYears) });
+      }
+
       rows.push({
         type: 'col-data',
         label,
@@ -310,6 +305,10 @@ function buildToothRows(items, insuranceStartDate) {
       });
       return;
     }
+
+    // 발치처럼 면책기간 개념이 없는 단일 조건 항목은 섹션 추적에서 제외 (다음 항목이
+    // 이어서 같은 헤더를 쓸지 판단할 근거가 없으므로 리셋)
+    currentSectionKey = null;
 
     if (item.amounts.length > 2) {
       // 스펙 위반 방어(골절재해와 동일한 문제): 여러 치료가 item 하나에 뭉쳐서 온 경우,
