@@ -52,6 +52,34 @@ export const uploadTerms = async (file, chatSessionId) => {
   return response.json(); // { status, id, message }
 };
 
+// 보험증권 삭제 (연결된 보장카드, 채팅방-증권 연결, S3 원본까지 함께 삭제됨)
+export const deletePolicy = async (analysisId) => {
+  const response = await fetch(`${BASE_URL}/api/upload/policy/${analysisId}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}));
+    const err = new Error(errorBody.error || errorBody.message || '보험증권 삭제 실패');
+    err.code = errorBody.code;
+    throw err;
+  }
+};
+
+// 보험약관 삭제 (과거 채팅 근거 보존을 위해 파싱 결과는 유지되고, 연결/원본만 정리됨)
+export const deleteTerms = async (termsDocumentId) => {
+  const response = await fetch(`${BASE_URL}/api/upload/terms/${termsDocumentId}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}));
+    const err = new Error(errorBody.error || errorBody.message || '보험약관 삭제 실패');
+    err.code = errorBody.code;
+    throw err;
+  }
+};
+
 // 보험증권 분석 상태 조회
 export const checkPolicyStatus = async (analysisId) => {
   const response = await fetch(
