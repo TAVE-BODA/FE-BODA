@@ -4,8 +4,8 @@ import NavBar from '../components/NavBar';
 import Character from '../components/Character';
 import InsuranceBadge from '../components/InsuranceBadge';
 import CoverageCard from '../components/CoverageCard';
-import { getDashboardSummary } from '../api/dashboard';
-import { buildCoverageSummaryTile } from '../utils/coverageMapper';
+import { getDashboard, getDashboardSummary } from '../api/dashboard';
+import { buildCoverageSummaryTile, isReimbursementActuallyDetected } from '../utils/coverageMapper';
 import { COVERAGE_META, COVERAGE_ORDER } from '../utils/coverageMeta';
 import './DashboardPage.css';
 
@@ -18,12 +18,26 @@ export default function SummaryDashboardPage() {
   const navigate = useNavigate();
   const { chatSessionId } = useParams();
   const [data, setData] = useState(null);
+  const [reimbursementCompanies, setReimbursementCompanies] = useState([]);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     if (!chatSessionId) return;
     getDashboardSummary(chatSessionId)
-      .then(setData)
+      .then(async (summary) => {
+        setData(summary);
+        // 실손은 합산 응답(coverageSummaries)에 조건 텍스트가 없어서 "가입 안내" 문구만
+        // 온 경우를 여기서는 못 걸러냄 - 각 증권의 상세 응답을 따로 받아서 직접 검증함
+        const results = await Promise.allSettled(
+          (summary.analysisIds ?? []).map((analysisId) => getDashboard(analysisId))
+        );
+        const companies = results
+          .filter((r) => r.status === 'fulfilled')
+          .map((r) => r.value)
+          .filter((d) => isReimbursementActuallyDetected(d.coverages?.find((c) => c && c.coverageType === '실손')))
+          .map((d) => d.companyName);
+        setReimbursementCompanies(companies);
+      })
       .catch(() => setError('데이터를 불러오지 못했어요.'));
   }, [chatSessionId]);
 
@@ -63,6 +77,18 @@ export default function SummaryDashboardPage() {
   const companyNames = data.companyNames ?? [];
   const coverages = COVERAGE_ORDER.map((coverageType) => {
     const meta = COVERAGE_META[coverageType];
+
+    // 실손은 합산 요약의 companyNames를 그대로 못 믿어서(가입 안내 문구만 있어도 회사가
+    // 들어있음), 각 증권 상세를 직접 검증한 reimbursementCompanies로 대체
+    if (coverageType === '실손') {
+      return {
+        id: meta.id, icon: meta.icon, category: meta.label,
+        amount: reimbursementCompanies.length > 0 ? '실손 보장' : '',
+        companies: reimbursementCompanies,
+        inactive: reimbursementCompanies.length === 0,
+      };
+    }
+
     // 감지 안 된 보장은 백엔드가 항목 자체를 null로 내려보낼 때가 있어서 s가 null일 수 있음
     const summary = data.coverageSummaries?.find((s) => s && s.coverageType === coverageType);
     const { amountText, companies, inactive } = buildCoverageSummaryTile(summary);
