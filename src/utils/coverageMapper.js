@@ -148,6 +148,20 @@ function buildActiveColumnMeta(condition1, condition2, elapsedYears) {
   };
 }
 
+// 헤더 행은 "N년 이내"/"N년 초과" 두 개를 나란히 보여주는 대신, 가입일 기준 지금
+// 해당되는 조건 하나만 아이콘+툴팁과 함께 보여줌. 강조 대상을 못 정하면(가입일 없음/
+// 조건 하나뿐/"N년" 형태가 아님) 기존처럼 있는 조건들을 그대로 보여줌.
+function buildHeaderDisplay(condition1, condition2, elapsedYears) {
+  if (!condition1 || !condition2) {
+    return { col1: cleanConditionLabel(condition1), col2: cleanConditionLabel(condition2) };
+  }
+  const meta = buildActiveColumnMeta(condition1, condition2, elapsedYears);
+  // 활성 조건이 있는 쪽 칸에만 라벨+툴팁을 넣고, 반대쪽은 비워서 아래 데이터 행과 칸 위치를 맞춤
+  if (meta.col1Active) return { col1: cleanConditionLabel(condition1), col1Tooltip: meta.col1Tooltip };
+  if (meta.col2Active) return { col2: cleanConditionLabel(condition2), col2Tooltip: meta.col2Tooltip };
+  return { col1: cleanConditionLabel(condition1), col2: cleanConditionLabel(condition2) };
+}
+
 // LLM 프롬프트에서 "다른 카드에는 치아/골절재해 항목을 넣지 말라"고 지시해도 가끔 새서
 // 들어옴(예: 수술비 카드에 "질병·재해수술"). 백엔드가 프롬프트로 막고 있지만 완전히
 // 안 막혀서, 치아/골절재해 카드가 아닌 곳에서는 coverageName에 이 키워드가 있으면 걸러냄.
@@ -185,7 +199,7 @@ function buildStandardRows(items, { allowPairing = true } = {}, insuranceStartDa
 
     if (isNullHeaderItem) {
       const [first, second] = sortAmountsWithInsideFirst(item.amounts);
-      rows.push({ type: 'section', label: item.coverageName, col1: cleanConditionLabel(first?.condition), col2: cleanConditionLabel(second?.condition) });
+      rows.push({ type: 'section', label: item.coverageName, ...buildHeaderDisplay(first?.condition, second?.condition, elapsedYears) });
       headerShown = true;
       return;
     }
@@ -240,7 +254,8 @@ function sortAmountsWithInsideFirst(amounts) {
 // - 같은 면책기간(예: "2년 이내"/"2년 초과")을 쓰는 치료끼리 그룹으로 묶임
 // - 그룹 제목은 coverageAmount가 둘 다 null인 item으로 따로 오거나(구 스펙),
 //   coverageName에 "그룹명 - 세부항목명"으로 합쳐서 옴(실제 응답) — 그룹이 바뀔 때만 헤더 행 삽입
-// - 그룹 없이 단독으로 오는 항목(예: 크라운치료, 영구치발치)은 그 자체가 하나의 행
+// - 그룹 없이 단독으로 오는 항목(예: 크라운치료, 영구치발치)도 자기 이름으로 된 헤더를 하나씩 가짐
+//   (면책기간 있는 항목은 헤더에 표시, 발치처럼 없는 항목은 라벨만)
 function buildToothRows(items, insuranceStartDate) {
   const elapsedYears = getElapsedYears(insuranceStartDate);
   const rows = [];
@@ -252,19 +267,26 @@ function buildToothRows(items, insuranceStartDate) {
 
     if (isNullHeaderItem) {
       const [first, second] = sortAmountsWithInsideFirst(item.amounts);
-      rows.push({ type: 'section', label: item.coverageName, col1: cleanConditionLabel(first?.condition), col2: cleanConditionLabel(second?.condition) });
-      currentGroup = null;
+      rows.push({ type: 'section', label: item.coverageName, ...buildHeaderDisplay(first?.condition, second?.condition, elapsedYears) });
+      currentGroup = item.coverageName;
       return;
     }
 
     const { group, label } = splitGroupedCoverageName(item.coverageName);
+    // 명시적 그룹(그룹명 - 세부항목)이 없는 단독 항목도 자기 이름을 그룹으로 삼아서
+    // 헤더가 한 번은 뜨게 함 (크라운치료, 영구치발치 등)
+    const effectiveGroup = group ?? item.coverageName;
 
-    if (group && group !== currentGroup) {
-      currentGroup = group;
-      const [first, second] = sortAmountsWithInsideFirst(item.amounts);
-      rows.push({ type: 'section', label: group, col1: cleanConditionLabel(first?.condition), col2: cleanConditionLabel(second?.condition) });
-    } else if (!group) {
-      currentGroup = null;
+    if (effectiveGroup !== currentGroup) {
+      currentGroup = effectiveGroup;
+      if (item.amounts.length === 2) {
+        const [first, second] = sortAmountsWithInsideFirst(item.amounts);
+        rows.push({ type: 'section', label: group ?? item.coverageName, ...buildHeaderDisplay(first.condition, second.condition, elapsedYears) });
+      } else {
+        // 발치처럼 면책기간 개념이 없는 단일 조건 항목, 혹은 조건 3개 이상 뭉친(스펙 위반)
+        // 항목은 깔끔한 조건 쌍을 못 뽑으니 컬럼 없이 라벨만
+        rows.push({ type: 'section', label: group ?? item.coverageName });
+      }
     }
 
     if (item.amounts.length === 2) {

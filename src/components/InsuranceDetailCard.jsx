@@ -78,7 +78,7 @@ function ColHeaderRow({ row }) {
 }
 
 function SectionRow({ row }) {
-  const hasColumns = row.col1 !== undefined;
+  const hasColumns = row.col1 !== undefined || row.col2 !== undefined;
   return (
     <div className={['detail-row detail-row--section', hasColumns ? 'detail-row--section-cols' : ''].filter(Boolean).join(' ')}>
       <span className="detail-row__section-label">{row.label}</span>
@@ -90,6 +90,7 @@ function SectionRow({ row }) {
           </span>
           <span className="detail-row__col-head detail-row__col-head--section">
             {row.col2}
+            {row.col2Tooltip && <Tooltip text={row.col2Tooltip} />}
           </span>
         </>
       )}
