@@ -7,6 +7,7 @@ import NavBar from '../components/NavBar';
 import logosImg from '../assets/images/home_bottomicon.png';
 import uploadIconSrc from '../assets/icons/upload-icon.svg';
 import { uploadPolicy, checkPolicyStatus, pollUntilDone } from '../api/upload';
+import { attachPoliciesToChat } from '../api/chat';
 
 // 로티 라이브러리 + 애니메이션 JSON은 분석 중 화면에서만 필요해서
 // 별도 청크로 분리해 초기 번들에 포함되지 않도록 지연 로딩합니다.
@@ -85,6 +86,9 @@ export default function UploadOverviewPage() {
       if (failedNames.length > 0) {
         setFailedFiles(failedNames);
       }
+
+      // 분석된 증권을 채팅방에 연결해야 대시보드가 (재)생성됨 - 백엔드 스펙
+      await attachPoliciesToChat(chatSessionId, succeededIds);
 
       setStep(STEP.DONE);
     } catch (error) {
