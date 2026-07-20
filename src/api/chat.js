@@ -1,13 +1,36 @@
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-export const createChatSession = async () => {
+// analysisIds(이미 분석된 증권)/termsDocumentId를 같이 넘기면 새 채팅방 생성과 동시에
+// 연결됨 - 마이페이지에서 어느 채팅에도 안 묶인 증권(unlinkedAnalysisIds)을 재사용해서
+// 새 채팅을 만들 때 재업로드 없이 바로 연결하기 위해 사용.
+export const createChatSession = async ({ analysisIds, termsDocumentId } = {}) => {
   const response = await fetch(`${BASE_URL}/api/chat/sessions`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
-    body: JSON.stringify({}),
+    body: JSON.stringify({
+      ...(analysisIds?.length && { analysisIds }),
+      ...(termsDocumentId != null && { termsDocumentId }),
+    }),
   });
   if (!response.ok) throw new Error('채팅 세션 생성 실패');
+  return response.json();
+};
+
+// 이미 만들어진 채팅방에 나중에 증권을 추가로 연결 (연결 후 대시보드가 자동으로 다시 생성됨)
+export const attachPoliciesToChat = async (chatSessionId, analysisIds) => {
+  const response = await fetch(`${BASE_URL}/api/chat/sessions/${chatSessionId}/policies`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ analysisIds }),
+  });
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}));
+    const err = new Error(errorBody.error || errorBody.message || '증권 연결 실패');
+    err.code = errorBody.code;
+    throw err;
+  }
   return response.json();
 };
 

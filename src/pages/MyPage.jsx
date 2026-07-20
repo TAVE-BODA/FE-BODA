@@ -191,18 +191,14 @@ function InsurerCard({ insurer, onViewDashcard, onUploadTerms, onOpenChat, onNew
                 저장된 대시카드 보러가기
               </button>
             )}
-            {chats.length >= 2 ? (
+            {chats.length >= 1 ? (
               <ChatDropdownButton
-                label="채팅창 선택"
+                label={chats.length >= 2 ? '채팅창 선택' : '채팅하러가기'}
                 variant="secondary"
                 chats={chats}
                 onSelectChat={onOpenChat}
                 onNewChat={onNewChat}
               />
-            ) : chats.length === 1 ? (
-              <button className="mypage-action-btn mypage-action-btn--secondary" onClick={() => onOpenChat(chats[0])}>
-                채팅하러가기
-              </button>
             ) : (
               <button className="mypage-action-btn mypage-action-btn--secondary" onClick={onNewChat}>
                 + 새로운 채팅
@@ -351,8 +347,8 @@ export default function MyPage() {
                   `/result/analysis/${targetAnalysisId}${lastChat?.chatSessionId != null ? `?chatSessionId=${lastChat.chatSessionId}` : ''}`
                 )}
                 onUploadTerms={() => navigate('/chat', { state: { chatSessionId: lastChat?.chatSessionId } })}
-                onOpenChat={(chat) => navigate('/chat', { state: { chatSessionId: chat.chatSessionId } })}
-                onNewChat={() => navigate('/chat', { state: { newSession: true } })}
+                onOpenChat={(chat) => navigate('/chat', { state: { chatSessionId: chat.chatSessionId, termsUploaded: chat.termsUploaded } })}
+                onNewChat={() => navigate('/chat', { state: { unlinkedAnalysisIds: insurer.unlinkedAnalysisIds } })}
                 onDelete={() => handleDeleteInsurer(insurer)}
                 isDeleting={deletingKey === insurer.companyKey}
               />

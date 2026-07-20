@@ -4,7 +4,7 @@ import './ChatPage.css';
 import Character from '../components/Character';
 import InsuranceModal from '../components/InsuranceModal';
 import NavBar from '../components/NavBar';
-import { createChatSession } from '../api/chat';
+import { createChatSession, sendInsuranceCondition } from '../api/chat';
 
 const OPTION_TEXT = {
   1: '1. 청구 가능한지 먼저 알고싶어요',
@@ -38,18 +38,20 @@ const UPLOAD_CONTENT = {
   },
 };
 
-function UploadButtonGroup({ cancelLabel, onCancel, onUpload }) {
+function UploadButtonGroup({ cancelLabel, onCancel, onUpload, isLoading }) {
   return (
     <div className="chat-upload-btn-group">
       <button
         className="insurance-condition-btn chat-upload-btn"
         onClick={onUpload}
+        disabled={isLoading}
       >
-        파일 업로드하기
+        {isLoading ? '처리 중...' : '파일 업로드하기'}
       </button>
       <button
         className="chat-option-btn chat-cancel-btn"
         onClick={onCancel}
+        disabled={isLoading}
       >
         {cancelLabel}
       </button>
@@ -62,7 +64,19 @@ export default function ChatPage() {
   const location = useLocation();
   // 마이페이지/대시보드에서 기존 채팅 세션으로 다시 들어온 경우 - 새 세션을 만들지 않고
   // 이 세션에 이어서 업로드/조건입력이 붙도록 재사용한다 (같은 보험으로 마이페이지에 묶여 보이게).
-  const { chatSessionId: incomingChatSessionId } = location.state || {};
+  // callerSkipCert: 재사용할 세션은 없어도(증권에 연결된 채팅이 하나도 없는 경우) 호출한
+  // 쪽(대시보드)이 이미 분석된 증권이 있다는 걸 알고 있는 경우 - 새 세션을 만들더라도
+  // 증권 업로드는 건너뛰고 약관 업로드부터 시작하게 함.
+  // incomingTermsUploaded: 마이페이지 "채팅하러가기"로 들어온 채팅에 증권·약관이 이미 다
+  // 올라가 있는 경우 - 업로드 화면 자체를 거치지 않고 바로 조건 전송으로 넘어가게 함.
+  // unlinkedAnalysisIds: 마이페이지에서 어느 채팅에도 안 묶인(오르판) 증권이 있는 경우 -
+  // 새 세션을 만들 때 이 증권들을 바로 연결해서 재업로드 없이 이어가게 함.
+  const {
+    chatSessionId: incomingChatSessionId,
+    skipCert: callerSkipCert,
+    termsUploaded: incomingTermsUploaded,
+    unlinkedAnalysisIds,
+  } = location.state || {};
   const [selectedOption, setSelectedOption] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalFinished, setIsModalFinished] = useState(false);
@@ -87,7 +101,7 @@ export default function ChatPage() {
 
     setIsLoading(true);
     try {
-      const session = await createChatSession();
+      const session = await createChatSession({ analysisIds: unlinkedAnalysisIds });
       setChatSessionId(session.chatSessionId);
       setIsModalFinished(true);
     } catch (error) {
@@ -105,7 +119,7 @@ export default function ChatPage() {
       // 기존 세션으로 들어온 경우 새로 만들지 않고 재사용
       const session = incomingChatSessionId
         ? { chatSessionId: incomingChatSessionId }
-        : await createChatSession();
+        : await createChatSession({ analysisIds: unlinkedAnalysisIds });
       setChatSessionId(session.chatSessionId);
       setConditionData(formData);
       setIsModalOpen(false);
@@ -118,15 +132,47 @@ export default function ChatPage() {
     }
   };
 
-  const handleGoToUpload = () => {
-    // 칩4(보장 항목부터 보기)는 다중 업로드 전용 페이지로 분리되어 있음
-    navigate(selectedOption === 4 ? '/upload/overview' : '/upload', {
+  const handleGoToUpload = async () => {
+    // 칩1/2/3인데 이 채팅에 증권·약관이 이미 다 올라가 있으면, 업로드 화면 자체를 안 거치고
+    // 바로 조건을 전송함 (UploadPage.jsx의 TERMS_DONE 단계와 동일한 처리)
+    if (selectedOption !== 4 && incomingTermsUploaded) {
+      setIsLoading(true);
+      try {
+        const result = await sendInsuranceCondition(chatSessionId, conditionData, selectedOption);
+        navigate(`/result/option/${selectedOption}`, {
+          state: { resultData: result, chatSessionId, conditionData },
+        });
+      } catch (error) {
+        console.error('보험 조건 전송 오류:', error);
+        alert('분석 중 오류가 발생했어요. 다시 시도해주세요.');
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
+    // 기존 세션 재사용이거나(증권 이미 업로드됨), 호출한 쪽에서 이미 분석된 증권이 있다고
+    // 알려줬거나(연결된 채팅은 없지만 증권만 있던 경우), 방금 새 세션 생성 시 오르판
+    // 증권을 바로 연결한 경우 - 증권은 이미 준비돼 있음
+    const hasExistingPolicy = Boolean(incomingChatSessionId) || Boolean(callerSkipCert) || Boolean(unlinkedAnalysisIds?.length);
+
+    if (selectedOption === 4) {
+      // 칩4(보장 항목부터 보기)는 다중 업로드 전용 페이지로 분리되어 있는데, 증권이 이미
+      // 세션에 연결돼 있으면(대시보드가 자동 재생성됨) 업로드 없이 바로 합산 대시보드로
+      if (hasExistingPolicy) {
+        navigate(`/result/summary/${chatSessionId}`);
+        return;
+      }
+      navigate('/upload/overview', { state: { chatSessionId } });
+      return;
+    }
+
+    navigate('/upload', {
       state: {
         chatSessionId,
         conditionData,
         selectedOption,
-        // 기존 세션이면 증권은 이미 업로드돼 있으니 약관 업로드부터 시작
-        skipCert: Boolean(incomingChatSessionId),
+        skipCert: hasExistingPolicy,
       },
     });
   };
@@ -240,6 +286,7 @@ export default function ChatPage() {
                       cancelLabel={UPLOAD_CONTENT.confirm.cancelLabel}
                       onCancel={() => setIsNotReady(true)}
                       onUpload={handleGoToUpload}
+                      isLoading={isLoading}
                     />
                   </div>
                 )}
@@ -261,12 +308,14 @@ export default function ChatPage() {
                         <button
                           className="insurance-condition-btn chat-upload-btn"
                           onClick={handleGoToUpload}
+                          disabled={isLoading}
                         >
-                          파일 준비됐어요
+                          {isLoading ? '처리 중...' : '파일 준비됐어요'}
                         </button>
                         <button
                           className="chat-option-btn chat-cancel-btn"
                           onClick={() => navigate('/home')}
+                          disabled={isLoading}
                         >
                           나중에 할게요
                         </button>
