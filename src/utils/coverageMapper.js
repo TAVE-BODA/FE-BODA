@@ -19,11 +19,13 @@ export function buildSummaryTile(coverage) {
   if (coverage.coverageType === '실손') {
     const items = coverage.items ?? [];
     // "가입 관련 안내가 포함되어 있으며..."처럼 몇 세대 실손인지 특정 못하고 일반 안내
-    // 문구만 온 경우는 실제로 감지된 게 아니므로 미감지 처리
-    const isGenericNoticeOnly = items.length > 0 && items.every((item) =>
-      item.amounts.every((a) => typeof a.condition === 'string' && a.condition.includes('안내'))
+    // 문구만 온 경우나, condition 자체가 "실손 감지 안됨"으로 오는 경우는 실제로
+    // 감지된 게 아니므로 미감지 처리
+    const isNotActuallyDetected = items.length > 0 && items.every((item) =>
+      item.amounts.every((a) => typeof a.condition === 'string'
+        && (a.condition.includes('안내') || a.condition.includes('감지 안됨')))
     );
-    const detected = coverage.isDetected && !isGenericNoticeOnly;
+    const detected = coverage.isDetected && !isNotActuallyDetected;
     return { amountText: detected ? '실손 보장' : '', inactive: !detected };
   }
 
