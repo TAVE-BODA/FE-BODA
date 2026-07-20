@@ -142,6 +142,11 @@ export default function UploadPage() {
   };
 
   const handleSubmitClick = () => {
+    // 증권 단계는 팝업 없이 바로 분석 시작, 약관 단계에서만 확인 팝업을 띄움
+    if (isCert) {
+      handleAnalyze();
+      return;
+    }
     setShowMatchConfirm(true);
   };
 

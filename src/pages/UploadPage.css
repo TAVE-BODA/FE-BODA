@@ -389,6 +389,9 @@
 
 .upload-popup__btn-group .upload-popup__btn {
   margin-top: 0;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 16px 0;
 }
 
 .upload-popup__btn:disabled {
