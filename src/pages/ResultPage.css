@@ -286,6 +286,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  margin-bottom: 24px;
 }
 
 .result-freechat-user-bubble {
@@ -307,8 +308,7 @@
   align-items: flex-start;
   gap: 28px;
   align-self: flex-start;
-  width: calc(100% + 168px);
-  margin-left: -168px;
+  width: 100%;
 }
 
 .result-freechat-answer-bubble {
