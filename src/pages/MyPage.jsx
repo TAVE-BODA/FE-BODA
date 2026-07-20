@@ -342,7 +342,7 @@ export default function MyPage() {
                 onViewDashcard={() => targetAnalysisId != null && navigate(
                   `/result/analysis/${targetAnalysisId}${lastChat?.chatSessionId != null ? `?chatSessionId=${lastChat.chatSessionId}` : ''}`
                 )}
-                onUploadTerms={() => navigate('/upload', { state: { chatSessionId: lastChat?.chatSessionId } })}
+                onUploadTerms={() => navigate('/chat', { state: { chatSessionId: lastChat?.chatSessionId } })}
                 onOpenChat={(chat) => navigate('/chat', { state: { chatSessionId: chat.chatSessionId } })}
                 onNewChat={() => navigate('/chat', { state: { newSession: true } })}
                 onDelete={() => handleDeleteInsurer(insurer)}
