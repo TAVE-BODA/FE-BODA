@@ -18,8 +18,7 @@ const STEP = {
   TERMS_DONE:      'terms-done',
 };
 
-// b타입(프론트에서 먼저 걸러내는 것) 검증 기준 - 백엔드 요청 스펙 기준
-const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB
+const MAX_FILE_SIZE = 15 * 1024 * 1024;
 const ACCEPTED_FILE_TYPE = 'application/pdf';
 const MAX_CERT_FILES = 3;
 
@@ -34,10 +33,10 @@ export default function UploadPage() {
   const [termsFiles, setTermsFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading]   = useState(false);
-  const [errorPopup, setErrorPopup] = useState(null); // { code, message } - 기존 완료 팝업을 재사용해서 에러도 보여줌
+  const [errorPopup, setErrorPopup] = useState(null);
   const [certProgress, setCertProgress] = useState({ current: 0, total: 0 });
-  const [certFailedFiles, setCertFailedFiles] = useState([]); // 배치 업로드 중 실패한 fileName 목록
-  const [showMatchConfirm, setShowMatchConfirm] = useState(false); // 증권/약관 보험사·피보험자 일치 확인 팝업
+  const [certFailedFiles, setCertFailedFiles] = useState([]);
+  const [showMatchConfirm, setShowMatchConfirm] = useState(false);
   const fileInputRef = useRef(null);
 
   const isCert      = step.startsWith('cert');
@@ -49,7 +48,6 @@ export default function UploadPage() {
 
   const showErrorPopup = (code, message) => setErrorPopup({ code, message });
 
-  // step을 직접 참조해서 증권/약관 파일 구분 + b타입(형식/크기/약관 개수) 프론트 검증
   const addFiles = useCallback((incoming) => {
     const files = Array.from(incoming);
     if (files.length === 0) return;
@@ -106,7 +104,6 @@ export default function UploadPage() {
         const succeededIds = [];
         const failedNames = [];
 
-        // 배치 업로드가 단건 업로드로 롤백돼서, 파일마다 순서대로 업로드+분석 폴링
         setCertProgress({ current: 0, total: activeFiles.length });
         for (let i = 0; i < activeFiles.length; i++) {
           const file = activeFiles[i];
@@ -114,7 +111,6 @@ export default function UploadPage() {
             const raw = await uploadPolicy(file, chatSessionId);
             const analysisId = raw?.id ?? raw?.analysisId;
             if (analysisId == null) throw new Error('증권 분석 응답 구조를 이해할 수 없어요.');
-            // 증권 분석: 5초 간격 x 120번 = 600초(10분)
             await pollUntilDone(checkPolicyStatus, analysisId, 5000, 120);
             succeededIds.push(analysisId);
           } catch {
@@ -133,8 +129,6 @@ export default function UploadPage() {
         }
       } else {
         const { id } = await uploadTerms(activeFiles[0], chatSessionId);
-        // 약관 분석: 분량이 많으면 10분도 부족한 경우가 있어서 여유 있게 15분으로 연장
-        // 5초 간격 x 180번 = 900초(15분)
         await pollUntilDone(checkTermsStatus, id, 5000, 180);
       }
       setStep(nextDone);
@@ -148,13 +142,7 @@ export default function UploadPage() {
   };
 
   const handleSubmitClick = () => {
-    // 증권 단계는 아직 약관이 뭔지 모르니 "같은 보험사/사람인지" 물어볼 수 없음.
-    // 약관 단계(둘 다 정해진 시점)에서만 확인 팝업을 띄움.
-    if (!isCert) {
-      setShowMatchConfirm(true);
-      return;
-    }
-    handleAnalyze();
+    setShowMatchConfirm(true);
   };
 
   const handleConfirmProceed = () => {
@@ -343,20 +331,22 @@ export default function UploadPage() {
               같은 보험사, 같은 사람 것이어야 분석돼요<br />
               다시 한번 확인해봐요
             </p>
-            <button
-              className="upload-popup__btn"
-              onClick={handleConfirmProceed}
-              disabled={isLoading}
-            >
-              확인했어요, 계속할게요
-            </button>
-            <button
-              className="upload-popup__btn upload-popup__btn--secondary"
-              onClick={handleConfirmRecheck}
-              disabled={isLoading}
-            >
-              다시 확인할게요
-            </button>
+            <div className="upload-popup__btn-group">
+              <button
+                className="upload-popup__btn"
+                onClick={handleConfirmProceed}
+                disabled={isLoading}
+              >
+                확인했어요, 계속할게요
+              </button>
+              <button
+                className="upload-popup__btn upload-popup__btn--secondary"
+                onClick={handleConfirmRecheck}
+                disabled={isLoading}
+              >
+                다시 확인할게요
+              </button>
+            </div>
           </div>
         </div>
       )}

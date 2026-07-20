@@ -1,4 +1,3 @@
-/* ── 페이지 컨테이너 ──────────────────────────────── */
 .upload-page {
   position: relative;
   display: flex;
@@ -20,7 +19,6 @@
   right: 0;
 }
 
-/* ── 메인 영역 (홈페이지와 동일한 구조) ─────────── */
 .upload-main {
   display: flex;
   flex-direction: column;
@@ -53,7 +51,6 @@
   margin-bottom: 32px;
 }
 
-/* ── 업로드 박스 ──────────────────────────────────── */
 .upload-box {
   display: flex;
   width: 990px;
@@ -75,7 +72,6 @@
   background: rgba(235, 246, 255, 0.65);
 }
 
-/* 빈 상태 */
 .upload-box__empty {
   display: flex;
   align-items: center;
@@ -110,7 +106,6 @@
   color: var(--gray-04);
 }
 
-/* 파일 있는 상태 */
 .upload-box__content {
   display: flex;
   flex-direction: column;
@@ -186,7 +181,6 @@
   transform: scale(1.06);
 }
 
-/* ── 파일 썸네일 ──────────────────────────────────── */
 .file-thumb {
   position: relative;
   width: 88px;
@@ -235,7 +229,6 @@
   background: var(--gray-02);
 }
 
-/* ── 분석중 화면 ──────────────────────────────────── */
 .upload-main--analyzing {
   gap: 40px;
   padding: 0 24px;
@@ -324,7 +317,6 @@
   100% { background-position: -200% 0; }
 }
 
-/* ── 완료 팝업 ───────────────────────────────────── */
 .upload-popup-overlay {
   position: fixed;
   inset: 0;
@@ -386,13 +378,25 @@
   background: #333333;
 }
 
+.upload-popup__btn-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.upload-popup__btn-group .upload-popup__btn {
+  margin-top: 0;
+}
+
 .upload-popup__btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
 }
 
-/* ── 푸터 ────────────────────────────────────────── */
 .upload-footer {
   display: flex;
   flex-direction: column;
