@@ -378,6 +378,20 @@
   transform: scale(1.02);
 }
 
+.upload-popup__btn--secondary {
+  background: #4B4B4B;
+}
+
+.upload-popup__btn--secondary:hover {
+  background: #333333;
+}
+
+.upload-popup__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
 /* ── 푸터 ────────────────────────────────────────── */
 .upload-footer {
   display: flex;

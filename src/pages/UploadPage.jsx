@@ -37,6 +37,7 @@ export default function UploadPage() {
   const [errorPopup, setErrorPopup] = useState(null); // { code, message } - 기존 완료 팝업을 재사용해서 에러도 보여줌
   const [certProgress, setCertProgress] = useState({ current: 0, total: 0 });
   const [certFailedFiles, setCertFailedFiles] = useState([]); // 배치 업로드 중 실패한 fileName 목록
+  const [showMatchConfirm, setShowMatchConfirm] = useState(false); // 증권/약관 보험사·피보험자 일치 확인 팝업
   const fileInputRef = useRef(null);
 
   const isCert      = step.startsWith('cert');
@@ -146,6 +147,25 @@ export default function UploadPage() {
     }
   };
 
+  const handleSubmitClick = () => {
+    // 증권 단계는 아직 약관이 뭔지 모르니 "같은 보험사/사람인지" 물어볼 수 없음.
+    // 약관 단계(둘 다 정해진 시점)에서만 확인 팝업을 띄움.
+    if (!isCert) {
+      setShowMatchConfirm(true);
+      return;
+    }
+    handleAnalyze();
+  };
+
+  const handleConfirmProceed = () => {
+    setShowMatchConfirm(false);
+    handleAnalyze();
+  };
+
+  const handleConfirmRecheck = () => {
+    setShowMatchConfirm(false);
+  };
+
   const handlePopupNext = async () => {
     if (step === STEP.CERT_DONE) {
       setIsLoading(false);
@@ -235,7 +255,7 @@ export default function UploadPage() {
                   <p className="upload-box__notice">파일을 골랐어요! 분석 후 바로 삭제돼요</p>
                   <button
                     className="upload-box__submit"
-                    onClick={handleAnalyze}
+                    onClick={handleSubmitClick}
                     disabled={isLoading}
                     aria-label="분석 시작"
                   >
@@ -308,6 +328,34 @@ export default function UploadPage() {
               disabled={isLoading}
             >
               {isLoading ? '분석 중...' : step === STEP.TERMS_DONE ? '결과 보러가기' : '다음으로'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showMatchConfirm && (
+        <div className="upload-popup-overlay">
+          <div className="upload-popup">
+            <Character size="sm" />
+            <h2 className="upload-popup__title">보험사와 피보험자가 같나요?</h2>
+            <p className="upload-popup__desc">
+              증권과 약관은<br />
+              같은 보험사, 같은 사람 것이어야 분석돼요<br />
+              다시 한번 확인해봐요
+            </p>
+            <button
+              className="upload-popup__btn"
+              onClick={handleConfirmProceed}
+              disabled={isLoading}
+            >
+              확인했어요, 계속할게요
+            </button>
+            <button
+              className="upload-popup__btn upload-popup__btn--secondary"
+              onClick={handleConfirmRecheck}
+              disabled={isLoading}
+            >
+              다시 확인할게요
             </button>
           </div>
         </div>
