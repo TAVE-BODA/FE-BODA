@@ -84,7 +84,6 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [conditionData, setConditionData] = useState(null);
   const [chatSessionId, setChatSessionId] = useState(null);
-  const [showBeneficiaryConfirm, setShowBeneficiaryConfirm] = useState(false);
 
   const handleOptionClick = async (optionNumber) => {
     setSelectedOption(optionNumber);
@@ -175,13 +174,6 @@ export default function ChatPage() {
         skipCert: hasExistingPolicy,
       },
     });
-  };
-
-  const handleUploadOverviewClick = () => setShowBeneficiaryConfirm(true);
-
-  const handleBeneficiaryConfirmYes = () => {
-    setShowBeneficiaryConfirm(false);
-    handleGoToUpload();
   };
 
   const isOption123 = [1, 2, 3].includes(selectedOption);
@@ -356,7 +348,8 @@ export default function ChatPage() {
                 <div className="chat-no-indent">
                   <UploadButtonGroup
                     cancelLabel={UPLOAD_CONTENT.coverage.cancelLabel}
-                    onUpload={handleUploadOverviewClick}
+                    onUpload={handleGoToUpload}
+                    isLoading={isLoading}
                   />
                 </div>
               </div>
@@ -371,30 +364,6 @@ export default function ChatPage() {
         onClose={() => setIsModalOpen(false)}
         onSubmitSuccess={handleModalSubmitSuccess}
       />
-
-      {showBeneficiaryConfirm && (
-        <div className="chat-popup-overlay">
-          <div className="chat-popup">
-            <Character size="sm" />
-            <h2 className="chat-popup__title">증권마다 보장받는 사람이 같나요?</h2>
-            <p className="chat-popup__desc">
-              증권 여러 개는 보장받는 사람이 같아야 함께 분석할 수 있어요.<br />
-              계약자가 아니라 실제로 보장받는 사람 기준이에요.
-            </p>
-            <div className="chat-popup__btn-group">
-              <button className="chat-popup__btn" onClick={handleBeneficiaryConfirmYes}>
-                네, 모두 같아요
-              </button>
-              <button
-                className="chat-popup__btn chat-popup__btn--secondary"
-                onClick={() => setShowBeneficiaryConfirm(false)}
-              >
-                아니요, 다시 고를게요
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

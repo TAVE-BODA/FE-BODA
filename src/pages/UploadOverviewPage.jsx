@@ -31,6 +31,7 @@ export default function UploadOverviewPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [failedFiles, setFailedFiles] = useState([]); // 배치 업로드 중 실패한 파일명 기록용 상태 추가
+  const [showBeneficiaryConfirm, setShowBeneficiaryConfirm] = useState(false);
   const fileInputRef = useRef(null);
 
   const hasFiles = files.length > 0;
@@ -99,6 +100,13 @@ export default function UploadOverviewPage() {
     navigate(`/result/summary/${chatSessionId}`);
   };
 
+  const handleSubmitClick = () => setShowBeneficiaryConfirm(true);
+
+  const handleBeneficiaryConfirmYes = () => {
+    setShowBeneficiaryConfirm(false);
+    handleAnalyze();
+  };
+
   return (
     <div className="upload-page">
 
@@ -165,7 +173,7 @@ export default function UploadOverviewPage() {
                   <p className="upload-box__notice">파일을 골랐어요! 분석 후 바로 삭제돼요</p>
                   <button
                     className="upload-box__submit"
-                    onClick={handleAnalyze}
+                    onClick={handleSubmitClick}
                     disabled={isLoading}
                     aria-label="분석 시작"
                   >
@@ -224,6 +232,30 @@ export default function UploadOverviewPage() {
             <button className="upload-popup__btn" onClick={handlePopupNext}>
               결과 보러가기
             </button>
+          </div>
+        </div>
+      )}
+
+      {showBeneficiaryConfirm && (
+        <div className="upload-popup-overlay">
+          <div className="upload-popup">
+            <Character size="sm" />
+            <h2 className="upload-popup__title">증권마다 보장받는 사람이 같나요?</h2>
+            <p className="upload-popup__desc">
+              증권 여러 개는 보장받는 사람이 같아야 함께 분석할 수 있어요.<br />
+              계약자가 아니라 실제로 보장받는 사람 기준이에요.
+            </p>
+            <div className="upload-popup__btn-group">
+              <button className="upload-popup__btn" onClick={handleBeneficiaryConfirmYes}>
+                네, 모두 같아요
+              </button>
+              <button
+                className="upload-popup__btn upload-popup__btn--secondary"
+                onClick={() => setShowBeneficiaryConfirm(false)}
+              >
+                아니요, 다시 고를게요
+              </button>
+            </div>
           </div>
         </div>
       )}
